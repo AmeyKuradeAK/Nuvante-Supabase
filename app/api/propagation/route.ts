@@ -10,8 +10,95 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Cache duration in seconds
 const CACHE_DURATION = 60; // 1 minute
 
+// Helper function to handle public routes (no auth required)
+async function handlePublicRoutes({ id, every }: { id?: string; every?: boolean }) {
+  const headers = {
+    'Cache-Control': `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate=${CACHE_DURATION * 2}`,
+  };
+
+  // Handle fetching a single product
+  if (id && !every) {
+    console.log("Fetching single product with ID:", id);
+    const { data: product, error: productError } = await supabase
+      .from("products")
+      .select(`
+        id,
+        product_name,
+        product_price,
+        product_images,
+        cancelled_product_price,
+        latest,
+        description,
+        materials,
+        packaging,
+        shipping,
+        product_info,
+        type
+      `)
+      .eq("id", id)
+      .single();
+
+    if (productError) {
+      console.error("Error fetching product:", productError);
+      return NextResponse.json(
+        { error: "Failed to fetch product", details: productError.message },
+        { status: 500, headers }
+      );
+    }
+
+    if (!product) {
+      console.log("No product found with ID:", id);
+      return NextResponse.json(
+        { error: "Product not found" },
+        { status: 404, headers }
+      );
+    }
+
+    return NextResponse.json(product, { status: 200, headers });
+  }
+
+  // Handle fetching all products
+  if (every) {
+    console.log("Fetching all products");
+    const { data: products, error: productsError } = await supabase
+      .from("products")
+      .select(`
+        id,
+        product_name,
+        product_price,
+        product_images,
+        cancelled_product_price,
+        latest,
+        description,
+        materials,
+        packaging,
+        shipping,
+        product_info,
+        type
+      `);
+
+    if (productsError) {
+      console.error("Error fetching products:", productsError);
+      return NextResponse.json(
+        { error: "Failed to fetch products", details: productsError.message },
+        { status: 500, headers }
+      );
+    }
+
+    return NextResponse.json(products || [], { status: 200, headers });
+  }
+}
+
 export async function POST(request: Request) {
   try {
+    const { type, productId, productIds, id, every } = await request.json();
+
+    // If this is a public route (product fetching), handle it without authentication
+    if (id || every) {
+      return handlePublicRoutes({ id, every });
+    }
+
+    // For protected routes (wishlist, cart, etc.), require authentication
     const user = await currentUser();
     if (!user) {
       return NextResponse.json(
@@ -20,85 +107,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const { type, productId, productIds, id, every } = await request.json();
-
-    // Add cache control headers
+    // Add cache control headers for protected routes
     const headers = {
       'Cache-Control': `public, s-maxage=${CACHE_DURATION}, stale-while-revalidate=${CACHE_DURATION * 2}`,
     };
 
-    // Handle fetching a single product
-    if (id && !every) {
-      console.log("Fetching single product with ID:", id);
-      const { data: product, error: productError } = await supabase
-        .from("products")
-        .select(`
-          id,
-          product_name,
-          product_price,
-          product_images,
-          cancelled_product_price,
-          latest,
-          description,
-          materials,
-          packaging,
-          shipping,
-          product_info,
-          type
-        `)
-        .eq("id", id)
-        .single();
-
-      if (productError) {
-        console.error("Error fetching product:", productError);
-        return NextResponse.json(
-          { error: "Failed to fetch product", details: productError.message },
-          { status: 500, headers }
-        );
-      }
-
-      if (!product) {
-        console.log("No product found with ID:", id);
-        return NextResponse.json(
-          { error: "Product not found" },
-          { status: 404, headers }
-        );
-      }
-
-      return NextResponse.json(product, { status: 200, headers });
-    }
-
-    // Handle fetching all products
-    if (every) {
-      console.log("Fetching all products");
-      const { data: products, error: productsError } = await supabase
-        .from("products")
-        .select(`
-          id,
-          product_name,
-          product_price,
-          product_images,
-          cancelled_product_price,
-          latest,
-          description,
-          materials,
-          packaging,
-          shipping,
-          product_info,
-          type
-        `);
-
-      if (productsError) {
-        console.error("Error fetching products:", productsError);
-        return NextResponse.json(
-          { error: "Failed to fetch products", details: productsError.message },
-          { status: 500, headers }
-        );
-      }
-
-      return NextResponse.json(products || [], { status: 200, headers });
-    }
-
+    // Handle protected routes
     switch (type) {
       case "wishlist":
         console.log("Fetching wishlist for user:", user.id);
