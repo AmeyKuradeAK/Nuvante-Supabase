@@ -1,65 +1,109 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { currentUser } from "@clerk/nextjs/server";
-import supabase from "@/lib/supabase";
-import bcrypt from "bcrypt";
 
-const SALT_ROUNDS = 10;
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function POST(request: Request) {
-  const user = await currentUser();
-  const global_user_email = user?.emailAddresses[0]?.emailAddress;
-
-  if (!user || !global_user_email) {
-    return NextResponse.json(
-      { message: "User not authenticated" },
-      { status: 401 }
-    );
-  }
-
   try {
-    let body: any = {};
-    try {
-      body = await request.json();
-    } catch {
-      // request might be empty (first-time signup)
-      body = {};
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "User not authenticated" },
+        { status: 401 }
+      );
     }
 
-    const email = global_user_email;
-    const firstName = user.firstName || "New";
-    const lastName = user.lastName || "User";
+    const { email, first_name, last_name, address } = await request.json();
+    console.log("Received data for client update:", { email, first_name, last_name, address });
 
-    let hashedPassword: string | undefined = undefined;
-    if (body.password && body.password !== "existing") {
-      hashedPassword = await bcrypt.hash(body.password, SALT_ROUNDS);
+    if (!email) {
+      console.error("No email provided");
+      return NextResponse.json(
+        { error: "Email is required" },
+        { status: 400 }
+      );
     }
 
-    const upsertData: any = {
-      email,
-      username: firstName,
-      firstName,
-      lastName,
-      cart: [],
-      wishlist: [],
-    };
-
-    if (body.address) upsertData.address = body.address;
-    if (hashedPassword) upsertData.password = hashedPassword;
-
-    const { error: upsertError } = await supabase
+    // Check if client exists
+    const { data: existingClient, error: checkError } = await supabase
       .from("clients")
-      .upsert(upsertData, { onConflict: "email" });
+      .select("*")
+      .eq("email", email)
+      .single();
 
-    if (upsertError) {
-      console.error("Supabase upsert error:", upsertError);
-      throw upsertError;
+    if (checkError && checkError.code !== "PGRST116") { // PGRST116 is "no rows returned"
+      console.error("Error checking existing client:", checkError);
+      return NextResponse.json(
+        { error: "Failed to check existing client" },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ message: "User synced to Supabase ✅" }, { status: 200 });
-  } catch (error: any) {
+    if (existingClient) {
+      // Update existing client
+      const { data: updatedClient, error: updateError } = await supabase
+        .from("clients")
+        .update({
+          first_name: first_name || existingClient.first_name,
+          last_name: last_name || existingClient.last_name,
+          address: address || existingClient.address,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("email", email)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("Error updating client:", updateError);
+        return NextResponse.json(
+          { error: `Failed to update client: ${updateError.message}` },
+          { status: 500 }
+        );
+      }
+
+      console.log("Successfully updated client:", updatedClient);
+      return NextResponse.json({ success: true, client: updatedClient }, { status: 200 });
+    } else {
+      // Create new client
+      const username = email.split('@')[0];
+      const { data: newClient, error: createError } = await supabase
+        .from("clients")
+        .insert([
+          {
+            email: email,
+            username: username,
+            clerk_id: user.id,
+            first_name: first_name || username,
+            last_name: last_name || "",
+            address: address || "",
+            cart: [],
+            wishlist: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
+
+      if (createError) {
+        console.error("Error creating client:", createError);
+        return NextResponse.json(
+          { error: `Failed to create client: ${createError.message}` },
+          { status: 500 }
+        );
+      }
+
+      console.log("Successfully created client:", newClient);
+      return NextResponse.json({ success: true, client: newClient }, { status: 200 });
+    }
+  } catch (error) {
     console.error("Error in populate route:", error);
     return NextResponse.json(
-      { message: "Failed to populate", error: error.message || error },
+      { error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }

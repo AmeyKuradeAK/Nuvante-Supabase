@@ -8,10 +8,9 @@ function popElement(array: any[], victim: any) {
 
 export async function POST(request: any) {
   const user = await currentUser();
-  const global_user_email = user?.emailAddresses[0]?.emailAddress;
-
-  if (!user || !global_user_email) {
-    console.log("No active session is found");
+  
+  if (!user) {
+    console.log("No active session found");
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
@@ -22,11 +21,15 @@ export async function POST(request: any) {
     const { data: existingClient, error: fetchError } = await supabase
       .from("clients")
       .select("wishlist")
-      .eq("email", global_user_email)
+      .eq("clerk_id", user.id)
       .single();
 
     if (fetchError) {
-      throw fetchError;
+      console.error("Error fetching client data:", fetchError);
+      return NextResponse.json(
+        { message: "Failed to fetch wishlist", error: fetchError.message },
+        { status: 500 }
+      );
     }
 
     let updatedWishlist = existingClient?.wishlist || [];
@@ -44,16 +47,29 @@ export async function POST(request: any) {
     // Update wishlist in database
     const { error: updateError } = await supabase
       .from("clients")
-      .update({ wishlist: updatedWishlist })
-      .eq("email", global_user_email);
+      .update({ 
+        wishlist: updatedWishlist,
+        updated_at: new Date().toISOString()
+      })
+      .eq("clerk_id", user.id);
 
     if (updateError) {
-      throw updateError;
+      console.error("Error updating wishlist:", updateError);
+      return NextResponse.json(
+        { message: "Failed to update wishlist", error: updateError.message },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ message: "Wishlist updated" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Wishlist updated", wishlist: updatedWishlist },
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error("Error in wishlist route:", error);
-    return NextResponse.json({ message: "Bad Request", error: error.message }, { status: 400 });
+    return NextResponse.json(
+      { message: "Bad Request", error: error.message },
+      { status: 400 }
+    );
   }
 }

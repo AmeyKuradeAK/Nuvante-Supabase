@@ -26,6 +26,7 @@ const Preview = () => {
   const [currentSize, setCurrentSize] = useState<string>("");
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [loaded, setLoaded] = useState<boolean>(false);
+  const [imagesLoaded, setImagesLoaded] = useState<boolean>(false);
 
   const { isSignedIn } = useUser();
 
@@ -34,31 +35,139 @@ const Preview = () => {
   const { GlobalWishlist, changeGlobalWishlist, GlobalCart, changeGlobalCart } =
     context;
 
-  const id: string | undefined =
-    typeof slug === "string" ? slug : Array.isArray(slug) ? slug[0] : undefined;
+  // Function to preload images
+  const preloadImages = useCallback((imageUrls: string[]) => {
+    const loadPromises = imageUrls.map((url) => {
+      return new Promise((resolve, reject) => {
+        const img = new window.Image();
+        img.src = url;
+        img.onload = () => resolve(url);
+        img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+      });
+    });
+
+    Promise.all(loadPromises)
+      .then(() => {
+        console.log("All images preloaded successfully");
+        setImagesLoaded(true);
+      })
+      .catch((error) => {
+        console.error("Error preloading images:", error);
+        setImagesLoaded(true); // Still set to true to show the component
+      });
+  }, []);
+
+  const id: string | undefined = typeof slug === "string" ? slug : Array.isArray(slug) ? slug[0] : undefined;
 
   const fetchProductData = useCallback(async () => {
-    if (!id) return;
+    if (!id) {
+      console.error("No product ID provided");
+      return;
+    }
     try {
-      const { data } = await axios.post(`/api/propagation/`, {
+      console.log("Fetching product with ID:", id); // Debug log
+      const { data } = await axios.post(`/api/propagation`, {
         id,
         every: false,
       });
-      setProductImages(data.productImages || []);
-      setCurrentProduct(data);
+      
+      console.log("Raw API response:", data); // Debug log
+      
+      if (!data || Object.keys(data).length === 0) {
+        console.error("Empty data received from API");
+        alert("Product not found!");
+        return;
+      }
+
+      // Log the structure of the received data
+      console.log("Data structure:", {
+        hasName: !!(data as any).product_name,
+        hasPrice: !!(data as any).product_price,
+        hasImages: !!(data as any).product_images,
+        imageCount: Array.isArray((data as any).product_images) ? (data as any).product_images.length : 0,
+        allFields: Object.keys(data),
+      });
+
+      // Handle product_images which is stored as jsonb
+      let images: string[] = [];
+      try {
+        // If product_images is a string (JSON string), parse it
+        if (typeof (data as any).product_images === 'string') {
+          images = JSON.parse((data as any).product_images);
+        } 
+        // If it's already an array, use it directly
+        else if (Array.isArray((data as any).product_images)) {
+          images = (data as any).product_images;
+        }
+        // If it's an object, try to convert it to an array
+        else if (typeof (data as any).product_images === 'object') {
+          images = Object.values((data as any).product_images);
+        }
+      } catch (error) {
+        console.error("Error parsing product_images:", error);
+        images = [];
+      }
+
+      console.log("Processed images:", images); // Debug log
+      
+      // Transform the data to match the expected structure
+      const transformedData = {
+        productName: (data as any).product_name || '',
+        productPrice: String((data as any).product_price || 0),
+        cancelledProductPrice: String((data as any).cancelled_product_price || 0),
+        productInfo: (data as any).product_info || '',
+        productImages: images,
+        description: (data as any).description || '',
+        materials: (data as any).materials || '',
+        packaging: (data as any).packaging || '',
+        shippingandreturns: (data as any).shipping || '',
+      };
+      
+      // Set the states
+      setProductImages(images);
+      setCurrentProduct(transformedData);
       setLoaded(true);
+
+      // Preload all images
+      if (images.length > 0) {
+        preloadImages(images);
+      } else {
+        setImagesLoaded(true);
+      }
+
+      // Verify the states were set correctly
+      console.log("States after update:", {
+        productImages: images,
+        currentProduct: transformedData,
+        loaded: true
+      });
     } catch (error) {
       console.error("Error fetching product data:", error);
+      alert("Failed to fetch product details. Please try again.");
     }
-  }, [id]);
+  }, [id, preloadImages]);
 
   useEffect(() => {
     if (!id) {
-      window.location.href = "https://google.com";
+      console.error("No product ID in URL");
       return;
     }
     fetchProductData();
   }, [id, fetchProductData]);
+
+  // Debug log for current state
+  useEffect(() => {
+    console.log("State update:", {
+      currentProduct: currentProduct ? {
+        name: currentProduct.productName,
+        price: currentProduct.productPrice,
+        hasImages: Array.isArray(currentProduct.productImages),
+        imageCount: currentProduct.productImages?.length,
+      } : null,
+      productImages: productImages,
+      loaded: loaded
+    });
+  }, [currentProduct, productImages, loaded]);
 
   const updateCart = async () => {
     if (!id) return;
@@ -164,7 +273,8 @@ const Preview = () => {
     return () => clearInterval(interval);
   }, [isHovered]);
 
-  if (!loaded || !currentProduct) {
+  if (!loaded || !currentProduct || !imagesLoaded) {
+    console.log("Rendering loading state:", { loaded, hasProduct: !!currentProduct, imagesLoaded });
     return (
       <motion.div
         className="w-fit mx-auto mt-20"
@@ -175,6 +285,17 @@ const Preview = () => {
       </motion.div>
     );
   }
+
+  // Debug log before render
+  console.log("Rendering with data:", {
+    product: {
+      name: currentProduct.productName,
+      price: currentProduct.productPrice,
+      hasImages: Array.isArray(currentProduct.productImages),
+      imageCount: currentProduct.productImages?.length,
+    },
+    images: productImages,
+  });
 
   return (
     <div className="preview_container flex justify-center items-center lg:flex-row flex-col-reverse gap-10 w-full xl:px-16 2xl:px-20 max-w-[2100px] mx-auto">

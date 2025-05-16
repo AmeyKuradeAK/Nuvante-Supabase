@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,67 +14,142 @@ import Sidebar from "@/components/Sidebar";
 import axios from "axios";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useUser } from "@clerk/nextjs";
+import Alert from "@/components/Alert";
 
 const logo = "/logo.png";
 
+interface ProfileResponse {
+  firstName: string;
+  lastName: string;
+  address: string;
+  wishlist: string[];
+  cart: string[];
+}
+
+interface AlertState {
+  show: boolean;
+  message: string;
+  type: "success" | "error";
+}
+
 const Page = () => {
+  const { isSignedIn } = useUser();
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [globalEmail, setGlobalEmail] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
+  const [alert, setAlert] = useState<AlertState>({
+    show: false,
+    message: "",
+    type: "success",
+  });
 
-  const custom_propagation_flow = async () => {
+  const showAlert = useCallback((message: string, type: "success" | "error") => {
+    setAlert({ show: true, message, type });
+  }, []);
+
+  const hideAlert = useCallback(() => {
+    setAlert((prev) => ({ ...prev, show: false }));
+  }, []);
+
+  const custom_propagation_flow = useCallback(async () => {
     try {
-      const response = await axios.get("/api/propagation_client/");
-      const data = response.data;
-      if (data?.firstName || data?.lastName || data?.address) {
-        setFirstName(data.firstName ?? "");
-        setLastName(data.lastName ?? "");
-        setAddress(data.address ?? "");
+      const response = await axios.get<ProfileResponse>("/api/propagation_client/");
+      if (response.status === 200 && response.data) {
+        setFirstName(response.data.firstName || "");
+        setLastName(response.data.lastName || "");
+        setAddress(response.data.address || "");
         setLoaded(true);
       } else {
-        throw new Error("Invalid data format");
+        throw new Error("Invalid response format");
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-      alert("There was an error fetching the profile. Please try refreshing");
+      showAlert("There was an error fetching the profile. Please try refreshing", "error");
       setLoaded(false);
     }
-  };
+  }, [showAlert]);
 
-  const fetch_current_email = async () => {
+  const fetch_current_email = useCallback(async () => {
     try {
-      const response = await axios.get("/api/emailify/");
-      setGlobalEmail(response.data ?? "");
+      const response = await axios.get<string>("/api/emailify/");
+      if (response.status === 200) {
+        setGlobalEmail(response.data || "");
+      }
     } catch (error) {
       console.error("Error fetching email:", error);
+      showAlert("Failed to fetch email", "error");
     }
-  };
+  }, [showAlert]);
 
-  const lazily_update_database = async () => {
+  const lazily_update_database = useCallback(async () => {
     try {
+      // First get the current email
+      const emailResponse = await axios.get<string>("/api/emailify/");
+      if (emailResponse.status !== 200) {
+        throw new Error("Failed to get user email");
+      }
+
+      // Optimistically update the UI
+      const originalFirstName = firstName;
+      const originalLastName = lastName;
+      const originalAddress = address;
+
       const response = await axios.post("/api/populate/", {
-        firstName,
-        lastName,
-        password: "existing",
-        address,
-        email: "existing",
+        email: emailResponse.data,
+        first_name: firstName,
+        last_name: lastName,
+        address: address,
       });
-      console.log("modifying the database in page.tsx (Profile)\n", response);
+
+      if (response.status === 200) {
+        showAlert("Profile updated successfully!", "success");
+      } else {
+        // Revert optimistic update on failure
+        setFirstName(originalFirstName);
+        setLastName(originalLastName);
+        setAddress(originalAddress);
+        throw new Error("Failed to update profile");
+      }
     } catch (error) {
       console.error("Error saving profile changes:", error);
+      showAlert("Failed to save profile changes. Please try again.", "error");
+      // Refresh the profile data to ensure consistency
+      await custom_propagation_flow();
     }
-  };
+  }, [firstName, lastName, address, custom_propagation_flow, showAlert]);
 
   useEffect(() => {
-    fetch_current_email();
-    custom_propagation_flow();
-  }, []);
+    if (isSignedIn) {
+      fetch_current_email();
+      custom_propagation_flow();
+    }
+  }, [isSignedIn, fetch_current_email, custom_propagation_flow]);
+
+  if (!isSignedIn) {
+    return (
+      <div>
+        <Navbar />
+        <div className="flex justify-center items-center h-[80vh]">
+          <p>Please sign in to view your profile.</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <>
       <Navbar />
+      {alert.show && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onClose={hideAlert}
+        />
+      )}
       <div className="p-4">
         <div className="mt-6 ml-4 lg:ml-32">
           <Breadcrumb>
@@ -119,7 +194,7 @@ const Page = () => {
               <div className="mt-8 lg:mt-[40px] ml-4 lg:ml-[80px] h-[28px] w-[155px]">
                 <h1 className="font-medium text-[#DB4444]">Edit Your Profile</h1>
               </div>
-              <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-full lg:w-[710px] h-auto lg:h-[82px] mt-8">
+              <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] mt-8">
                 <div className="w-full lg:w-[330px] h-[62px]">
                   <h1 className="font-normal">First Name</h1>
                   <input
@@ -141,7 +216,7 @@ const Page = () => {
                   />
                 </div>
               </div>
-              <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-auto lg:w-[710px] h-auto lg:h-[82px] mt-8">
+              <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] mt-8">
                 <div className="w-full lg:w-[330px] h-[62px]">
                   <h1 className="font-normal">Email</h1>
                   <input

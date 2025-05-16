@@ -35,7 +35,7 @@ export default function Suggestion() {
         .map((product: any, index: any) => (
           <Card
             key={index}
-            id={product._id}
+            id="f43ce2c2-99f3-4b6a-9acc-1ef48a157176"
             src={product.productImages[0]}
             productName={product.productName}
             productPrice={product.productPrice}

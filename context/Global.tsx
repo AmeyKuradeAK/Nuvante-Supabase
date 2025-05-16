@@ -7,7 +7,7 @@ import { useUser } from "@clerk/nextjs";
 interface GlobalContextType {
   GlobalWishlist: string[];
   GlobalCart: string[];
-  changeGlobalWishlist: (updatedWishlist: string[]) => Promise<void>;
+  changeGlobalWishlist: (updatedWishlist: string[] | string, append?: boolean) => Promise<void>;
   changeGlobalCart: (identifier: string, append: boolean) => Promise<void>;
 }
 
@@ -46,9 +46,26 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
     }
   }, [isSignedIn]);
 
-  const changeGlobalWishlist = async (updatedWishlist: string[]) => {
+  const changeGlobalWishlist = async (updatedWishlist: string[] | string, append?: boolean) => {
     try {
-      await axios.post("/api/wishlist", { wishlist: updatedWishlist });
+      if (typeof updatedWishlist === 'string') {
+        // Handle single item update
+        const currentWishlist = [...GlobalWishlist];
+        if (append) {
+          if (!currentWishlist.includes(updatedWishlist)) {
+            currentWishlist.push(updatedWishlist);
+          }
+        } else {
+          const index = currentWishlist.indexOf(updatedWishlist);
+          if (index > -1) {
+            currentWishlist.splice(index, 1);
+          }
+        }
+        setGlobalWishlist(currentWishlist);
+      } else {
+        // Handle array update
+        setGlobalWishlist(updatedWishlist);
+      }
       await fetchClientData();
     } catch (error) {
       console.error("Error updating wishlist:", error);
