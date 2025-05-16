@@ -29,7 +29,7 @@ export default function Arrivals({ fragment }: mainProp) {
           </Link> */}
         </div>
         <div className="flex flex-col gap-12 w-fit mx-auto">
-          <div className="cards flex flex-wrap sm:gap-x-6 2xl:gap-x-16 gap-x-4 sm:w-auto sm:justify-center justify-center w-[100%] gap-y-16">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 w-full">
             {fragment.map((product, index) => (
               <Card
                 key={product.id}

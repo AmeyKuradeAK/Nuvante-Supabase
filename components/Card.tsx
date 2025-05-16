@@ -200,11 +200,11 @@ export default function Card({
               : "Add to cart"}
           </button>
         </div>
-        <div className="flex flex-col gap-2">
-          <h1 className="font-extrabold text-black">{productName}</h1>
+        <div className="card-details flex flex-col gap-3 text-center uppercase">
+          <h1 className="font-extrabold text-black text-lg sm:text-xl md:text-2xl line-clamp-2">{productName}</h1>
           <div className="flex gap-2 text-center mx-auto w-fit uppercase">
-            <h1 className="text-[#DB4444] font-extrabold">Rs. {productPrice}</h1>
-            <h1 className="line-through text-gray-500 font-extrabold">
+            <h1 className="text-[#DB4444] font-extrabold text-base sm:text-lg md:text-xl">Rs. {productPrice}</h1>
+            <h1 className="line-through text-gray-500 font-extrabold text-sm sm:text-base md:text-lg">
               Rs. {cancelledPrice}
             </h1>
           </div>

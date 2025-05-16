@@ -11,6 +11,21 @@ import "keen-slider/keen-slider.min.css";
 
 const logo = "/logo.png";
 
+interface ProductResponse {
+  id: string;
+  product_name: string;
+  product_price: number;
+  product_images: string[] | string | Record<string, string>;
+  cancelled_product_price: number;
+  latest: boolean;
+  description: string;
+  materials: string;
+  packaging: string;
+  shipping: string;
+  product_info: string;
+  type: string;
+}
+
 const Preview = () => {
   const { slug } = useParams();
   const [currentProduct, setCurrentProduct] = useState<any>(null);
@@ -66,7 +81,7 @@ const Preview = () => {
     }
     try {
       console.log("Fetching product with ID:", id); // Debug log
-      const { data } = await axios.post(`/api/propagation`, {
+      const { data } = await axios.post<ProductResponse>(`/api/propagation`, {
         id,
         every: false,
       });
@@ -81,10 +96,10 @@ const Preview = () => {
 
       // Log the structure of the received data
       console.log("Data structure:", {
-        hasName: !!(data as any).product_name,
-        hasPrice: !!(data as any).product_price,
-        hasImages: !!(data as any).product_images,
-        imageCount: Array.isArray((data as any).product_images) ? (data as any).product_images.length : 0,
+        hasName: !!data.product_name,
+        hasPrice: !!data.product_price,
+        hasImages: !!data.product_images,
+        imageCount: Array.isArray(data.product_images) ? data.product_images.length : 0,
         allFields: Object.keys(data),
       });
 
@@ -92,35 +107,35 @@ const Preview = () => {
       let images: string[] = [];
       try {
         // If product_images is a string (JSON string), parse it
-        if (typeof (data as any).product_images === 'string') {
-          images = JSON.parse((data as any).product_images);
+        if (typeof data.product_images === 'string') {
+          images = JSON.parse(data.product_images);
         } 
         // If it's already an array, use it directly
-        else if (Array.isArray((data as any).product_images)) {
-          images = (data as any).product_images;
+        else if (Array.isArray(data.product_images)) {
+          images = data.product_images;
         }
         // If it's an object, try to convert it to an array
-        else if (typeof (data as any).product_images === 'object') {
-          images = Object.values((data as any).product_images);
+        else if (typeof data.product_images === 'object') {
+          images = Object.values(data.product_images);
         }
       } catch (error) {
         console.error("Error parsing product_images:", error);
         images = [];
       }
 
-      console.log("Processed images:", images); // Debug log
+      console.log("Processed images:", images);
       
       // Transform the data to match the expected structure
       const transformedData = {
-        productName: (data as any).product_name || '',
-        productPrice: String((data as any).product_price || 0),
-        cancelledProductPrice: String((data as any).cancelled_product_price || 0),
-        productInfo: (data as any).product_info || '',
+        productName: data.product_name || '',
+        productPrice: String(data.product_price || 0),
+        cancelledProductPrice: String(data.cancelled_product_price || 0),
+        productInfo: data.product_info || '',
         productImages: images,
-        description: (data as any).description || '',
-        materials: (data as any).materials || '',
-        packaging: (data as any).packaging || '',
-        shippingandreturns: (data as any).shipping || '',
+        description: data.description || '',
+        materials: data.materials || '',
+        packaging: data.packaging || '',
+        shippingandreturns: data.shipping || '',
       };
       
       // Set the states
