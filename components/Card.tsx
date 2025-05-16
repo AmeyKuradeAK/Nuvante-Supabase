@@ -112,11 +112,7 @@ export default function Card({
       });
 
       if (response.status === 200) {
-        const updatedCart = isPresent
-          ? GlobalCart.filter((item) => item !== id)
-          : [...GlobalCart, id];
-
-        changeGlobalCart(updatedCart);
+        await changeGlobalCart(id, !isPresent);
         showAlert(
           isPresent ? "Removed from cart" : "Added to cart",
           "success"
