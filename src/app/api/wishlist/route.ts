@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { Database } from '@/types/supabase';
+import { Database } from '@/src/types/supabase';
 
 interface WishlistItem {
   id: string;
@@ -21,7 +21,7 @@ interface WishlistItem {
 
 export async function GET() {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -65,11 +65,11 @@ export async function GET() {
     if (wishlistError) throw wishlistError;
 
     // Transform the data to match the expected format
-    const transformedWishlistItems = wishlistItems.map((item: WishlistItem) => ({
+    const transformedWishlistItems = wishlistItems.map((item: any) => ({
       id: item.id,
       createdAt: item.created_at,
       productId: item.product_id,
-      product: item.products
+      product: Array.isArray(item.products) ? item.products[0] : item.products
     }));
 
     return NextResponse.json(transformedWishlistItems);
@@ -84,7 +84,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -160,7 +160,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

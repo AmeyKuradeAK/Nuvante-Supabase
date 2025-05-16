@@ -25,8 +25,9 @@ export const GlobalContextProvider = ({ children }: { children: React.ReactNode 
       });
 
       if (response.status === 200) {
-        setGlobalWishlist(response.data.wishlist || []);
-        setGlobalCart(response.data.cart || []);
+        const data = response.data as { wishlist?: string[]; cart?: string[] };
+        setGlobalWishlist(data.wishlist || []);
+        setGlobalCart(data.cart || []);
       } else if (response.status === 404) {
         console.warn("No client data found at /api/propagation_client (likely first-time user).");
       } else {
