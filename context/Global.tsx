@@ -8,7 +8,7 @@ interface GlobalContextType {
   GlobalWishlist: string[];
   GlobalCart: string[];
   changeGlobalWishlist: (updatedWishlist: string[]) => void;
-  changeGlobalCart: (element: any) => void;
+  changeGlobalCart: (element: string) => void;
 }
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN;
@@ -16,6 +16,11 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN;
 export const GlobalContext = createContext<GlobalContextType | undefined>(
   undefined
 );
+
+interface ApiResponse {
+  wishlist: string[];
+  cart: string[];
+}
 
 export const GlobalContextProvider = ({
   children,
@@ -27,64 +32,58 @@ export const GlobalContextProvider = ({
 
   const { isSignedIn, user } = useUser();
 
-  const changeGlobalWishlist = (updatedWishlist: string[]) => {
-    setGlobalWishlist([...updatedWishlist]);
-    (async () => {
-      try {
-        const response = await axios.get(`/api/propagation_client`);
-        if (response.data === 404) {
-          alert(
-            "Context error 404, error getting the wishlist data to the database."
-          );
-        } else {
-          setGlobalWishlist(response.data.wishlist);
-          setGlobalCart(response.data.cart || []);
-        }
-      } catch (error) {
-        console.error("Error updating wishlist:", error);
-      }
-    })();
-  };
-
-  const changeGlobalCart = (element: any) => {
-    setGlobalCart([...GlobalCart, element]);
-    (async () => {
-      try {
-        const response = await axios.get(`/api/propagation_client`);
-        if (response.data === 404) {
-          alert(
-            "Context error 404, error getting the cart data to the database."
-          );
-        } else {
-          setGlobalWishlist(response.data.wishlist);
-          setGlobalCart(response.data.cart || []);
-        }
-      } catch (error) {
-        console.error("Error updating cart:", error);
-      }
-    })();
-  };
-
   useEffect(() => {
     if (isSignedIn) {
-      // Ensure isSignedIn is true before making API calls
       (async () => {
         try {
-          const response = await axios.get(`/api/propagation_client`);
-          if (response.data === 404) {
-            alert(
-              "Context error 404, error getting initial data from the database."
-            );
-          } else {
-            setGlobalWishlist(response.data.wishlist || []);
-            setGlobalCart(response.data.cart || []);
-          }
+          const response = await axios.get<ApiResponse>(`/api/propagation_client`);
+          const { wishlist = [], cart = [] } = response.data;
+          setGlobalWishlist(wishlist);
+          setGlobalCart(cart);
         } catch (error) {
           console.error("Error fetching initial data:", error);
+          setGlobalWishlist([]);
+          setGlobalCart([]);
+        }
+      })();
+    } else {
+      // Reset state when user is not signed in
+      setGlobalWishlist([]);
+      setGlobalCart([]);
+    }
+  }, [isSignedIn]);
+
+  const changeGlobalWishlist = (updatedWishlist: string[]) => {
+    setGlobalWishlist(updatedWishlist);
+    if (isSignedIn) {
+      (async () => {
+        try {
+          const response = await axios.get<ApiResponse>(`/api/propagation_client`);
+          const { wishlist = [], cart = [] } = response.data;
+          setGlobalWishlist(wishlist);
+          setGlobalCart(cart);
+        } catch (error) {
+          console.error("Error updating wishlist:", error);
         }
       })();
     }
-  }, [isSignedIn]); // Add isSignedIn as a dependency
+  };
+
+  const changeGlobalCart = (element: string) => {
+    setGlobalCart([...GlobalCart, element]);
+    if (isSignedIn) {
+      (async () => {
+        try {
+          const response = await axios.get<ApiResponse>(`/api/propagation_client`);
+          const { wishlist = [], cart = [] } = response.data;
+          setGlobalWishlist(wishlist);
+          setGlobalCart(cart);
+        } catch (error) {
+          console.error("Error updating cart:", error);
+        }
+      })();
+    }
+  };
 
   return (
     <GlobalContext.Provider

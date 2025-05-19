@@ -7,9 +7,10 @@ import Link from "next/link";
 import { useSignIn } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
+import { useAlert } from "@/context/AlertContext";
+import { motion } from "framer-motion";
 
 const sideImg = "/Side-Image.jpg";
-const googleLogo = "/Icon-Google.png";
 
 type Props = {};
 
@@ -17,114 +18,165 @@ const page = (props: Props) => {
   const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
   const router = useRouter();
   const user = useUser();
-  // console.log(user);
+  const { showAlert } = useAlert();
 
-  // Handle the submission of the sign-in form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!isLoaded) return;
 
-    // Start the sign-in process using the email and password provided
+    setIsLoading(true);
     try {
-      const signInAttempt = await signIn.create({
+      const result = await signIn.create({
         identifier: email,
         password,
       });
 
-      // If sign-in process is complete, set the created session as active
-      // and redirect the user
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
+      if (result.status === "complete") {
+        await setActive({ session: result.createdSessionId });
+        showAlert("Successfully signed in!", "success");
         router.push("/");
       } else {
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
-        console.error(JSON.stringify(signInAttempt, null, 2));
+        console.error(JSON.stringify(result, null, 2));
+        showAlert("Sign in process incomplete", "error");
       }
     } catch (err: any) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.log(JSON.parse(JSON.stringify(err)));
-      // console.log(JSON.stringify(err, null, 2));
-      alert(err.errors[0].message);
+      console.error(err);
+      showAlert(err.errors[0].message, "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {!user.isSignedIn && (
-        <div>
+        <>
           <Navbar />
-          <div className="flex flex-col xl:flex-row xl:h-[781px] mx-auto xl:w-[1305px] xl:items-center xl:justify-around xl:mt-12 items-center">
-            <div>
-              <Image src={sideImg} alt="side-image" height={400} width={700} />
-            </div>
-            <div className="h-auto w-full max-w-[371px] flex flex-col justify-between items-center">
-              <div className="text-left xl:text-left">
-                <h1 className="text-[36px] xl:text-[36px] font-medium">
-                  Log In to Nuvante
-                </h1>
-                <p className="font-normal text-left text-sm pt-5">
-                  Enter your details here
-                </p>
-              </div>
-              <div className="w-full xl:w-[370px] flex flex-col xl:justify-between items-center mt-5">
-                <input
-                  className="h-[32px] w-full bg-transparent border-b border-black mt-3"
-                  placeholder="Email or Phone number"
-                  onChange={(e) => setEmail(e.target.value)}
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={email}
+          <div className="max-w-7xl mx-auto px-4 py-12">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+              {/* Left Side - Image */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full lg:w-1/2"
+              >
+                <Image
+                  src={sideImg}
+                  alt="side-image"
+                  height={600}
+                  width={800}
+                  className="rounded-2xl shadow-xl"
                 />
-                <input
-                  className="h-[32px] w-full bg-transparent border-b border-black mt-3"
-                  placeholder="Password"
-                  onChange={(e) => setPassword(e.target.value)}
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={password}
-                />
-              </div>
-              <div className="flex flex-col xl:flex-row items-center justify-between w-full max-w-[370px] mt-5">
-                <button
-                  className="h-[56px] w-[143px] bg-[#DB4444] text-white"
-                  onClick={handleSubmit}
-                >
-                  Log In
-                </button>
-                <button
-                  className="text-[#DB4444]"
-                  onClick={() => {
-                    router.push("/forgot");
-                  }}
-                >
-                  Forgot Password?
-                </button>
-              </div>
-              <p className="text-center mt-3">
-                Not yet registered?{" "}
-                <Link className="border-b border-black" href="/sign-up">
-                  Sign Up
-                </Link>
-              </p>
+              </motion.div>
+
+              {/* Right Side - Form */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="w-full lg:w-1/2 max-w-md"
+              >
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+                    <p className="text-gray-600">Sign in to your account</p>
+                  </div>
+
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        Email
+                      </label>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
+                        placeholder="Enter your email"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                      </label>
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
+                        placeholder="Enter your password"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end">
+                      <Link
+                        href="/forgot-password"
+                        className="text-sm text-[#DB4444] hover:text-[#c13a3a] transition-colors"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full bg-[#DB4444] text-white py-3 px-4 rounded-lg hover:bg-[#c13a3a] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
+                    >
+                      {isLoading ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Signing in...
+                        </>
+                      ) : (
+                        "Sign In"
+                      )}
+                    </button>
+
+                    <div className="text-center mt-6">
+                      <p className="text-gray-600">
+                        Don't have an account?{" "}
+                        <Link href="/sign-up" className="text-[#DB4444] hover:text-[#c13a3a] transition-colors font-medium">
+                          Sign Up
+                        </Link>
+                      </p>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
             </div>
           </div>
           <Footer />
-        </div>
+        </>
       )}
 
       {user.isSignedIn && (
-        <div>
-          <h1 className="text-2xl m-10">You are already signed in</h1>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold text-gray-900 mb-4">You are already signed in</h1>
+            <button
+              onClick={() => router.push("/")}
+              className="text-[#DB4444] hover:text-[#c13a3a] transition-colors"
+            >
+              Go to Home
+            </button>
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

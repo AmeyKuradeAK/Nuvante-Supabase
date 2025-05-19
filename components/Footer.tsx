@@ -23,7 +23,7 @@ export default function Footer() {
             our passion, enabling you to flaunt the classiest products and
             services available. Discover your next favorite today!
           </p>
-          <div className="flex items-center border w-fit border-white rounded-md overflow-hidden">
+          <div className="flex items-center border w-fit border-white rounded-md overflow-hidden hidden">
             <input
               type="email"
               placeholder="Enter your email"

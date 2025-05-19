@@ -1,221 +1,206 @@
 "use client";
 import React from "react";
 import Footer from "@/components/Footer";
-import Header from "@/components/Header";
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
 import Link from "next/link";
 import { useSignUp } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useClerk } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
+import { useAlert } from "@/context/AlertContext";
+import { motion } from "framer-motion";
 import axios from "axios";
 
+// Move static assets outside component
 const sideImg = "/Side-Image.jpg";
-const googleLogo = "/Icon-Google.png";
 
-type Props = {};
+// Memoize the form component
+const SignUpForm = React.memo(({ onSubmit, isLoading }: { onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>, isLoading: boolean }) => (
+  <form onSubmit={onSubmit} className="space-y-6">
+    <div>
+      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+        Full Name
+      </label>
+      <input
+        id="name"
+        name="name"
+        type="text"
+        required
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
+        placeholder="Enter your full name"
+      />
+    </div>
 
-const domain = process.env.NEXT_PUBLIC_DOMAIN;
+    <div>
+      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        Email
+      </label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        required
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
+        placeholder="Enter your email"
+      />
+    </div>
 
-const page = (props: Props) => {
-  const { signOut } = useClerk();
-  const [name, setName] = React.useState("");
+    <div>
+      <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+        Password
+      </label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        required
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
+        placeholder="Create a password"
+      />
+    </div>
+
+    <button
+      type="submit"
+      disabled={isLoading}
+      className="w-full bg-[#DB4444] text-white py-3 px-4 rounded-lg hover:bg-[#c13a3a] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
+    >
+      {isLoading ? (
+        <>
+          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Creating account...
+        </>
+      ) : (
+        "Create Account"
+      )}
+    </button>
+
+    <div className="text-center mt-6">
+      <p className="text-gray-600">
+        Already have an account?{" "}
+        <Link href="/sign-in" className="text-[#DB4444] hover:text-[#c13a3a] transition-colors font-medium">
+          Sign In
+        </Link>
+      </p>
+    </div>
+  </form>
+));
+
+SignUpForm.displayName = 'SignUpForm';
+
+const SignUpPage = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
-  const [emailAddress, setEmailAddress] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [verifying, setVerifying] = React.useState(false);
-  const [code, setCode] = React.useState("");
   const router = useRouter();
+  const { showAlert } = useAlert();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const user = useUser();
 
-  // Handle submission of the sign-up form
-  const handleSubmit = async (e: React.FormEvent) => {
-    console.log(name, emailAddress, password, verifying, code);
+  const handleSubmit = React.useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (!isLoaded) return;
 
-    // Start the sign-up process using the email and password provided
+    setIsLoading(true);
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const name = formData.get("name") as string;
+
     try {
-      await signUp.create({
-        emailAddress,
+      const signUpAttempt = await signUp.create({
+        emailAddress: email,
         password,
       });
 
-      // Send the user an email with the verification code
-      await signUp.prepareEmailAddressVerification({
-        strategy: "email_code",
-      });
-
-      // Set 'verifying' true to display second form
-      // and capture the OTP code
-      setVerifying(true);
-    } catch (err: any) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error(JSON.stringify(err, null, 2));
-    }
-  };
-
-  // Handle the submission of the verification form
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!isLoaded) return;
-
-    try {
-      // Use the code the user provided to attempt verification
-      const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code,
-      });
-
-      // If verification was completed, set the session to active
-      // and redirect the user
-      if (signUpAttempt.status === "complete") {
-        const response = await axios
-          .post(`/api/populate/`, {
-            firstName: name.split(" ")[0],
-            lastName: name.split(" ")[1],
-            password: password,
-            address: "xyz road",
-            email: emailAddress,
-          })
-          .then(async (data) => {
-            if (data.data === "Success") {
-              await setActive({
-                session: signUpAttempt.createdSessionId,
-                redirectUrl: "/Profile",
-              });
-            }
-          });
-
-        console.log("couldn't generate active session");
-        alert("Couldn't generate active session, please sign up again");
-        router.push("/sign-up");
-
-        // if (response.data === "success") {
-        //   await setActive({
-        //     session: signUpAttempt.createdSessionId,
-        //     redirectUrl: "/Profile",
-        //   });
-        // } else {
-        //   alert(
-        //     "That process failed because the database couldn't process the sign-up info."
-        //   );
-        //   signOut({ redirectUrl: "/sign-up" });
-        // }
-      } else {
-        alert(
-          "That process failed because connection to @clerkjs was not established."
-        );
-        // If the status is not complete, check why. User may need to
-        // complete further steps.
-        console.error(JSON.stringify(signUpAttempt, null, 2));
+      if (signUpAttempt.status === "missing_requirements") {
+        await signUpAttempt.prepareEmailAddressVerification();
+        showAlert("Please check your email for a verification code", "info");
+        router.push("/verify");
+        return;
       }
-    } catch (err: any) {
-      // See https://clerk.com/docs/custom-flows/error-handling
-      // for more info on error handling
-      console.error("Error:", JSON.stringify(err, null, 2));
-    }
-  };
 
-  if (verifying) {
+      await signUpAttempt.update({
+        firstName: name,
+      });
+
+      await setActive({ session: signUpAttempt.createdSessionId });
+
+      try {
+        await axios.post("/api/populate/", {
+          firstName: name,
+          lastName: "",
+          password,
+          email,
+          address: "Default Address",
+        });
+        showAlert("Account created successfully!", "success");
+        router.push("/");
+      } catch (error) {
+        console.error("Error populating database:", error);
+        showAlert("Account created but database population failed", "warning");
+      }
+    } catch (error: any) {
+      console.error("Error during sign up:", error);
+      showAlert(error.message || "Something went wrong", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoaded, signUp, setActive, router, showAlert]);
+
+  if (user.isSignedIn) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-100 p-4">
-        <h1 className="text-2xl font-semibold mb-6 text-gray-800">
-          Verify Your Email
-        </h1>
-        <form
-          className="flex flex-col items-center gap-4 w-full max-w-md bg-white p-6 rounded-lg shadow-lg"
-          onSubmit={handleVerify}
-        >
-          <label htmlFor="code" className="text-gray-600 text-sm">
-            Enter your verification code
-          </label>
-          <input
-            type="text"
-            value={code}
-            id="code"
-            name="code"
-            onChange={(e) => setCode(e.target.value)}
-            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-4">You are already signed in</h1>
           <button
-            type="submit"
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            onClick={() => router.push("/")}
+            className="text-[#DB4444] hover:text-[#c13a3a] transition-colors"
           >
-            Verify
+            Go to Home
           </button>
-        </form>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
-      <div className="flex flex-col xl:flex-row xl:h-[781px] xl:w-[1305px] xl:items-center xl:justify-around xl:mt-12 items-center">
-        <div>
-          <Image src={sideImg} alt="side-image" height={400} width={600} />
-        </div>
-        <div className="h-auto w-full max-w-[371px] flex flex-col justify-between items-center">
-          <div className="text-left xl:text-left">
-            <h1 className="text-[36px] xl:text-[36px] font-medium">
-              Create an Account
-            </h1>
-            <p className="font-normal text-left text-sm pt-5">
-              Enter your details here
-            </p>
-          </div>
-          <div className="w-full xl:w-[370px] flex flex-col xl:justify-between items-center mt-5">
-            <input
-              className="h-[32px] w-full bg-transparent border-b border-black mt-3"
-              type="text"
-              placeholder="Enter full name"
-              onChange={(e) => setName(e.target.value)}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="w-full lg:w-1/2"
+          >
+            <Image
+              src={sideImg}
+              alt="side-image"
+              height={600}
+              width={800}
+              className="rounded-2xl shadow-xl"
+              priority
+              quality={75}
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
-            <input
-              className="h-[32px] w-full bg-transparent border-b border-black mt-3"
-              id="email"
-              type="email"
-              name="email"
-              value={emailAddress}
-              onChange={(e) => setEmailAddress(e.target.value)}
-              placeholder="Enter your email"
-            />
-            <input
-              className="h-[32px] w-full bg-transparent border-b border-black mt-3"
-              id="password"
-              type="password"
-              name="password"
-              value={password}
-              placeholder="Enter your password"
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col items-center justify-between w-full max-w-[370px] mt-5">
-            <button
-              className="h-[56px] w-full bg-[#DB4444] text-white"
-              onClick={handleSubmit}
-            >
-              Create Account
-            </button>
-            {/* <button className="h-[56px] w-full mt-3 flex flex-row items-center justify-center border border-black">
-              <Image
-                className="mr-3"
-                src={googleLogo}
-                alt="google"
-                height={24}
-                width={24}
-              />
-              <p className="font-normal">Sign up with Google</p> */}
-            {/* </button> */}
-            <p className="text-center mt-3">
-              Already have an account?{" "}
-              <Link className="border-b border-black" href="/sign-in">
-                Login in
-              </Link>
-            </p>
-          </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="w-full lg:w-1/2 max-w-md"
+          >
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
+                <p className="text-gray-600">Join Nuvante today</p>
+              </div>
+              <SignUpForm onSubmit={handleSubmit} isLoading={isLoading} />
+            </div>
+          </motion.div>
         </div>
       </div>
       <Footer />
@@ -223,4 +208,4 @@ const page = (props: Props) => {
   );
 };
 
-export default page;
+export default SignUpPage;

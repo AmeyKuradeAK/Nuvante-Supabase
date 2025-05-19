@@ -4,6 +4,7 @@ import "./globals.css";
 import connect from "@/db";
 import { ClerkProvider } from "@clerk/nextjs";
 import { GlobalContextProvider } from "@/context/Global";
+import { AlertProvider } from "@/context/AlertContext";
 
 //? an inline function to connect to mongodb atlas using mongoose.
 (async () => {
@@ -57,16 +58,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider dynamic>
-      <GlobalContextProvider>
-        <html lang="en">
-          <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-          >
-            {children}
-          </body>
-        </html>
-      </GlobalContextProvider>
-    </ClerkProvider>
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ClerkProvider>
+          <GlobalContextProvider>
+            <AlertProvider>
+              {children}
+            </AlertProvider>
+          </GlobalContextProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

@@ -6,36 +6,30 @@ import axios from "axios";
 import { GlobalContext } from "@/context/Global";
 import Button from "@/components/button";
 import { motion } from "framer-motion";
+import { useAlert } from "@/context/AlertContext";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 const logo = "/logo.png";
 
-const CartTotal = ({ subtotal }: { subtotal: number }) => {
-  return (
-    <div className=" rounded-md p-10 w-full md:w-80 sm:m-0 m-auto border-4 border-black flex flex-col gap-3 ">
-      <h2 className="text-lg font-semibold mb-4">Cart Total</h2>
-      <div className="flex justify-between mb-2">
-        <span>Subtotal:</span>
-        <span>Rs. {subtotal}</span>
-      </div>
-      <div className="flex justify-between mb-4">
-        <span>Shipping:</span>
-        <span>Free</span>
-      </div>
-      <div className="flex justify-between font-semibold text-lg">
-        <span>Total:</span>
-        <span>Rs. {subtotal}</span>
-      </div>
-      <div className="w-[90%] sm:w-[250px]">
-        <Button text="Proceed to Checkout" width={250} />
-      </div>
-    </div>
-  );
-};
+interface Product {
+  _id: string;
+  productName: string;
+  productPrice: number;
+  productImages: string[];
+}
 
 const CartPage = () => {
-  const [morphedProducts, setMorphedProducts] = useState<any[]>([]);
+  const [morphedProducts, setMorphedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const { showAlert } = useAlert();
 
   const context = useContext(GlobalContext);
   if (!context) {
@@ -47,22 +41,22 @@ const CartPage = () => {
   const asyncHandler = async () => {
     try {
       const response = await axios
-        .post(`/api/propagation`, {
+        .post<Product[]>(`/api/propagation`, {
           every: true,
         })
         .then((res) => {
-          if (res.data === 404) {
-            alert(
-              "there was an error fetching cart products, please try again after refreshing the page."
-            );
-            alert("redirecting to home page.");
-            window.location.href = "/";
+          if (res.status === 404) {
+            showAlert("Error fetching cart products. Please try again.", "error");
+            setTimeout(() => {
+              window.location.href = "/";
+            }, 2000);
           } else {
-            setMorphedProducts(res.data === null ? [] : res.data);
+            setMorphedProducts(res.data || []);
           }
         });
     } catch (error) {
       console.error("Error fetching products:", error);
+      showAlert("Error loading cart. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -87,28 +81,35 @@ const CartPage = () => {
   };
 
   const handleRemoveItem = async (id: string) => {
-    console.log(`Remove item with ID: ${id}`);
-    const response = await axios
-      .post(`/api/cart`, {
+    try {
+      const response = await axios.post(`/api/cart`, {
         append: false,
         identifier: id,
-      })
-      .then((res) => {
-        if (res.data === 404) {
-          alert("There was a problem setting data in the context.");
-        } else if (res.data === 200) {
-          changeGlobalCart((prevGlobalCart: any) => {
-            return prevGlobalCart.filter((element: any) => {
-              element != id;
-            });
-          });
-        }
       });
+      
+      if (response.data === 200) {
+        const updatedCart = GlobalCart.filter((element: string) => element !== id);
+        changeGlobalCart(updatedCart[0] || "");
+        showAlert("Item removed from cart", "success");
+      } else {
+        showAlert("Failed to remove item. Please try again.", "error");
+      }
+    } catch (error) {
+      console.error("Error removing item:", error);
+      showAlert("Error removing item. Please try again.", "error");
+    }
   };
+
+  const handleReturnToShop = () => {
+    window.location.href = "/";
+  };
+
+  const cartItems = morphedProducts.filter(item => GlobalCart.includes(item._id));
+  const subtotal = calculateSubtotal();
 
   return (
     <>
-      <div>
+      <div className="min-h-screen bg-gray-50">
         {loading && (
           <motion.div
             className="w-fit mx-auto mt-20"
@@ -125,125 +126,186 @@ const CartPage = () => {
         {!loading && (
           <>
             <Navbar />
-            <div className="p-4 flex justify-center">
-              <div className="flex flex-col w-[80vw] space-y-4 mt-16">
-                <div className="hidden md:flex flex-row items-center justify-between h-[72px] w-full border rounded-sm bg-white px-4">
-                  <h1 className="flex-[2] text-left">Product</h1>
-                  <h1 className="flex-[1] text-center">Price</h1>
-                  <h1 className="flex-[2] text-center">Quantity</h1>
-                  <h1 className="flex-[1] text-center">Subtotal</h1>
+            <main className="container mx-auto px-4 py-8">
+              <div className="max-w-7xl mx-auto">
+                <div className="mb-8">
+                  <Breadcrumb>
+                    <BreadcrumbList>
+                      <BreadcrumbItem>
+                        <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                      </BreadcrumbItem>
+                      <BreadcrumbSeparator />
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>Cart</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    </BreadcrumbList>
+                  </Breadcrumb>
                 </div>
 
-                {morphedProducts.map((item) => {
-                  if (!GlobalCart.includes(item._id)) return null;
-
-                  return (
-                    <div
-                      key={item._id}
-                      className="flex flex-col md:flex-row items-center justify-between border rounded-sm bg-white p-4 space-y-4 md:space-y-0"
-                    >
-                      <div className="relative flex-[2] flex items-center space-x-4">
-                        <img
-                          src={item.productImages[0]}
-                          alt={item.productName}
-                          className="w-12 h-12 object-cover rounded"
-                        />
-                        <button
-                          onClick={() => handleRemoveItem(item._id)}
-                          className="absolute top-[-16px] left-[-20px] text-red-500 bg-none rounded-[50%] p-1 hover:bg-red-100"
-                          aria-label="Remove item"
-                        >
-                          <img
-                            src="/cancel.png"
-                            alt="Remove"
-                            className="w-4 h-4 object-contain"
-                          />
-                        </button>
-                        <h1 className="text-left">{item.productName}</h1>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                  {/* Main Cart Section */}
+                  <div className="lg:col-span-8">
+                    <div className="bg-white rounded-lg shadow-sm">
+                      <div className="p-6 border-b border-gray-200">
+                        <h1 className="text-2xl font-bold">Shopping Cart ({cartItems.length} items)</h1>
                       </div>
 
-                      <h1 className="flex-[1] text-center">
-                        Rs. {item.productPrice}
-                      </h1>
+                      {cartItems.length === 0 ? (
+                        <div className="p-12 text-center">
+                          <div className="w-20 h-20 mx-auto mb-6 text-gray-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                          </div>
+                          <h2 className="text-xl font-semibold text-gray-800 mb-2">Your cart is empty</h2>
+                          <p className="text-gray-600 mb-6">Looks like you haven't added anything to your cart yet.</p>
+                          <div onClick={handleReturnToShop} className="inline-block">
+                            <Button text="Continue Shopping" width={200} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-200">
+                          {cartItems.map((item) => (
+                            <div key={item._id} className="p-6">
+                              <div className="flex flex-col md:flex-row gap-6">
+                                {/* Product Image */}
+                                <div className="w-full md:w-32 h-32 relative group">
+                                  <img
+                                    src={item.productImages[0]}
+                                    alt={item.productName}
+                                    className="w-full h-full object-cover rounded-lg transition-transform group-hover:scale-105"
+                                  />
+                                </div>
 
-                      <div className="flex-[2] flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() =>
-                            handleQuantityChange(
-                              item._id,
-                              (quantities[item._id] || 1) - 1
-                            )
-                          }
-                          className="px-2 py-1 border rounded bg-gray-200 hover:bg-gray-300"
-                        >
-                          -
-                        </button>
-                        <input
-                          type="number"
-                          value={quantities[item._id] || 1}
-                          onChange={(event) =>
-                            handleQuantityChange(
-                              item._id,
-                              parseInt(event.target.value) || 1
-                            )
-                          }
-                          className="w-12 text-center border rounded"
-                          min={1}
-                        />
-                        <button
-                          onClick={() =>
-                            handleQuantityChange(
-                              item._id,
-                              (quantities[item._id] || 1) + 1
-                            )
-                          }
-                          className="px-2 py-1 border rounded bg-gray-200 hover:bg-gray-300"
-                        >
-                          +
-                        </button>
-                      </div>
+                                {/* Product Details */}
+                                <div className="flex-1">
+                                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div>
+                                      <h3 className="text-lg font-medium text-gray-800">{item.productName}</h3>
+                                      <p className="text-sm text-gray-500 mt-1">Product ID: {item._id.slice(-6)}</p>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                      <div className="text-lg font-semibold text-[#DB4444]">
+                                        Rs. {item.productPrice}
+                                      </div>
+                                      <button
+                                        onClick={() => handleRemoveItem(item._id)}
+                                        className="text-gray-400 hover:text-[#DB4444] transition-colors"
+                                        aria-label="Remove item"
+                                      >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </div>
 
-                      <h1 className="flex-[1] text-center">
-                        Rs. {(quantities[item._id] || 1) * item.productPrice}
-                      </h1>
+                                  {/* Quantity Controls */}
+                                  <div className="mt-4 flex items-center gap-4">
+                                    <div className="flex items-center border rounded-md">
+                                      <button
+                                        onClick={() => handleQuantityChange(item._id, (quantities[item._id] || 1) - 1)}
+                                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                                      >
+                                        -
+                                      </button>
+                                      <input
+                                        type="number"
+                                        value={quantities[item._id] || 1}
+                                        onChange={(e) => handleQuantityChange(item._id, parseInt(e.target.value) || 1)}
+                                        className="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
+                                        min={1}
+                                      />
+                                      <button
+                                        onClick={() => handleQuantityChange(item._id, (quantities[item._id] || 1) + 1)}
+                                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                    <div className="text-gray-600">
+                                      Subtotal: <span className="font-semibold">Rs. {(quantities[item._id] || 1) * item.productPrice}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="flex justify-between w-[81%] mx-auto my-4">
-              <div
-                onClick={() => {
-                  window.location.href = "/";
-                }}
-                className="w-fit mx-auto"
-              >
-                <Button text="Return To Shop" width={200}></Button>
-              </div>
-            </div>
+                  </div>
 
-            <div className="flex w-[80%] mx-auto justify-center items-center  md:justify-between md:items-start mt-20 flex-col flex-wrap md:flex-row">
-              <div className="flex justify-start  my-6 w-fit">
-                <div className="flex items-center space-x-4 flex-col sm:flex-row gap-1">
-                  <input
-                    type="text"
-                    style={{
-                      height: "50px",
-                      border: "2px solid black",
-                      padding: "3px",
-                      borderRadius: "0.375rem",
-                      margin: "auto",
-                    }}
-                    placeholder="Coupon Code"
-                    className="border rounded px-4 py-2 w-64 focus:outline-none focus:ring focus:ring-red-300"
-                  />
-                  <Button text="Apply Coupon" width={150} />
+                  {/* Order Summary Section */}
+                  <div className="lg:col-span-4">
+                    <div className="sticky top-8 space-y-6">
+                      {/* Order Summary Card */}
+                      <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+                        <div className="space-y-4">
+                          <div className="flex justify-between text-gray-600">
+                            <span>Subtotal ({cartItems.length} items)</span>
+                            <span>Rs. {subtotal}</span>
+                          </div>
+                          <div className="flex justify-between text-gray-600">
+                            <span>Shipping</span>
+                            <span className="text-[#DB4444]">Free</span>
+                          </div>
+                          <div className="border-t border-gray-200 pt-4">
+                            <div className="flex justify-between font-bold text-lg">
+                              <span>Total</span>
+                              <span>Rs. {subtotal}</span>
+                            </div>
+                          </div>
+                          <div className="pt-4">
+                            <Button text="Proceed to Checkout" width={250} />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Coupon Card */}
+                      <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h3 className="text-lg font-semibold mb-4">Apply Coupon</h3>
+                        <div className="space-y-4">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Enter coupon code"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <Button text="Apply Coupon" width={250} />
+                        </div>
+                      </div>
+
+                      {/* Help Card */}
+                      <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h3 className="text-lg font-semibold mb-4">Need Help?</h3>
+                        <div className="space-y-3">
+                          <div className="flex items-center text-gray-600">
+                            <svg className="w-5 h-5 mr-2 text-[#DB4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            <span>Chat with us</span>
+                          </div>
+                          <div className="flex items-center text-gray-600">
+                            <svg className="w-5 h-5 mr-2 text-[#DB4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <span>+1 234 567 890</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex justify-center my-6 w-[90%] sm:w-fit">
-                <CartTotal subtotal={calculateSubtotal()} />
-              </div>
-            </div>
+            </main>
             <Footer />
           </>
         )}

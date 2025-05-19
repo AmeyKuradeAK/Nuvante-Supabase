@@ -19,6 +19,7 @@ import { GlobalContext } from "@/context/Global";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
+import { useAlert } from "@/context/AlertContext";
 
 /**
  * 1.Pretty exhausting function (handleBag) running in O(n^2) probably. Considering the post requests to be linear.
@@ -29,10 +30,26 @@ import { useParams } from "next/navigation";
 
 const logo = "/logo.png";
 
+interface Product {
+  _id: string;
+  productName: string;
+  productPrice: string;
+  cancelledProductPrice: string;
+  productImages: string[];
+  latest: boolean;
+}
+
+interface ApiResponse {
+  wishlist: string[];
+}
+
+type ApiResponseOr404 = ApiResponse | 404;
+
 const Page = () => {
-  const [products, setProducts] = useState([]);
-  const [currentWishlist, setCurrentWishlist] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [currentWishlist, setCurrentWishlist] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const { showAlert } = useAlert();
 
   const url_params = useParams();
 
@@ -45,75 +62,93 @@ const Page = () => {
 
   useEffect(() => {
     const propagate_data = async () => {
-      const localProducts = await axios
-        .post(`/api/propagation/`, {
-          every: true,
-        })
-        .then((response) => {
-          return response.data;
-        });
-      setProducts(localProducts);
-      const currentWishlist = await axios
-        .get(`/api/propagation_client/`)
-        .then((response) => {
-          if (response.data === 404) {
-            console.log(
-              "Couldn't get the current wishlist from the database, try refreshing the page. Developers are supposed to check /api/propagation_client"
-            );
-            return [];
-          } else {
-            return response.data.wishlist;
-          }
-        });
+      try {
+        const localProducts = await axios
+          .post<Product[]>(`/api/propagation/`, {
+            every: true,
+          })
+          .then((response) => {
+            return response.data || [];
+          });
+        setProducts(localProducts);
 
-      setCurrentWishlist(currentWishlist);
-      // TODO: remove in production.
-      setTimeout(() => {
-        setLoaded(true);
-      }, 1000);
+        const response = await axios.get<ApiResponseOr404>(`/api/propagation_client/`);
+        if (response.data === 404 || !response.data) {
+          console.error("Could not fetch wishlist data");
+          setCurrentWishlist([]);
+        } else {
+          const { wishlist = [] } = response.data;
+          setCurrentWishlist(wishlist);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setProducts([]);
+        setCurrentWishlist([]);
+      } finally {
+        setTimeout(() => {
+          setLoaded(true);
+        }, 1000);
+      }
     };
-    propagate_data();
+
+    if (GlobalWishlist) {
+      propagate_data();
+    }
   }, [GlobalWishlist]);
 
   const handleBag = async () => {
-    for (let i = 0; i < GlobalWishlist.length; ++i) {
-      if (!GlobalCart.includes(GlobalWishlist[i])) {
-        const response = await axios
-          .post(`/api/cart`, {
-            identifier: GlobalWishlist[i],
+    if (!GlobalWishlist?.length) {
+      showAlert("Your wishlist is empty", "warning");
+      return;
+    }
+
+    try {
+      let movedItems = 0;
+      for (const wishlistItem of GlobalWishlist) {
+        if (!GlobalCart?.includes(wishlistItem)) {
+          const response = await axios.post(`/api/cart`, {
+            identifier: wishlistItem,
             append: true,
-          })
-          .then((res) => {
-            if (res.data === 200) {
-              changeGlobalCart(GlobalWishlist[i]);
-              alert("Cart updated!");
-            } else {
-              alert(
-                "There was an error in updating the cart. Try refreshing the page."
-              );
-            }
           });
+          
+          if (response.data === 200) {
+            changeGlobalCart(wishlistItem);
+            movedItems++;
+          }
+        }
       }
+      
+      if (movedItems > 0) {
+        showAlert(`Successfully moved ${movedItems} items to cart`, "success");
+      } else {
+        showAlert("All items are already in your cart", "info");
+      }
+    } catch (error) {
+      console.error("Error updating cart:", error);
+      showAlert("Failed to move items to cart. Please try again.", "error");
     }
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="p-4">
-        <div className="mt-6 ml-4 xl:ml-32">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-8">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444]">Home</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Wishlist</BreadcrumbPage>
+                <BreadcrumbPage className="text-[#DB4444]">Wishlist</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
         </div>
+
+        {/* Loading State */}
         {!loaded && (
           <motion.div
             className="w-fit mx-auto mt-20"
@@ -121,51 +156,93 @@ const Page = () => {
               rotate: 360,
               transition: {
                 duration: 1.5,
+                repeat: Infinity,
+                ease: "linear"
               },
             }}
           >
             <Image src={logo} alt="preloader" width={60} height={60}></Image>
           </motion.div>
         )}
+
+        {/* Main Content */}
         {loaded && (
-          <div className="flex flex-col xl:flex-col xl:justify-between xl:w-[1170px] w-full xl:ml-28 mt-8">
-            <div className="flex flex-col xl:flex-row xl:justify-between">
-              <div>
-                <h1 className="p-5">Wishlist ({currentWishlist.length})</h1>
-              </div>
-              <div>
+          <div className="space-y-8">
+            {/* Header Section */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">My Wishlist</h1>
+                  <p className="text-gray-600 mt-1">
+                    {currentWishlist.length} {currentWishlist.length === 1 ? 'item' : 'items'} saved
+                  </p>
+                </div>
                 <button
-                  className="w-full xl:w-[223px] h-[56px] text-center border border-black"
                   onClick={handleBag}
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-colors duration-200"
                 >
-                  Move All to bag
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Move All to Cart
                 </button>
               </div>
             </div>
 
-            <div className="flex flex-col xl:flex-row gap-x-5 w-full mt-7">
-              {products.length &&
-                products.map((product: any, index: any) => {
-                  let smol: any = product._id;
-                  if (currentWishlist.includes(smol)) {
+            {/* Empty State */}
+            {currentWishlist.length === 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-lg shadow-sm p-12 text-center"
+              >
+                <div className="w-24 h-24 mx-auto mb-6 text-gray-400">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Your wishlist is empty</h3>
+                <p className="text-gray-600 mb-6">Save items you like to your wishlist to keep track of them</p>
+                <a
+                  href="/Products"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-colors duration-200"
+                >
+                  Start Shopping
+                </a>
+              </motion.div>
+            )}
+
+            {/* Products Grid */}
+            {currentWishlist.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {products.map((product: any, index: any) => {
+                  if (currentWishlist.includes(product._id)) {
                     return (
-                      <Card
-                        id={product._id}
-                        key={index}
-                        productName={product.productName}
-                        productPrice={Number(product.productPrice)}
-                        cancelledPrice={product.cancelledProductPrice}
-                        src={
-                          product.productImages[0] === undefined
-                            ? "https://fastly.picsum.photos/id/1050/536/354.jpg?hmac=fjxUSeQRIROZvo_be9xEf-vMhMutXf2F5yw-WaWyaWA"
-                            : product.productImages[0]
-                        }
-                        status={product.latest ? "new" : "old"}
-                      ></Card>
+                      <motion.div
+                        key={product._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Card
+                          id={product._id}
+                          productName={product.productName}
+                          productPrice={Number(product.productPrice)}
+                          cancelledPrice={product.cancelledProductPrice}
+                          src={
+                            product.productImages[0] === undefined
+                              ? "https://fastly.picsum.photos/id/1050/536/354.jpg?hmac=fjxUSeQRIROZvo_be9xEf-vMhMutXf2F5yw-WaWyaWA"
+                              : product.productImages[0]
+                          }
+                          status={product.latest ? "new" : "old"}
+                          isWishlist={true}
+                        />
+                      </motion.div>
                     );
                   }
                 })}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>

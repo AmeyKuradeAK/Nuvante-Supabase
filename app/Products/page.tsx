@@ -22,13 +22,13 @@ const Page = async () => {
     <div>
       <Navbar />
       <div className="p-4">
-        <div className="mt-6 ml-4 xl:ml-32">
+        <div className="mt-6 max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex flex-col gap-6">
             <div className="flex w-full justify-between items-center">
               <Heading message="Products" secondaryMessage="" />
             </div>
             <div className="flex flex-col gap-12">
-              <div className="cards flex flex-wrap sm:w-auto w-[100%] gap-y-10 gap-x-10">
+              <div className="cards grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
                 {response.map((product: any, index: number) => (
                   <Card
                     id={product.id}

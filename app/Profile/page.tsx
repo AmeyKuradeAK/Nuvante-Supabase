@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,55 +15,173 @@ import Sidebar from "@/components/Sidebar";
 import axios from "axios";
 import { useEffect } from "react";
 import Image from "next/image";
-import { motion, useAnimationControls } from "framer-motion";
+import { motion } from "framer-motion";
+import { useAlert } from "@/context/AlertContext";
+import { useRouter } from "next/navigation";
 
 const logo = "/logo.png";
 
-const Page = () => {
+type ProfileData = {
+  firstName: string;
+  lastName: string;
+  address: string;
+  email: string;
+  cart: string[];
+  wishlist: string[];
+};
+
+// Memoize the profile form component
+const ProfileForm = React.memo(({ 
+  firstName, 
+  lastName, 
+  address, 
+  email,
+  onFirstNameChange,
+  onLastNameChange,
+  onAddressChange,
+  onSave
+}: {
+  firstName: string;
+  lastName: string;
+  address: string;
+  email: string;
+  onFirstNameChange: (value: string) => void;
+  onLastNameChange: (value: string) => void;
+  onAddressChange: (value: string) => void;
+  onSave: () => Promise<void>;
+}) => (
+  <div className="flex flex-col w-auto lg:w-[870px] pb-10 rounded-sm border lg:ml-32 bg-[#FFFFFF]">
+    <div className="mt-8 lg:mt-[40px] ml-4 lg:ml-[80px] h-[28px] w-[155px]">
+      <h1 className="font-medium text-[#DB4444]">Edit Your Profile</h1>
+    </div>
+    <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-full lg:w-[710px] h-auto lg:h-[82px] mt-8">
+      <div className="w-full lg:w-[330px] h-[62px]">
+        <h1 className="font-normal">First Name</h1>
+        <input
+          className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
+          type="text"
+          placeholder="First Name"
+          value={firstName}
+          onChange={(e) => onFirstNameChange(e.target.value)}
+        />
+      </div>
+      <div className="w-full lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10">
+        <h1 className="font-normal">Last Name</h1>
+        <input
+          className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
+          type="text"
+          placeholder="Last Name"
+          value={lastName}
+          onChange={(e) => onLastNameChange(e.target.value)}
+        />
+      </div>
+    </div>
+    <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-auto lg:w-[710px] h-auto lg:h-[82px] mt-8">
+      <div className="w-full lg:w-[330px] h-[62px]">
+        <h1 className="font-normal">Email</h1>
+        <input
+          className="mt-1 lg:w-[330px] p-2 h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
+          type="text"
+          placeholder="Email"
+          value={email}
+          readOnly
+          disabled
+        />
+      </div>
+      <div className="w-auto lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10">
+        <h1 className="font-normal">Address</h1>
+        <input
+          className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
+          type="text"
+          placeholder="Address"
+          value={address}
+          onChange={(e) => onAddressChange(e.target.value)}
+        />
+      </div>
+    </div>
+    <div className="flex flex-row justify-end mt-10">
+      <button 
+        className="mr-4 lg:mr-6 text-gray-600 hover:text-gray-800 transition-colors"
+        onClick={() => window.location.reload()}
+      >
+        Cancel
+      </button>
+      <button
+        className="bg-[#DB4444] w-[250px] lg:w-[250px] h-[56px] font-medium rounded-sm text-white mr-4 lg:mr-[80px] hover:bg-[#c13a3a] transition-colors"
+        onClick={onSave}
+      >
+        Save Changes
+      </button>
+    </div>
+  </div>
+));
+
+ProfileForm.displayName = 'ProfileForm';
+
+const ProfilePage = () => {
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [address, setAddress] = useState<string>("");
-  const [globalEmail, setGlobalEmail] = useState<string>("");
-  const [loaded, setLoaded] = useState(false);
+  const [email, setEmail] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const { showAlert } = useAlert();
+  const router = useRouter();
 
-  const custom_propagation_flow = async () => {
-    const response = await axios
-      .get("/api/propagation_client/")
-      .then((data) => {
-        return data;
-      });
-
-    if (response.data != 404) {
-      setFirstName(response.data.firstName);
-      setLastName(response.data.lastName);
-      setAddress(response.data.address);
-      setLoaded(true);
-    } else {
-      alert("There was an error fetching the profile. Please try refreshing");
-      setLoaded(false);
+  const fetchProfile = useCallback(async () => {
+    try {
+      const response = await axios.get<ProfileData>("/api/propagation_client/");
+      const data = response.data;
+      setFirstName(data.firstName || "");
+      setLastName(data.lastName || "");
+      setAddress(data.address || "");
+      setIsLoaded(true);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      showAlert("Error fetching profile. Please try refreshing.", "error");
+      setIsLoaded(false);
     }
-  };
+  }, [showAlert]);
 
-  const fetch_current_email = async () => {
-    const response = await axios.get("/api/emailify/");
-    setGlobalEmail(response.data);
-  };
+  const fetchEmail = useCallback(async () => {
+    try {
+      const response = await axios.get<string>("/api/emailify/");
+      setEmail(response.data || "");
+    } catch (error) {
+      console.error("Error fetching email:", error);
+      showAlert("Error fetching email.", "error");
+    }
+  }, [showAlert]);
 
-  const lazily_update_database = async () => {
-    const response = await axios.post("/api/populate/", {
-      firstName: firstName,
-      lastName: lastName,
-      password: "existing",
-      address: address,
-      email: "existing",
-    });
-    console.log("modifying the database in page.tsx (Profile)\n", response);
-  };
+  const updateProfile = useCallback(async () => {
+    if (!firstName.trim() || !lastName.trim() || !address.trim()) {
+      showAlert("Please fill in all fields", "error");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await axios.post("/api/populate/", {
+        firstName,
+        lastName,
+        password: "existing",
+        address,
+        email: "existing",
+      });
+      showAlert("Profile updated successfully!", "success");
+      router.refresh();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      showAlert("Error updating profile. Please try again.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [firstName, lastName, address, showAlert, router]);
 
   useEffect(() => {
-    fetch_current_email();
-    custom_propagation_flow();
-  }, []);
+    fetchEmail();
+    fetchProfile();
+  }, [fetchEmail, fetchProfile]);
 
   return (
     <>
@@ -83,20 +201,23 @@ const Page = () => {
           </Breadcrumb>
         </div>
 
-        {!loaded && (
+        {!isLoaded && (
           <motion.div
             className="w-fit mx-auto mt-20"
             animate={{
               rotate: 360,
               transition: {
                 duration: 1.5,
+                repeat: Infinity,
+                ease: "linear"
               },
             }}
           >
-            <Image src={logo} alt="preloader" width={60} height={60}></Image>
+            <Image src={logo} alt="Loading..." width={60} height={60} priority />
           </motion.div>
         )}
-        {loaded && (
+
+        {isLoaded && (
           <div className="flex flex-col lg:flex-row ml-4 lg:ml-32 mt-8 lg:mt-24">
             <div className="flex flex-col">
               <div className="flex flex-col">
@@ -108,95 +229,20 @@ const Page = () => {
                 </div>
               </div>
               <div className="pt-10 font-normal gap-3 flex flex-col">
-                <Sidebar></Sidebar>
+                <Sidebar />
               </div>
             </div>
 
-            <div className="flex flex-col w-auto lg:w-[870px] pb-10 rounded-sm border lg:ml-32 bg-[#FFFFFF]">
-              <div className="mt-8 lg:mt-[40px] ml-4 lg:ml-[80px] h-[28px] w-[155px]">
-                <h1 className="font-medium text-[#DB4444]">
-                  Edit Your Profile
-                </h1>
-              </div>
-              <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-full lg:w-[710px] h-auto lg:h-[82px] mt-8">
-                <div className="w-full lg:w-[330px] h-[62px]">
-                  <h1 className="font-normal">First Name</h1>
-                  <input
-                    className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
-                    type="text"
-                    placeholder="Daksh"
-                    value={firstName}
-                    onChange={(e) => {
-                      setFirstName(e.target.value);
-                    }}
-                  />
-                </div>
-                <div className="w-full lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10">
-                  <h1 className="font-normal">Last Name</h1>
-                  <input
-                    className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
-                    type="text"
-                    placeholder="XYZ"
-                    value={lastName}
-                    onChange={(e) => {
-                      setLastName(e.target.value);
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-auto lg:w-[710px] h-auto lg:h-[82px] mt-8">
-                <div className="w-full lg:w-[330px] h-[62px]">
-                  <h1 className="font-normal">Email</h1>
-                  <input
-                    className="mt-1 lg:w-[330px] p-2 h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
-                    type="text"
-                    placeholder="xyz@gmail.com"
-                    value={globalEmail}
-                    readOnly
-                    contentEditable={false}
-                  />
-                </div>
-                <div className="w-auto lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10">
-                  <h1 className="font-normal">Address</h1>
-                  <input
-                    className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
-                    type="text"
-                    placeholder="Delhi"
-                    value={address}
-                    onChange={(e) => {
-                      setAddress(e.target.value);
-                    }}
-                  />
-                </div>
-              </div>
-              {/* <div className="flex flex-col ml-4 lg:ml-[80px] w-auto lg:w-[710px] h-auto lg:h-[214px] mt-8">
-              <h1 className="font-normal">Password Changes</h1>
-              <input
-                className="w-full lg:w-[710px] h-[50px] bg-[#F5F5F5] rounded-sm mt-1 placeholder:pl-3"
-                type="text"
-                placeholder="Current Password"
-              />
-              <input
-                className="w-full lg:w-[710px] h-[50px] bg-[#F5F5F5] rounded-sm mt-2 placeholder:pl-3"
-                type="text"
-                placeholder="New Password"
-              />
-              <input
-                className="w-full lg:w-[710px] h-[50px] bg-[#F5F5F5] rounded-sm mt-2 placeholder:pl-3"
-                type="text"
-                placeholder="Confirm New Password"
-              />
-            </div> */}
-              <div className="flex flex-row justify-end mt-10">
-                <button className="mr-4 lg:mr-6">Cancel</button>
-                <button
-                  className="bg-[#DB4444] w-[250px] lg:w-[250px] h-[56px] font-medium rounded-sm text-white mr-4 lg:mr-[80px]"
-                  onClick={lazily_update_database}
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
+            <ProfileForm
+              firstName={firstName}
+              lastName={lastName}
+              address={address}
+              email={email}
+              onFirstNameChange={setFirstName}
+              onLastNameChange={setLastName}
+              onAddressChange={setAddress}
+              onSave={updateProfile}
+            />
           </div>
         )}
       </div>
@@ -205,4 +251,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default ProfilePage;
