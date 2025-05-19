@@ -6,11 +6,11 @@ const domain = process.env.DOMAIN;
 
 const sliderImages = [
   {
-    src: "https://cdn.jsdelivr.net/gh/AmeyKuradeAK/nuvante-cdn/Image/nuvante_web.jpg",
+    src: "./nuvante_web.jpg",
     link: `/ProductDetails/67630548e9a7266a1f0b3533`,
   },
   {
-    src: "https://cdn.jsdelivr.net/gh/AmeyKuradeAK/nuvante-cdn/Image/nuvante_web.jpg",
+    src: "./nuvante_web.jpg",
     link: `/ProductDetails/67630548e9a7266a1f0b3533`,
   },
 ];
@@ -22,7 +22,7 @@ export function EmblaCarousel() {
         {sliderImages.map((image, index) => (
           <div key={index} className="embla__slide">
             <img
-              className="lg:h-[90vh] md:h-[80vh] xl:h-[95vh] 2xl:h-[90vh] h-[50vh]"
+              className="lg:h-[100vh] h-[40vh]"
               src={image.src}
               alt={`Slide ${index + 1}`}
             />

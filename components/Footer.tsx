@@ -23,7 +23,7 @@ export default function Footer() {
             our passion, enabling you to flaunt the classiest products and
             services available. Discover your next favorite today!
           </p>
-          <div className="items-center border w-fit border-white rounded-md overflow-hidden hidden">
+          <div className="flex items-center border w-fit border-white rounded-md overflow-hidden">
             <input
               type="email"
               placeholder="Enter your email"
@@ -38,8 +38,7 @@ export default function Footer() {
               ></Image>
             </button>
           </div>
-          <div className="flex gap-2 mt-6 text-xl flex-col">
-            <h1 className="text-[#DB4444] font-extrabold">Follow us on</h1>
+          <div className="flex gap-6 mt-6 text-xl">
             <a
               href="https://www.instagram.com/nuvante.in/"
               className="hover:text-gray-500"

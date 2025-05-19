@@ -1,58 +1,45 @@
+import clientModel from "@/models/Clients";
 import { NextResponse } from "next/server";
+import React from "react";
 import { currentUser } from "@clerk/nextjs/server";
-import supabase from "@/lib/supabase"; // centralized supabase client
 
+// Custom remove function with a filter logic.
+// you could also do something like array.splice(0, array.indexOf(victim)).concat(array.indexOf(victim) + 1) (maybe)
 function popElement(array: any[], victim: any) {
-  return array.filter((element) => element !== victim);
+  const current = array.filter((element) => {
+    return element != victim;
+  });
+  return current;
 }
 
 export async function POST(request: any) {
   const user = await currentUser();
+  const global_user_email = user?.emailAddresses[0].emailAddress;
+  if (user) {
+    try {
+      const body = await request.json();
+      const existingModel = await clientModel
+        .findOne({
+          email: global_user_email,
+        })
+        .then((data) => {
+          return data;
+        });
 
-  if (!user) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
-
-  const clerk_id = user.id;
-
-  try {
-    const body = await request.json();
-
-    // Supabase flow only
-    const { data: client, error } = await supabase
-      .from("clients")
-      .select("cart")
-      .eq("clerk_id", clerk_id)
-      .single();
-
-    if (error || !client) {
-      console.error("Supabase client fetch error:", error);
-      return new NextResponse("Client not found", { status: 404 });
-    }
-
-    let cart = client.cart || [];
-
-    if (body.append) {
-      if (!cart.includes(body.identifier)) {
-        cart.push(body.identifier);
+      if (body.append) {
+        if (!existingModel.cart.includes(body.identifier)) {
+          existingModel.cart.push(body.identifier);
+        }
+      } else {
+        existingModel.cart = popElement(existingModel.cart, body.identifier);
       }
-    } else {
-      cart = popElement(cart, body.identifier);
+      await existingModel.save();
+      return new NextResponse("200");
+    } catch (error) {
+      console.log(error);
+      return new NextResponse("400");
     }
-
-    const { error: updateError } = await supabase
-      .from("clients")
-      .update({ cart })
-      .eq("clerk_id", clerk_id);
-
-    if (updateError) {
-      console.error("Supabase cart update error:", updateError);
-      return new NextResponse("Failed to update cart", { status: 500 });
-    }
-
-    return new NextResponse("OK", { status: 200 });
-  } catch (error) {
-    console.error("Error in cart POST:", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+  } else {
+    return new NextResponse("400");
   }
 }

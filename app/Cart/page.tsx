@@ -11,7 +11,7 @@ const logo = "/logo.png";
 
 const CartTotal = ({ subtotal }: { subtotal: number }) => {
   return (
-    <div className="rounded-md p-10 w-full md:w-80 sm:m-0 m-auto border-4 border-black flex flex-col gap-3 ">
+    <div className=" rounded-md p-10 w-full md:w-80 sm:m-0 m-auto border-4 border-black flex flex-col gap-3 ">
       <h2 className="text-lg font-semibold mb-4">Cart Total</h2>
       <div className="flex justify-between mb-2">
         <span>Subtotal:</span>
@@ -46,19 +46,21 @@ const CartPage = () => {
 
   const asyncHandler = async () => {
     try {
-      const response = await axios.post(`/api/propagation`, {
-        every: true,
-      });
-
-      if (response.data === 404) {
-        alert(
-          "There was an error fetching cart products, please try again after refreshing the page."
-        );
-        alert("Redirecting to home page.");
-        window.location.href = "/";
-      } else {
-        setMorphedProducts(response.data === null ? [] : response.data);
-      }
+      const response = await axios
+        .post(`/api/propagation`, {
+          every: true,
+        })
+        .then((res) => {
+          if (res.data === 404) {
+            alert(
+              "there was an error fetching cart products, please try again after refreshing the page."
+            );
+            alert("redirecting to home page.");
+            window.location.href = "/";
+          } else {
+            setMorphedProducts(res.data === null ? [] : res.data);
+          }
+        });
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -85,22 +87,23 @@ const CartPage = () => {
   };
 
   const handleRemoveItem = async (id: string) => {
-    try {
-      const response = await axios.post(`/api/cart`, {
+    console.log(`Remove item with ID: ${id}`);
+    const response = await axios
+      .post(`/api/cart`, {
         append: false,
         identifier: id,
+      })
+      .then((res) => {
+        if (res.data === 404) {
+          alert("There was a problem setting data in the context.");
+        } else if (res.data === 200) {
+          changeGlobalCart((prevGlobalCart: any) => {
+            return prevGlobalCart.filter((element: any) => {
+              element != id;
+            });
+          });
+        }
       });
-
-      if (response.data === 404) {
-        alert("There was a problem setting data in the context.");
-      } else if (response.data === 200) {
-        changeGlobalCart((prevGlobalCart: any) =>
-          prevGlobalCart.filter((element: any) => element !== id)
-        );
-      }
-    } catch (error) {
-      console.error("Error removing item:", error);
-    }
   };
 
   return (
@@ -141,7 +144,7 @@ const CartPage = () => {
                     >
                       <div className="relative flex-[2] flex items-center space-x-4">
                         <img
-                          src={item.productImages?.[0] || "/placeholder.png"}
+                          src={item.productImages[0]}
                           alt={item.productName}
                           className="w-12 h-12 object-cover rounded"
                         />
@@ -215,7 +218,7 @@ const CartPage = () => {
                 }}
                 className="w-fit mx-auto"
               >
-                <Button text="Return To Shop" width={200} />
+                <Button text="Return To Shop" width={200}></Button>
               </div>
             </div>
 

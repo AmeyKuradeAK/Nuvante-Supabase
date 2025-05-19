@@ -11,75 +11,110 @@ import { useClerk } from "@clerk/nextjs";
 import axios from "axios";
 
 const sideImg = "/Side-Image.jpg";
-// const googleLogo = "/Icon-Google.png"; // Uncomment if using Google auth
+const googleLogo = "/Icon-Google.png";
 
-const SignUpPage = () => {
+type Props = {};
+
+const domain = process.env.NEXT_PUBLIC_DOMAIN;
+
+const page = (props: Props) => {
   const { signOut } = useClerk();
-  const { isLoaded, signUp, setActive } = useSignUp();
-  const router = useRouter();
-
   const [name, setName] = React.useState("");
+  const { isLoaded, signUp, setActive } = useSignUp();
   const [emailAddress, setEmailAddress] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [verifying, setVerifying] = React.useState(false);
   const [code, setCode] = React.useState("");
+  const router = useRouter();
 
+  // Handle submission of the sign-up form
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log(name, emailAddress, password, verifying, code);
     e.preventDefault();
+
     if (!isLoaded) return;
 
+    // Start the sign-up process using the email and password provided
     try {
       await signUp.create({
         emailAddress,
         password,
       });
 
+      // Send the user an email with the verification code
       await signUp.prepareEmailAddressVerification({
         strategy: "email_code",
       });
 
+      // Set 'verifying' true to display second form
+      // and capture the OTP code
       setVerifying(true);
     } catch (err: any) {
-      console.error("Signup Error:", JSON.stringify(err, null, 2));
+      // See https://clerk.com/docs/custom-flows/error-handling
+      // for more info on error handling
+      console.error(JSON.stringify(err, null, 2));
     }
   };
 
+  // Handle the submission of the verification form
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!isLoaded) return;
 
     try {
+      // Use the code the user provided to attempt verification
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
         code,
       });
 
+      // If verification was completed, set the session to active
+      // and redirect the user
       if (signUpAttempt.status === "complete") {
-        const [firstName, lastNameRaw] = name.split(" ");
-        const lastName = lastNameRaw || "";
-
-        const res = await axios.post(`/api/populate/`, {
-          firstName,
-          lastName,
-          password,
-          address: "xyz road",
-          email: emailAddress,
-        });
-
-        if (res.status === 200) {
-          await setActive({
-            session: signUpAttempt.createdSessionId,
-            redirectUrl: "/Profile",
+        const response = await axios
+          .post(`/api/populate/`, {
+            firstName: name.split(" ")[0],
+            lastName: name.split(" ")[1],
+            password: password,
+            address: "xyz road",
+            email: emailAddress,
+          })
+          .then(async (data) => {
+            if (data.data === "Success") {
+              await setActive({
+                session: signUpAttempt.createdSessionId,
+                redirectUrl: "/Profile",
+              });
+            }
           });
-        } else {
-          alert("Error syncing with database. Please try again.");
-          signOut({ redirectUrl: "/sign-up" });
-        }
+
+        console.log("couldn't generate active session");
+        alert("Couldn't generate active session, please sign up again");
+        router.push("/sign-up");
+
+        // if (response.data === "success") {
+        //   await setActive({
+        //     session: signUpAttempt.createdSessionId,
+        //     redirectUrl: "/Profile",
+        //   });
+        // } else {
+        //   alert(
+        //     "That process failed because the database couldn't process the sign-up info."
+        //   );
+        //   signOut({ redirectUrl: "/sign-up" });
+        // }
       } else {
-        alert("Verification failed. Please try again.");
-        console.error("Verification incomplete:", signUpAttempt);
+        alert(
+          "That process failed because connection to @clerkjs was not established."
+        );
+        // If the status is not complete, check why. User may need to
+        // complete further steps.
+        console.error(JSON.stringify(signUpAttempt, null, 2));
       }
     } catch (err: any) {
-      console.error("Verify Error:", JSON.stringify(err, null, 2));
+      // See https://clerk.com/docs/custom-flows/error-handling
+      // for more info on error handling
+      console.error("Error:", JSON.stringify(err, null, 2));
     }
   };
 
@@ -98,15 +133,15 @@ const SignUpPage = () => {
           </label>
           <input
             type="text"
+            value={code}
             id="code"
             name="code"
-            value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <button
             type="submit"
-            className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600"
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
             Verify
           </button>
@@ -124,10 +159,14 @@ const SignUpPage = () => {
         </div>
         <div className="h-auto w-full max-w-[371px] flex flex-col justify-between items-center">
           <div className="text-left xl:text-left">
-            <h1 className="text-[36px] font-medium">Create an Account</h1>
-            <p className="text-sm pt-5">Enter your details here</p>
+            <h1 className="text-[36px] xl:text-[36px] font-medium">
+              Create an Account
+            </h1>
+            <p className="font-normal text-left text-sm pt-5">
+              Enter your details here
+            </p>
           </div>
-          <div className="w-full mt-5">
+          <div className="w-full xl:w-[370px] flex flex-col xl:justify-between items-center mt-5">
             <input
               className="h-[32px] w-full bg-transparent border-b border-black mt-3"
               type="text"
@@ -136,26 +175,40 @@ const SignUpPage = () => {
             />
             <input
               className="h-[32px] w-full bg-transparent border-b border-black mt-3"
+              id="email"
               type="email"
-              placeholder="Enter your email"
+              name="email"
               value={emailAddress}
               onChange={(e) => setEmailAddress(e.target.value)}
+              placeholder="Enter your email"
             />
             <input
               className="h-[32px] w-full bg-transparent border-b border-black mt-3"
+              id="password"
               type="password"
-              placeholder="Enter your password"
+              name="password"
               value={password}
+              placeholder="Enter your password"
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <div className="flex flex-col items-center w-full max-w-[370px] mt-5">
+          <div className="flex flex-col items-center justify-between w-full max-w-[370px] mt-5">
             <button
               className="h-[56px] w-full bg-[#DB4444] text-white"
               onClick={handleSubmit}
             >
               Create Account
             </button>
+            {/* <button className="h-[56px] w-full mt-3 flex flex-row items-center justify-center border border-black">
+              <Image
+                className="mr-3"
+                src={googleLogo}
+                alt="google"
+                height={24}
+                width={24}
+              />
+              <p className="font-normal">Sign up with Google</p> */}
+            {/* </button> */}
             <p className="text-center mt-3">
               Already have an account?{" "}
               <Link className="border-b border-black" href="/sign-in">
@@ -170,4 +223,4 @@ const SignUpPage = () => {
   );
 };
 
-export default SignUpPage;
+export default page;

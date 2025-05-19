@@ -21,14 +21,14 @@ const Page = async () => {
   return (
     <div>
       <Navbar />
-      <div className="sm:p-4 p-0">
-        <div className="mt-6 sm:ml-4 ml-0 xl:ml-32">
+      <div className="p-4">
+        <div className="mt-6 ml-4 xl:ml-32">
           <div className="flex flex-col gap-6">
             <div className="flex w-full justify-between items-center">
               <Heading message="Products" secondaryMessage="" />
             </div>
-            <div className="flex flex-col gap-12 w-fit mx-auto">
-              <div className="cards flex flex-wrap sm:gap-x-6 gap-x-2 sm:w-auto sm:justify-center justify-center w-[100%] gap-y-16">
+            <div className="flex flex-col gap-12">
+              <div className="cards flex flex-wrap sm:w-auto w-[100%] gap-y-10 gap-x-10">
                 {response.map((product: any, index: number) => (
                   <Card
                     id={product.id}

@@ -21,9 +21,8 @@ export default function Products({ fragment }: mainProp) {
       <div className="flex w-full justify-between items-center">
         <Heading message="Products" secondaryMessage="ALL PRODUCTS" />
       </div>
-      <div className="flex flex-col gap-12 w-full px-4">
-        {/* ✅ Responsive Grid for Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+      <div className="flex flex-col gap-12 mx-auto w-fit">
+        <div className="cards flex flex-wrap gap-x-10 gap-y-10">
           {fragment.map((product, index) => (
             <Card
               key={index}

@@ -40,6 +40,8 @@ export default function Suggestion() {
             productName={product.productName}
             productPrice={product.productPrice}
             cancelledPrice={product.cancelledProductPrice}
+            reviews={product.productReviews.length}
+            stars={product.productStars}
             status={product.latest ? "new" : "old"}
           />
         ))}

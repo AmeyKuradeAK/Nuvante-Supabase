@@ -12,11 +12,9 @@ const Page = () => {
   return (
     <>
       <Navbar />
-      <div className="py-4 md:w-[94%] w-full mx-auto">
-        <div className="mt-6 md:ml-4 flex flex-col gap-6">
-          <div className="ml-4">
-            <Bread />
-          </div>
+      <div className="p-4 w-[94%] mx-auto">
+        <div className="mt-6 ml-4 flex flex-col gap-6">
+          <Bread />
           <Preview />
         </div>
       </div>
