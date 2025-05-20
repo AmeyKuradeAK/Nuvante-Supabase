@@ -70,7 +70,7 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a href="/Sign-up" className="hover:text-white">
+              <a href="/sign-in" className="hover:text-white">
                 Login / Register
               </a>
             </li>
@@ -85,7 +85,7 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a href="#" className="hover:text-white">
+              <a href="/Products" className="hover:text-white">
                 Shop
               </a>
             </li>
