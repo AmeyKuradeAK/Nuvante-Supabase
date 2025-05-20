@@ -12,7 +12,7 @@ const logo_r = "/logo_r.svg";
 const search = "/search.svg";
 const heart = "/heart.svg";
 const cart = "/cart.svg";
-const animated_logo = "/nuv_1.mov";
+const animated_logo = "/nuv_1.webm";
 const User = "/user.svg";
 
 const navigation = [
