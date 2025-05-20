@@ -24,7 +24,7 @@ export default function Arrivals({ fragment }: mainProp) {
         <div className="flex w-full justify-between items-center">
           <Heading
             message="Newest Arrivals"
-            secondaryMessage="NUVANTE'S ORIGINALS"
+            secondaryMessage="Nuvante's Atelier"
           ></Heading>
           {/* <Link href="/Products">
             <Button text="View All" width={130}></Button>
