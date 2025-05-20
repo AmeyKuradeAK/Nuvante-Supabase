@@ -17,12 +17,12 @@ type mainProp = {
 
 export default function Products({ fragment }: mainProp) {
   return (
-    <div className="mt-24 flex flex-col gap-14">
+    <div className="mt-12 flex flex-col gap-8">
       <div className="flex w-full justify-between items-center">
         <Heading message="Products" secondaryMessage="ALL PRODUCTS" />
       </div>
-      <div className="flex flex-col gap-12 mx-auto w-full px-4 md:px-6 lg:px-8">
-        <div className="cards grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
+      <div className="flex flex-col gap-8 mx-auto w-full px-4 md:px-6 lg:px-8">
+        <div className="cards grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
           {fragment.map((product, index) => (
             <Card
               key={index}

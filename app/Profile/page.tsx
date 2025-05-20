@@ -119,42 +119,41 @@ const ProfileForm = React.memo(({
 ProfileForm.displayName = 'ProfileForm';
 
 const ProfilePage = () => {
-  const [firstName, setFirstName] = useState<string>("");
-  const [lastName, setLastName] = useState<string>("");
-  const [address, setAddress] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+  const [profileData, setProfileData] = useState<ProfileData>({
+    firstName: "",
+    lastName: "",
+    address: "",
+    email: "",
+    cart: [],
+    wishlist: []
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const { showAlert } = useAlert();
   const router = useRouter();
 
-  const fetchProfile = useCallback(async () => {
+  const fetchUserData = useCallback(async () => {
     try {
-      const response = await axios.get<ProfileData>("/api/propagation_client/");
-      const data = response.data;
-      setFirstName(data.firstName || "");
-      setLastName(data.lastName || "");
-      setAddress(data.address || "");
+      const [profileResponse, emailResponse] = await Promise.all([
+        axios.get<ProfileData>("/api/propagation_client/"),
+        axios.get<string>("/api/emailify/")
+      ]);
+
+      setProfileData(prev => ({
+        ...prev,
+        ...profileResponse.data,
+        email: emailResponse.data
+      }));
       setIsLoaded(true);
     } catch (error) {
-      console.error("Error fetching profile:", error);
-      showAlert("Error fetching profile. Please try refreshing.", "error");
+      console.error("Error fetching user data:", error);
+      showAlert("Error loading profile data. Please try refreshing.", "error");
       setIsLoaded(false);
     }
   }, [showAlert]);
 
-  const fetchEmail = useCallback(async () => {
-    try {
-      const response = await axios.get<string>("/api/emailify/");
-      setEmail(response.data || "");
-    } catch (error) {
-      console.error("Error fetching email:", error);
-      showAlert("Error fetching email.", "error");
-    }
-  }, [showAlert]);
-
   const updateProfile = useCallback(async () => {
-    if (!firstName.trim() || !lastName.trim() || !address.trim()) {
+    if (!profileData.firstName.trim() || !profileData.lastName.trim() || !profileData.address.trim()) {
       showAlert("Please fill in all fields", "error");
       return;
     }
@@ -162,10 +161,10 @@ const ProfilePage = () => {
     setIsLoading(true);
     try {
       await axios.post("/api/populate/", {
-        firstName,
-        lastName,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
         password: "existing",
-        address,
+        address: profileData.address,
         email: "existing",
       });
       showAlert("Profile updated successfully!", "success");
@@ -176,12 +175,15 @@ const ProfilePage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [firstName, lastName, address, showAlert, router]);
+  }, [profileData, showAlert, router]);
+
+  const handleFieldChange = useCallback((field: keyof ProfileData, value: string) => {
+    setProfileData(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   useEffect(() => {
-    fetchEmail();
-    fetchProfile();
-  }, [fetchEmail, fetchProfile]);
+    fetchUserData();
+  }, [fetchUserData]);
 
   return (
     <>
@@ -203,7 +205,7 @@ const ProfilePage = () => {
 
         {!isLoaded && (
           <motion.div
-            className="w-fit mx-auto mt-20"
+            className="w-fit mx-auto mt-20 relative"
             animate={{
               rotate: 360,
               transition: {
@@ -213,7 +215,28 @@ const ProfilePage = () => {
               },
             }}
           >
-            <Image src={logo} alt="Loading..." width={60} height={60} priority />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.div
+                className="w-[80px] h-[80px] rounded-full border-4 border-[#DB4444] border-t-transparent"
+                animate={{
+                  rotate: -360,
+                  transition: {
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "linear"
+                  },
+                }}
+              />
+            </div>
+            <Image 
+              src={logo} 
+              alt="Loading..." 
+              width={60} 
+              height={60} 
+              priority
+              className="relative z-10"
+              style={{ background: 'transparent' }}
+            />
           </motion.div>
         )}
 
@@ -234,13 +257,13 @@ const ProfilePage = () => {
             </div>
 
             <ProfileForm
-              firstName={firstName}
-              lastName={lastName}
-              address={address}
-              email={email}
-              onFirstNameChange={setFirstName}
-              onLastNameChange={setLastName}
-              onAddressChange={setAddress}
+              firstName={profileData.firstName}
+              lastName={profileData.lastName}
+              address={profileData.address}
+              email={profileData.email}
+              onFirstNameChange={(value) => handleFieldChange('firstName', value)}
+              onLastNameChange={(value) => handleFieldChange('lastName', value)}
+              onAddressChange={(value) => handleFieldChange('address', value)}
               onSave={updateProfile}
             />
           </div>

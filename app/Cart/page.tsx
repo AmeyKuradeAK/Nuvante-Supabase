@@ -15,6 +15,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const logo = "/logo.png";
 
@@ -26,10 +29,12 @@ interface Product {
 }
 
 const CartPage = () => {
-  const [morphedProducts, setMorphedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const { showAlert } = useAlert();
+  const user = useUser();
+  const router = useRouter();
 
   const context = useContext(GlobalContext);
   if (!context) {
@@ -37,6 +42,15 @@ const CartPage = () => {
   }
 
   const { GlobalCart, changeGlobalCart } = context;
+
+  useEffect(() => {
+    if (!user.isSignedIn) {
+      showAlert("Please sign in to access your cart", "warning");
+      router.push("/sign-in");
+      return;
+    }
+    asyncHandler();
+  }, [user.isSignedIn, showAlert, router]);
 
   const asyncHandler = async () => {
     try {
@@ -51,7 +65,7 @@ const CartPage = () => {
               window.location.href = "/";
             }, 2000);
           } else {
-            setMorphedProducts(res.data || []);
+            setProducts(res.data || []);
           }
         });
     } catch (error) {
@@ -62,10 +76,6 @@ const CartPage = () => {
     }
   };
 
-  useEffect(() => {
-    asyncHandler();
-  }, []);
-
   const handleQuantityChange = (id: string, value: number) => {
     setQuantities((prev) => ({
       ...prev,
@@ -74,7 +84,7 @@ const CartPage = () => {
   };
 
   const calculateSubtotal = () => {
-    return morphedProducts.reduce((total, item) => {
+    return products.reduce((total, item) => {
       if (!GlobalCart.includes(item._id)) return total;
       return total + (quantities[item._id] || 1) * item.productPrice;
     }, 0);
@@ -104,24 +114,48 @@ const CartPage = () => {
     window.location.href = "/";
   };
 
-  const cartItems = morphedProducts.filter(item => GlobalCart.includes(item._id));
+  const cartItems = products.filter(item => GlobalCart.includes(item._id));
   const subtotal = calculateSubtotal();
 
   return (
     <>
       <div className="min-h-screen bg-gray-50">
         {loading && (
-          <motion.div
-            className="w-fit mx-auto mt-20"
-            animate={{
-              rotate: 360,
-              transition: {
-                duration: 1.5,
-              },
-            }}
-          >
-            <img src={logo} alt="preloader" width={60} height={60} />
-          </motion.div>
+          <div className="h-screen flex items-center justify-center">
+            <motion.div
+              className="relative"
+              animate={{
+                rotate: 360,
+                transition: {
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "linear"
+                },
+              }}
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <motion.div
+                  className="w-[80px] h-[80px] rounded-full border-4 border-[#DB4444] border-t-transparent"
+                  animate={{
+                    rotate: -360,
+                    transition: {
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear"
+                    },
+                  }}
+                />
+              </div>
+              <Image 
+                src={logo} 
+                alt="preloader" 
+                width={60} 
+                height={60}
+                className="relative z-10"
+                style={{ background: 'transparent' }}
+              />
+            </motion.div>
+          </div>
         )}
         {!loading && (
           <>
@@ -167,18 +201,18 @@ const CartPage = () => {
                         <div className="divide-y divide-gray-200">
                           {cartItems.map((item) => (
                             <div key={item._id} className="p-6">
-                              <div className="flex flex-col md:flex-row gap-6">
+                              <div className="flex flex-col md:flex-row gap-6 items-start">
                                 {/* Product Image */}
-                                <div className="w-full md:w-32 h-32 relative group">
+                                <div className="w-full md:w-24 h-32 relative group shrink-0">
                                   <img
                                     src={item.productImages[0]}
                                     alt={item.productName}
-                                    className="w-full h-full object-cover rounded-lg transition-transform group-hover:scale-105"
+                                    className="w-full h-full object-contain rounded-lg transition-transform group-hover:scale-105"
                                   />
                                 </div>
 
                                 {/* Product Details */}
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div>
                                       <h3 className="text-lg font-medium text-gray-800">{item.productName}</h3>

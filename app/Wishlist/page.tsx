@@ -18,8 +18,9 @@ import { useContext } from "react";
 import { GlobalContext } from "@/context/Global";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useAlert } from "@/context/AlertContext";
+import { useUser } from "@clerk/nextjs";
 
 /**
  * 1.Pretty exhausting function (handleBag) running in O(n^2) probably. Considering the post requests to be linear.
@@ -50,6 +51,8 @@ const Page = () => {
   const [currentWishlist, setCurrentWishlist] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const { showAlert } = useAlert();
+  const user = useUser();
+  const router = useRouter();
 
   const url_params = useParams();
 
@@ -61,23 +64,27 @@ const Page = () => {
   }: any = useContext(GlobalContext);
 
   useEffect(() => {
+    if (!user.isSignedIn) {
+      showAlert("Please sign in to access your wishlist", "warning");
+      router.push("/sign-in");
+      return;
+    }
+
     const propagate_data = async () => {
       try {
-        const localProducts = await axios
-          .post<Product[]>(`/api/propagation/`, {
-            every: true,
-          })
-          .then((response) => {
-            return response.data || [];
-          });
-        setProducts(localProducts);
+        // Fetch both data in parallel
+        const [productsResponse, wishlistResponse] = await Promise.all([
+          axios.post<Product[]>(`/api/propagation/`, { every: true }),
+          axios.get<ApiResponseOr404>(`/api/propagation_client/`)
+        ]);
 
-        const response = await axios.get<ApiResponseOr404>(`/api/propagation_client/`);
-        if (response.data === 404 || !response.data) {
+        setProducts(productsResponse.data || []);
+        
+        if (wishlistResponse.data === 404 || !wishlistResponse.data) {
           console.error("Could not fetch wishlist data");
           setCurrentWishlist([]);
         } else {
-          const { wishlist = [] } = response.data;
+          const { wishlist = [] } = wishlistResponse.data;
           setCurrentWishlist(wishlist);
         }
       } catch (error) {
@@ -85,16 +92,14 @@ const Page = () => {
         setProducts([]);
         setCurrentWishlist([]);
       } finally {
-        setTimeout(() => {
-          setLoaded(true);
-        }, 1000);
+        setLoaded(true);
       }
     };
 
     if (GlobalWishlist) {
       propagate_data();
     }
-  }, [GlobalWishlist]);
+  }, [user.isSignedIn, GlobalWishlist, showAlert, router]);
 
   const handleBag = async () => {
     if (!GlobalWishlist?.length) {
@@ -151,7 +156,7 @@ const Page = () => {
         {/* Loading State */}
         {!loaded && (
           <motion.div
-            className="w-fit mx-auto mt-20"
+            className="w-fit mx-auto mt-20 relative"
             animate={{
               rotate: 360,
               transition: {
@@ -161,7 +166,27 @@ const Page = () => {
               },
             }}
           >
-            <Image src={logo} alt="preloader" width={60} height={60}></Image>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.div
+                className="w-[80px] h-[80px] rounded-full border-4 border-[#DB4444] border-t-transparent"
+                animate={{
+                  rotate: -360,
+                  transition: {
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "linear"
+                  },
+                }}
+              />
+            </div>
+            <Image 
+              src={logo} 
+              alt="preloader" 
+              width={60} 
+              height={60}
+              className="relative z-10"
+              style={{ background: 'transparent' }}
+            />
           </motion.div>
         )}
 

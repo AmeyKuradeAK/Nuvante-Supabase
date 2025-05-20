@@ -7,6 +7,9 @@ import { useContext } from "react";
 import { GlobalContext } from "@/context/Global";
 import { useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
+import ProductCarousel from "@/components/ProductCarousel";
+import { useAlert } from "@/context/AlertContext";
+import { useRouter } from "next/navigation";
 
 const return_icon = "/icon-return.png";
 const delivery_icon = "/icon-delivery.png";
@@ -15,15 +18,38 @@ const product_icon = "/product.png";
 const domain = process.env.DOMAIN;
 const logo = "/logo.png";
 
+interface ProductData {
+  productName: string;
+  productPrice: string;
+  cancelledProductPrice: string;
+  productInfo: string;
+  description: string;
+  materials: string;
+  packaging: string;
+  shipping: string;
+  productImages: string[];
+}
+
 const Preview = () => {
   const [hash, setHash] = useState<string | string[]>("");
-  const { slug } = useParams(); // Destructure slug directly
+  const { slug } = useParams();
   const [current, setCurrent] = useState("");
   const [productImages, setProductImages] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [loaded, setLoaded] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
   const id: any = hash || slug;
-  const [currentProduct, setCurrentProduct] = useState({});
+  const [currentProduct, setCurrentProduct] = useState<ProductData>({
+    productName: "",
+    productPrice: "",
+    cancelledProductPrice: "",
+    productInfo: "",
+    description: "",
+    materials: "",
+    packaging: "",
+    shipping: "",
+    productImages: []
+  });
   const [collapsible, setCollapsible] = useState<boolean[]>(
     Array(4).fill(false)
   );
@@ -33,8 +59,9 @@ const Preview = () => {
     throw new Error("GlobalContext is not provided.");
   }
   const user = useUser();
-  const { GlobalWishlist, changeGlobalWishlist, GlobalCart, changeGlobalCart } =
-    context;
+  const { GlobalWishlist, changeGlobalWishlist, GlobalCart, changeGlobalCart } = context;
+  const { showAlert } = useAlert();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -46,17 +73,18 @@ const Preview = () => {
             every: false,
           })
           .then((data) => {
-            var altered = data.data.productImages || [];
+            const responseData = data.data as ProductData;
+            const altered = responseData.productImages || [];
             altered.reverse();
             setProductImages(altered);
-            setCurrentProduct(data.data);
-            console.log("current product: \n", currentProduct);
+            setCurrentProduct(responseData);
           });
 
         setLoaded(true);
         productImages.reverse();
       } catch (error) {
         console.error("Error fetching product images:", error);
+        showAlert("Error loading product images", "error");
       }
     };
 
@@ -67,7 +95,12 @@ const Preview = () => {
     } else {
       setHash(slug);
     }
-  }, [hash, slug]);
+  }, [hash, slug, showAlert]);
+
+  useEffect(() => {
+    // Update local cart state when GlobalCart changes
+    setIsInCart(GlobalCart.includes(id));
+  }, [GlobalCart, id]);
 
   const handleSwitch = (size: any) => {
     setCurrent(size);
@@ -84,35 +117,38 @@ const Preview = () => {
     event.stopPropagation();
 
     if (!user.isSignedIn) {
-      alert("You are not signed in, please sign in first to access cart!");
-      alert("Redirecting...");
-      window.location.href = "/sign-in";
+      showAlert("Please sign in to access cart", "warning");
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 2000);
       return;
     }
+
     const id: any = hash || slug;
     try {
       const isPresent = GlobalCart.includes(id);
-      await axios
-        .post(`/api/cart`, {
-          identifier: id,
-          append: !isPresent,
-        })
-        .then((response: any) => {
-          if (response.data === parseInt("200")) {
-            const updatedCart = isPresent
-              ? GlobalCart.filter((item) => item !== id)
-              : [...GlobalCart, id];
+      
+      // Make the API call first
+      const response = await axios.post("/api/cart", {
+        identifier: id,
+        append: !isPresent,
+      });
 
-            changeGlobalCart(updatedCart);
-            alert("Cart updated successfully!");
-          } else if (response.data === parseInt("404")) {
-            alert(
-              "there was an error updating the cart! Try refreshing the page!"
-            );
-          }
-        });
+      // Check if response is successful
+      if (response.status === 200) {
+        // Update both states after successful API call
+        changeGlobalCart(id);
+        setIsInCart(!isPresent);
+        showAlert(
+          isPresent ? "Item removed from cart" : "Item added to cart",
+          "success"
+        );
+      } else {
+        showAlert("Error updating cart", "error");
+      }
     } catch (error) {
       console.error("Error updating cart:", error);
+      showAlert("Error updating cart", "error");
     }
   };
 
@@ -127,11 +163,11 @@ const Preview = () => {
 
   const handleWishlistPresence = async (event: React.MouseEvent) => {
     event.stopPropagation();
-    console.log(user);
     if (!user.isSignedIn) {
-      alert("You are not signed in, please sign in first to access wishlist!");
-      alert("Redirecting...");
-      window.location.href = "/sign-in";
+      showAlert("Please sign in to access wishlist", "warning");
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 2000);
       return;
     }
     try {
@@ -150,227 +186,204 @@ const Preview = () => {
 
             changeGlobalWishlist(updatedWishlist);
             setLoaded(true);
-          } else if (response.data === parseInt("404")) {
-            alert(
-              "there was an error updating the wishlist! Try refreshing the page!"
+            showAlert(
+              isPresent ? "Item removed from wishlist" : "Item added to wishlist",
+              "success"
             );
+          } else if (response.data === parseInt("404")) {
+            showAlert("Error updating wishlist", "error");
           }
         });
     } catch (error) {
       console.error("Error updating wishlist:", error);
-      alert(
-        "There was an error updating the wishlist! Try refreshing the page."
-      );
+      showAlert("Error updating wishlist", "error");
     }
   };
 
   return (
     <>
       {loaded && (
-        <div className=" flex preview_container justify-between lg:flex-row flex-col-reverse gap-10 w-[100%]">
-          <div className="flex flex-col gap-4 lg:p-4 lg:h-[78vh] align-center justify-end lg:sticky lg:w-[34%] lg:max-w-[800px] h-fit  w-[100%] top-6">
-            <div className="flex flex-col border-black border-2 p-4 gap-4 justify-center sticky top-6">
-              <div className="border-b-2 flex flex-col justify-between border-b-grey-200 cursor-pointer text-[16px] gap-3">
-                <div
-                  className="w-[100%] flex justify-between cursor-pointer"
-                  onClick={() => {
-                    handleCollapsibleState(1);
-                  }}
-                >
-                  <div>DESCRIPTION</div>
-                  <div>[+]</div>
-                </div>
-                <div
-                  className={`duration-1000 transition-all  ${
-                    collapsible[0]
-                      ? "h-[100px] py-2 overflow-y-scroll"
-                      : "h-0 py-0 overflow-hidden"
-                  }`}
-                >
-                  {currentProduct.description}
-                </div>
-              </div>
-              <div className="border-b-2 flex flex-col justify-between border-b-grey-200 cursor-pointer text-[16px] gap-3">
-                <div
-                  className="w-[100%] flex justify-between cursor-pointer"
-                  onClick={() => {
-                    handleCollapsibleState(2);
-                  }}
-                >
-                  <div>MATERIALS</div>
-                  <div>[+]</div>
-                </div>
-                <div
-                  className={`duration-1000 transition-all overflow-y-scroll ${
-                    collapsible[1]
-                      ? "h-[100px] overflow-y-scroll py-2"
-                      : "h-0 py-0 overflow-hidden"
-                  }`}
-                >
-                  {currentProduct.materials}
-                </div>
-              </div>
-              <div className="border-b-2 flex flex-col justify-between border-b-grey-200 cursor-pointer text-[16px] gap-3">
-                <div
-                  className="w-[100%] flex justify-between cursor-pointer"
-                  onClick={() => {
-                    handleCollapsibleState(3);
-                  }}
-                >
-                  <div>PACKAGING</div>
-                  <div>[+]</div>
-                </div>
-                <div
-                  className={`duration-1000 transition-all ${
-                    collapsible[2]
-                      ? "h-[100px]  py-2 overflow-y-scroll"
-                      : "h-0 py-0 overflow-hidden"
-                  }`}
-                >
-                  {currentProduct.packaging}
-                </div>
-              </div>
-              <div className="border-b-2 flex flex-col justify-between border-b-grey-200 cursor-pointer text-[16px] gap-3">
-                <div
-                  className="w-[100%] flex justify-between cursor-pointer"
-                  onClick={() => {
-                    handleCollapsibleState(4);
-                  }}
-                >
-                  <div>SHIPPING & RETURNS</div>
-                  <div>[+]</div>
-                </div>
-                <div
-                  className={`duration-1000 transition-all  ${
-                    collapsible[3]
-                      ? "h-[100px] overflow-y-scroll py-2"
-                      : "h-0 py-0 overflow-hidden"
-                  }`}
-                >
-                  {currentProduct.shipping}
-                </div>
-              </div>
-            </div>
+        <div className="flex flex-col lg:flex-row gap-10 w-full max-w-full overflow-x-hidden -mx-4 lg:mx-0">
+          {/* Product Images */}
+          <div className="flex-1 lg:w-[60%]">
+            <ProductCarousel images={productImages} />
           </div>
-          <div className="flex flex-col gap-4 lg:w-[50%] w-full">
-            {productImages.map((productImage) => {
-              return (
-                <img
-                  src={productImage}
-                  alt=""
-                  className="border p-1 border-gray-500"
-                />
-              );
-            })}
-            <div className="lg:hidden flex-col mb-10 border-black border-2 h-fit gap-3 ml-0 lg:ml-[10px] border-b-2 lg:sticky top-4 min-w-[250px] lg:w-[23%] w-[100%] flex">
-              <div className="flex flex-col gap-2 p-4">
-                <h1 className="text-[14px]">{currentProduct.productName}</h1>
-                <div className="flex gap-2">
-                  <h1 className="text-[12px] line-through">
-                    Rs. {currentProduct.cancelledProductPrice}
-                  </h1>
-                  <h1 className="text-[12px]">
-                    Rs.{currentProduct.productPrice}
-                  </h1>
-                </div>
-              </div>
-              <div className="text-[11px] px-4">
-                {currentProduct.productInfo}
-              </div>
-              <div className="text-[10px] opacity-70 px-4 border-b-black pb-4 border-b-2">
-                SHIPPING, EXCHANGES AND RETURNS
-              </div>
-              <div className="grid grid-cols-2  gap-1 w-fit mx-auto mt-6">
-                {["S", "M", "L", "XL"].map((size) => {
-                  return (
-                    <>
-                      <div
-                        className={`border-2 border-black ${
-                          size === current
-                            ? "bg-black text-white"
-                            : "bg-none text-black"
-                        } py-3 w-[120px] text-center cursor-pointer`}
-                        onClick={() => {
-                          handleSwitch(size);
-                        }}
-                      >
-                        {size}
-                      </div>
-                    </>
-                  );
-                })}
-              </div>
-              <div className="text-[9px] text-gray-900 px-4 opacity-70 pb-4">
-                This product has a larger fit than usual. Model is wearing L.
-              </div>
 
-              <div className="text-[12px] text-gray-900">
-                <button
-                  className="w-full py-3 border-black border-2"
-                  onClick={(event) => {
-                    handleAddToCart(event);
-                  }}
-                >
-                  ADD
-                </button>
-                <button className="w-full py-3 bg-black text-white">
-                  BUY IT NOW
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="hidden flex-col border-black border-2 h-fit gap-3 ml-0 lg:ml-[10px] border-b-2 lg:sticky top-4 min-w-[250px] lg:w-[33%] w-[100%] lg:flex">
-            <div className="flex flex-col gap-2 p-4">
-              <h1 className="text-[18px]">{currentProduct.productName}</h1>
-              <div className="flex gap-2">
-                <h1 className="text-[16px] line-through">
+          {/* Product Details */}
+          <div className="flex flex-col gap-4 lg:w-[40%] px-4 lg:px-0">
+            <div className="flex flex-col gap-2">
+              <h1 className="text-2xl font-medium">{currentProduct.productName}</h1>
+              <div className="flex gap-2 items-center">
+                <h1 className="text-xl font-medium text-[#DB4444]">
+                  Rs. {currentProduct.productPrice}
+                </h1>
+                <h1 className="text-lg line-through text-gray-500">
                   Rs. {currentProduct.cancelledProductPrice}
                 </h1>
-                <h1 className="text-[16px]">
-                  Rs.{currentProduct.productPrice}
-                </h1>
               </div>
-            </div>
-            <div className="text-[13px] px-4">{currentProduct.productInfo}</div>
-            <div className="text-[10px] opacity-70 px-4 border-b-black pb-4 border-b-2">
-              SHIPPING, EXCHANGES AND RETURNS
-            </div>
-            <div className="grid grid-cols-2  gap-1 w-fit mx-auto mt-6">
-              {["S", "M", "L", "XL"].map((size) => {
-                return (
-                  <>
-                    <div
-                      className={`border-2 border-black ${
-                        size === current
-                          ? "bg-black text-white"
-                          : "bg-none text-black"
-                      } py-3 w-[120px] text-center cursor-pointer`}
-                      onClick={() => {
-                        handleSwitch(size);
-                      }}
-                    >
-                      {size}
-                    </div>
-                  </>
-                );
-              })}
-            </div>
-            <div className="text-[9px] text-gray-900 px-4 opacity-70 pb-4">
-              This product has a larger fit than usual. Model is wearing L.
+              <p className="text-sm text-gray-600 mt-2">{currentProduct.productInfo}</p>
             </div>
 
-            <div className="text-[12px] text-gray-900">
-              <button
-                className="w-full py-3 border-black border-2"
-                onClick={(event) => {
-                  handleAddToCart(event);
-                }}
+            {/* Size Selection */}
+            <div className="mt-6">
+              <h2 className="text-sm font-medium mb-3">Select Size</h2>
+              <div className="grid grid-cols-4 gap-2">
+                {["S", "M", "L", "XL"].map((size) => (
+                  <button
+                    key={size}
+                    className={`border-2 py-2 text-center transition-colors ${
+                      size === current
+                        ? "bg-black text-white border-black"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => handleSwitch(size)}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                This product has a larger fit than usual. Model is wearing L.
+              </p>
+            </div>
+
+            {/* Add to Cart Buttons */}
+            <div className="mt-6 space-y-3">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 border-2 border-[#DB4444] text-[#DB4444] hover:bg-[#DB4444] hover:text-white transition-all duration-300 font-medium"
+                onClick={handleAddToCart}
               >
-                ADD
-              </button>
-              <button className="w-full py-3 bg-black text-white">
-                BUY IT NOW
-              </button>
+                {isInCart ? "Remove from Cart" : "Add to Cart"}
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 bg-black text-white hover:bg-gray-800 transition-all duration-300 font-medium"
+                onClick={() => showAlert("Coming Soon!", "info")}
+              >
+                Buy Now
+              </motion.button>
+            </div>
+
+            {/* Product Information */}
+            <div className="mt-8 space-y-4">
+              <motion.div 
+                className="border-b border-gray-200 pb-4"
+                whileHover={{ x: 5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div
+                  className="flex justify-between items-center cursor-pointer"
+                  onClick={() => handleCollapsibleState(1)}
+                >
+                  <h3 className="font-medium">Description</h3>
+                  <motion.span
+                    animate={{ rotate: collapsible[0] ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {collapsible[0] ? "−" : "+"}
+                  </motion.span>
+                </div>
+                <motion.div
+                  initial={false}
+                  animate={{ height: collapsible[0] ? "auto" : 0, opacity: collapsible[0] ? 1 : 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <p className="mt-2 text-sm text-gray-600">
+                    {currentProduct.description}
+                  </p>
+                </motion.div>
+              </motion.div>
+
+              <motion.div 
+                className="border-b border-gray-200 pb-4"
+                whileHover={{ x: 5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div
+                  className="flex justify-between items-center cursor-pointer"
+                  onClick={() => handleCollapsibleState(2)}
+                >
+                  <h3 className="font-medium">Materials</h3>
+                  <motion.span
+                    animate={{ rotate: collapsible[1] ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {collapsible[1] ? "−" : "+"}
+                  </motion.span>
+                </div>
+                <motion.div
+                  initial={false}
+                  animate={{ height: collapsible[1] ? "auto" : 0, opacity: collapsible[1] ? 1 : 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <p className="mt-2 text-sm text-gray-600">
+                    {currentProduct.materials}
+                  </p>
+                </motion.div>
+              </motion.div>
+
+              <motion.div 
+                className="border-b border-gray-200 pb-4"
+                whileHover={{ x: 5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div
+                  className="flex justify-between items-center cursor-pointer"
+                  onClick={() => handleCollapsibleState(3)}
+                >
+                  <h3 className="font-medium">Packaging</h3>
+                  <motion.span
+                    animate={{ rotate: collapsible[2] ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {collapsible[2] ? "−" : "+"}
+                  </motion.span>
+                </div>
+                <motion.div
+                  initial={false}
+                  animate={{ height: collapsible[2] ? "auto" : 0, opacity: collapsible[2] ? 1 : 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <p className="mt-2 text-sm text-gray-600">
+                    {currentProduct.packaging}
+                  </p>
+                </motion.div>
+              </motion.div>
+
+              <motion.div 
+                className="border-b border-gray-200 pb-4"
+                whileHover={{ x: 5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div
+                  className="flex justify-between items-center cursor-pointer"
+                  onClick={() => handleCollapsibleState(4)}
+                >
+                  <h3 className="font-medium">Shipping & Returns</h3>
+                  <motion.span
+                    animate={{ rotate: collapsible[3] ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {collapsible[3] ? "−" : "+"}
+                  </motion.span>
+                </div>
+                <motion.div
+                  initial={false}
+                  animate={{ height: collapsible[3] ? "auto" : 0, opacity: collapsible[3] ? 1 : 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <p className="mt-2 text-sm text-gray-600">
+                    {currentProduct.shipping}
+                  </p>
+                </motion.div>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -382,10 +395,12 @@ const Preview = () => {
             rotate: 360,
             transition: {
               duration: 1.5,
+              repeat: Infinity,
+              ease: "linear"
             },
           }}
         >
-          <Image src={logo} alt="preloader" width={60} height={60}></Image>
+          <Image src={logo} alt="Loading..." width={60} height={60} priority />
         </motion.div>
       )}
     </>

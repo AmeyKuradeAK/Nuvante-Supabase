@@ -140,38 +140,40 @@ export default function Card({
   return (
     <div
       onClick={() => (window.location.href = `/ProductDetails/${id}`)}
-      className="w-full overflow-hidden relative flex flex-col gap-4 cursor-pointer group"
+      className="w-full overflow-hidden relative flex flex-col gap-4 cursor-pointer group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
     >
-      <div className="card-body flex justify-center relative aspect-[3/4] w-full rounded-lg">
+      <div className="card-body flex justify-center relative aspect-[3/4] w-full rounded-t-lg overflow-hidden">
         <img
           src={src}
           alt={productName}
-          className="w-full h-full object-cover relative bg-[#F5F5F5]"
+          className="w-full h-full object-cover relative bg-[#F5F5F5] group-hover:scale-105 transition-transform duration-300"
         />
         {status === "new" && (
-          <h1 className="absolute top-1 left-1 rounded-lg bg-black px-3 py-1 text-white text-sm font-bold">
-            NEW
-          </h1>
+          <div className="absolute top-3 left-3">
+            <span className="bg-black text-white px-3 py-1 text-xs font-semibold tracking-wider rounded-full">
+              NEW
+            </span>
+          </div>
         )}
 
         {!isWishlist && (
           <button
             onClick={handleWishlistPresence}
             disabled={loadingWishlist}
-            className={`absolute top-2 right-3 w-[30px] h-[30px] ${
+            className={`absolute top-3 right-3 w-[35px] h-[35px] rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-all duration-200 ${
               loadingWishlist ? "opacity-50" : "opacity-100"
-            } hover:opacity-100 transition-opacity`}
+            }`}
           >
             {loadingWishlist ? (
-              "⏳"
+              <div className="w-5 h-5 border-2 border-[#DB4444] border-t-transparent rounded-full animate-spin" />
             ) : (
               <svg
-                width="30"
-                height="30"
+                width="20"
+                height="20"
                 viewBox="0 0 24 24"
                 fill={GlobalWishlist.includes(id) ? "#DB4444" : "none"}
                 xmlns="http://www.w3.org/2000/svg"
-                className="transition-all duration-200 drop-shadow-sm"
+                className="transition-all duration-200"
               >
                 <path
                   d="M8 5C5.7912 5 4 6.73964 4 8.88594C4 10.6185 4.7 14.7305 11.5904 18.8873C11.7138 18.961 11.8555 19 12 19C12.1445 19 12.2862 18.961 12.4096 18.8873C19.3 14.7305 20 10.6185 20 8.88594C20 6.73964 18.2088 5 16 5C13.7912 5 12 7.35511 12 7.35511C12 7.35511 10.2088 5 8 5Z"
@@ -186,44 +188,73 @@ export default function Card({
         )}
 
         {isWishlist ? (
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex flex-col gap-2 w-[270px]">
-            <button
-              onClick={handleWishlistPresence}
-              disabled={loadingWishlist}
-              className="font-bold bg-[#DB4444] text-white w-full py-2 px-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            >
-              {loadingWishlist ? "⏳" : "Remove from wishlist"}
-            </button>
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:block">
             <button
               onClick={handleAddToCart}
               disabled={loadingCart}
-              className="font-bold bg-black text-white w-full py-2 px-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              className="w-full bg-white text-black font-medium py-2.5 px-4 rounded-md hover:bg-[#DB4444] hover:text-white transition-colors duration-200 flex items-center justify-center gap-2"
             >
-              {loadingCart ? "⏳" : "Move to cart"}
+              {loadingCart ? (
+                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  {GlobalCart.includes(id) ? "Remove from cart" : "Add to cart"}
+                </>
+              )}
             </button>
           </div>
         ) : (
-          <button
-            onClick={handleAddToCart}
-            disabled={loadingCart}
-            className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 font-bold bg-black text-white w-[270px] py-2 px-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-          >
-            {loadingCart
-              ? "⏳"
-              : GlobalCart.includes(id)
-              ? "Remove from cart"
-              : "Add to cart"}
-          </button>
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:block">
+            <button
+              onClick={handleAddToCart}
+              disabled={loadingCart}
+              className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200 flex items-center justify-center gap-2"
+            >
+              {loadingCart ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  {GlobalCart.includes(id) ? "Remove from cart" : "Add to cart"}
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
-      <div className="card-details flex flex-col gap-3  text-center uppercase">
-        <h1 className="font-extrabold text-black">{productName}</h1>
-        <div className="flex gap-2 text-center mx-auto w-fit uppercase">
-          <h1 className="text-[#DB4444] font-extrabold">Rs. {productPrice}</h1>
-          <h1 className="line-through text-gray-500 font-extrabold">
-            Rs. {cancelledPrice}
-          </h1>
+      <div className="card-details flex flex-col gap-2 p-4">
+        <h1 className="font-semibold text-gray-900 line-clamp-2">{productName}</h1>
+        <div className="flex items-center gap-2">
+          <span className="text-[#DB4444] font-bold">Rs. {productPrice}</span>
+          <span className="text-gray-400 line-through text-sm">Rs. {cancelledPrice}</span>
+          {cancelledPrice > productPrice && (
+            <span className="text-xs font-medium text-green-600">
+              {Math.round(((cancelledPrice - productPrice) / cancelledPrice) * 100)}% OFF
+            </span>
+          )}
         </div>
+        {/* Mobile Cart Button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={loadingCart}
+          className="md:hidden w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200 flex items-center justify-center gap-2 mt-2"
+        >
+          {loadingCart ? (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              {GlobalCart.includes(id) ? "Remove from cart" : "Add to cart"}
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

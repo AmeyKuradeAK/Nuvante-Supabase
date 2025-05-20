@@ -21,9 +21,9 @@ export function EmblaCarousel() {
       <div className="embla__container">
         {sliderImages.map((image, index) => (
           <div key={index} className="embla__slide w-full">
-            <div className="relative w-full aspect-[16/9] md:aspect-[21/9] lg:aspect-[21/9]">
+            <div className="relative w-full aspect-[16/9]">
               <img
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-center"
                 src={image.src}
                 alt={`Slide ${index + 1}`}
               />

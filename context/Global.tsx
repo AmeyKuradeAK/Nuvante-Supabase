@@ -70,7 +70,11 @@ export const GlobalContextProvider = ({
   };
 
   const changeGlobalCart = (element: string) => {
-    setGlobalCart([...GlobalCart, element]);
+    if (GlobalCart.includes(element)) {
+      setGlobalCart(GlobalCart.filter(item => item !== element));
+    } else {
+      setGlobalCart([...GlobalCart, element]);
+    }
     if (isSignedIn) {
       (async () => {
         try {

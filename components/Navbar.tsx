@@ -88,31 +88,16 @@ export default function Navbar() {
             ))}
           </div>
           <div className="gap-4 lg:flex lg:flex-row flex flex-col lg:mt-0 mt-6">
-            <div className="flex rounded-lg items-center bg-[#F5F5F5] px-4 w-fit hidden">
-              <input
-                type="text"
-                className="bg-[#F5F5F5] h-[45px] outline-none w-[220px] rounded-lg text-black"
-                placeholder="What are you looking for?"
-              ></input>
-              <div className="">
-                <Image
-                  src={search}
-                  width={30}
-                  className="cursor-pointer"
-                  height={30}
-                  alt="search"
-                ></Image>
-              </div>
-            </div>
             <div className="flex lg:flex-row items-center gap-4">
-              <Link href="/Wishlist">
+              <Link href="/Wishlist" className="hidden lg:flex items-center gap-2">
                 <Image
                   src={heart}
                   width={30}
                   height={30}
                   className="cursor-pointer hover:opacity-80 transition-opacity"
                   alt="heart"
-                ></Image>
+                />
+                <span className="text-sm font-medium lg:hidden">Wishlist</span>
               </Link>
               <Link href="/Cart">
                 <Image
@@ -142,10 +127,10 @@ export default function Navbar() {
 
       <div
         style={{
-          transition: "1s all ease",
+          transition: "all 0.3s ease-in-out",
         }}
         className={`navbar_responsive lg:hidden flex flex-col py-3 overflow-y-hidden ${
-          open ? "h-[350px]" : "h-[90px]"
+          open ? "h-[300px]" : "h-[90px]"
         }`}
       >
         <div className="flex justify-between items-center px-4">
@@ -153,9 +138,9 @@ export default function Navbar() {
             onClick={handleNavbar}
             className="hamburger_responsive lg:hidden flex-col gap-1 cursor-pointer flex p-2"
           >
-            <div className="line w-5 h-[2px] bg-black"></div>
-            <div className="line w-5 h-[2px] bg-black"></div>
-            <div className="line w-5 h-[2px] bg-black"></div>
+            <div className={`line w-5 h-[2px] bg-black transition-all duration-300 ${open ? 'rotate-45 translate-y-1.5' : ''}`}></div>
+            <div className={`line w-5 h-[2px] bg-black transition-all duration-300 ${open ? 'opacity-0' : ''}`}></div>
+            <div className={`line w-5 h-[2px] bg-black transition-all duration-300 ${open ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
           </div>
           <div
             className="navbar-brand flex items-center cursor-pointer w-fit"
@@ -201,7 +186,7 @@ export default function Navbar() {
             </Link>
           </div>
         </div>
-        <div>
+        <div className="flex-1">
           <ul className="tracking-[2px] flex gap-4 lg:gap-10 ml-3 mt-4 lg:mt-0 lg:ml-0 lg:items-center flex-col text-black lg:flex-row w-fit text-sm">
             {navigation.map((item) => (
               <li key={item.name}>
@@ -210,6 +195,11 @@ export default function Navbar() {
                 </Link>
               </li>
             ))}
+            <li className="lg:hidden">
+              <Link href="/Wishlist" className="hover:text-[#DB4444] transition-colors">
+                Wishlist
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
