@@ -5,6 +5,8 @@ import connect from "@/db";
 import { ClerkProvider } from "@clerk/nextjs";
 import { GlobalContextProvider } from "@/context/Global";
 import { AlertProvider } from "@/context/AlertContext";
+import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 //? an inline function to connect to mongodb atlas using mongoose.
 (async () => {
@@ -64,6 +66,8 @@ export default function RootLayout({
           <GlobalContextProvider>
             <AlertProvider>
               {children}
+              <Analytics />
+              <SpeedInsights />
             </AlertProvider>
           </GlobalContextProvider>
         </ClerkProvider>
