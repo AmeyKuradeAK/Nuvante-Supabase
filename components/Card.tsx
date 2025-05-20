@@ -242,7 +242,7 @@ export default function Card({
         <button
           onClick={handleAddToCart}
           disabled={loadingCart}
-          className="md:hidden w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200 flex items-center justify-center gap-2 mt-2"
+          className="hidden w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200 items-center justify-center gap-2 mt-2"
         >
           {loadingCart ? (
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

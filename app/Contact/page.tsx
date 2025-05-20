@@ -40,7 +40,7 @@ export default function Page() {
                   </svg>
                   <div>
                     <h3 className="font-semibold text-gray-800">Email Support</h3>
-                    <p className="text-gray-600">support@nuvante.in</p>
+                    <p className="text-gray-600">nuvanteindia@gmail.com</p>
                     <p className="text-sm text-gray-500 mt-1">Response within 24 hours</p>
                   </div>
                 </div>
@@ -50,7 +50,7 @@ export default function Page() {
                   </svg>
                   <div>
                     <h3 className="font-semibold text-gray-800">Phone Support</h3>
-                    <p className="text-gray-600">+91 1234567890</p>
+                    <p className="text-gray-600">+91 9899044148</p>
                     <p className="text-sm text-gray-500 mt-1">Monday to Friday, 9 AM - 6 PM IST</p>
                   </div>
                 </div>
@@ -72,7 +72,7 @@ export default function Page() {
                   </svg>
                   <div>
                     <h3 className="font-semibold text-gray-800">Partnerships</h3>
-                    <p className="text-gray-600">partnerships@nuvante.in</p>
+                    <p className="text-gray-600">nuvanteindia@gmail.com</p>
                     <p className="text-sm text-gray-500 mt-1">For business collaborations</p>
                   </div>
                 </div>
@@ -129,7 +129,7 @@ export default function Page() {
                 </svg>
                 <div>
                   <h3 className="font-semibold text-gray-800">Share Your Thoughts</h3>
-                  <p className="text-gray-600">feedback@nuvante.in</p>
+                  <p className="text-gray-600">nuvanteindia@gmail.com</p>
                   <p className="text-sm text-gray-500 mt-1">We read every message</p>
                 </div>
               </div>

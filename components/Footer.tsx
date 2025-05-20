@@ -23,7 +23,7 @@ export default function Footer() {
             our passion, enabling you to flaunt the classiest products and
             services available. Discover your next favorite today!
           </p>
-          <div className="flex items-center border w-fit border-white rounded-md overflow-hidden hidden">
+          <div className="items-center border w-fit border-white rounded-md overflow-hidden hidden">
             <input
               type="email"
               placeholder="Enter your email"
@@ -57,7 +57,7 @@ export default function Footer() {
         <div className=" flex flex-col gap-3">
           <h3 className="font-semibold text-lg">Support</h3>
           <p className="text-gray-400">New Delhi, India.</p>
-          <p className="text-gray-400">nuvantestores@gmail.com</p>
+          <p className="text-gray-400">nuvanteindia@gmail.com</p>
           <p className="text-gray-400">+91 9899044148</p>
         </div>
 
