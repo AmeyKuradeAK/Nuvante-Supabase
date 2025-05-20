@@ -18,7 +18,8 @@ export default function Suggestion() {
         id: hash === "" ? url_param.slug : hash,
         every: true,
       });
-      const filteredProducts = response.data.filter(
+      const data = response.data as any[];
+      const filteredProducts = data.filter(
         (product: any) => product.id !== url_param.slug
       );
       filteredProducts.sort(
@@ -40,8 +41,8 @@ export default function Suggestion() {
             productName={product.productName}
             productPrice={product.productPrice}
             cancelledPrice={product.cancelledProductPrice}
-            reviews={product.productReviews.length}
-            stars={product.productStars}
+            // reviews={product.productReviews.length}
+            // stars={product.productStars}
             status={product.latest ? "new" : "old"}
           />
         ))}

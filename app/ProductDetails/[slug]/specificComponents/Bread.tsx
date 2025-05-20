@@ -29,10 +29,12 @@ export default function Bread() {
         id: url_param.slug,
         every: false,
       });
-      console.log("the response for the breadcrumb: ", response.data);
-      setProductName(response.data.productName);
+      // Type assertion for response.data
+      const data = response.data as { productName: string; type: string };
+      console.log("the response for the breadcrumb: ", data);
+      setProductName(data.productName);
       console.log(productName);
-      setProductType(response.data.type);
+      setProductType(data.type);
     })();
   });
 

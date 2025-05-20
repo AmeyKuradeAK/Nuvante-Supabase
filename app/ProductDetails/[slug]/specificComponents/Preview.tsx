@@ -130,8 +130,8 @@ const Preview = () => {
       
       // Make the API call first
       const response = await axios.post("/api/cart", {
-        identifier: id,
-        append: !isPresent,
+          identifier: id,
+          append: !isPresent,
       });
 
       // Check if response is successful
@@ -293,7 +293,7 @@ const Preview = () => {
                   className="overflow-hidden"
                 >
                   <p className="mt-2 text-sm text-gray-600">
-                    {currentProduct.description}
+                  {currentProduct.description}
                   </p>
                 </motion.div>
               </motion.div>
@@ -322,7 +322,7 @@ const Preview = () => {
                   className="overflow-hidden"
                 >
                   <p className="mt-2 text-sm text-gray-600">
-                    {currentProduct.materials}
+                  {currentProduct.materials}
                   </p>
                 </motion.div>
               </motion.div>
@@ -351,7 +351,7 @@ const Preview = () => {
                   className="overflow-hidden"
                 >
                   <p className="mt-2 text-sm text-gray-600">
-                    {currentProduct.packaging}
+                  {currentProduct.packaging}
                   </p>
                 </motion.div>
               </motion.div>
@@ -380,7 +380,7 @@ const Preview = () => {
                   className="overflow-hidden"
                 >
                   <p className="mt-2 text-sm text-gray-600">
-                    {currentProduct.shipping}
+                  {currentProduct.shipping}
                   </p>
                 </motion.div>
               </motion.div>
