@@ -1,6 +1,9 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import { useUser } from "@clerk/nextjs";
+import { useAlert } from "@/context/AlertContext";
+import { useRouter } from "next/navigation";
 
 const facebook_icon = "/facebook.svg";
 const gram_icon = "/instagram.svg";
@@ -8,6 +11,19 @@ const linkedin_icon = "/linkedin.svg";
 const caret_right = "/caret-right.svg";
 
 export default function Footer() {
+  const { isSignedIn } = useUser();
+  const { showAlert } = useAlert();
+  const router = useRouter();
+
+  const handleLoginClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (isSignedIn) {
+      showAlert("You are already signed in", "info");
+    } else {
+      router.push("/sign-in");
+    }
+  };
+
   return (
     <footer className="bg-black text-white py-20 mt-40">
       <div className="w-[96%] mx-auto flex lg:flex-row flex-wrap justify-between px-2  lg:gap-10 gap-10">
@@ -70,7 +86,7 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a href="/sign-in" className="hover:text-white">
+              <a href="#" onClick={handleLoginClick} className="hover:text-white">
                 Login / Register
               </a>
             </li>
