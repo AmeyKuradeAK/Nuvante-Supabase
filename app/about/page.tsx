@@ -51,11 +51,22 @@ export default function Page() {
               className="bg-white rounded-lg shadow-sm p-8"
             >
               <h2 className="text-2xl font-bold mb-4 text-[#DB4444]">Who We Are</h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-4">
                 Based in the heart of Delhi, India, Nuvante India was born out of a
                 desire to bring high-quality, stylish, and premium apparel to people
                 who value comfort, durability, and personalization.
               </p>
+              <div className="mt-4 border-t pt-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-[#DB4444] rounded-full flex items-center justify-center">
+                    <span className="text-white text-xl font-bold">AN</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-800">Alan Nobel</h3>
+                    <p className="text-sm text-[#DB4444]">Founder & Creative Director</p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
 
             {/* What Makes Us Different Section */}

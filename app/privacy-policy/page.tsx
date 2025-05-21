@@ -1,129 +1,175 @@
+"use client";
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { motion } from "framer-motion";
 
-
-export default function PrivacyPolicy() {
+export default function Page() {
   return (
     <>
       <Navbar />
-      <div className="max-w-6xl mx-auto p-6 text-left">
-        <h1 className="text-3xl font-bold mb-10 mx-auto w-fit">
-          PRIVACY POLICY
-        </h1>
-        <p className="font-semibold text-lg mb-4">
-          At Nuvante India, we value your privacy and are committed to
-          protecting your personal information. This Privacy Policy explains how
-          we collect, use, and safeguard the information you provide while using
-          our website or services. By accessing or using our website, you agree
-          to the terms of this Privacy Policy.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">Information We Collect</h2>
-        <p className="mb-4">
-          We may collect the following types of information:
-          <br />
-          <strong>1. Personal Information:</strong>
-          <br />- Name, email address, phone number, and mailing address.
-          <br />- Payment details (e.g., credit/debit card information) for
-          order processing.
-          <br />
-          <strong>2. Non-Personal Information:</strong>
-          <br />- Browser type, device type, IP address, and other technical
-          details about your visit to our website.
-          <br />- Information collected through cookies, including browsing
-          behavior and preferences.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">How We Use Your Information</h2>
-        <p className="mb-4">
-          The information we collect is used for the following purposes:
-          <br />- Order fulfillment and processing.
-          <br />- Customer support and responding to inquiries.
-          <br />- Improving our services, website functionality, and user
-          experience.
-          <br />- Legal compliance to meet obligations as referenced in our
-          Terms and Conditions.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">Sharing Your Information</h2>
-        <p className="mb-4">
-          We do not sell, trade, or rent your personal information to third
-          parties. However, we may share your information in the following
-          circumstances:
-          <br />- <strong>Service Providers:</strong> With third-party partners
-          who assist in payment processing, shipping, or analytics under strict
-          confidentiality agreements.
-          <br />- <strong>Legal Requirements:</strong> If required by law to
-          protect our legal rights or prevent fraud.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">Data Security</h2>
-        <p className="mb-4">
-          We implement industry-standard security measures to protect your
-          personal information from unauthorized access, alteration, disclosure,
-          or destruction. However, no online system is entirely secure, and we
-          cannot guarantee absolute data security.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">Your Rights</h2>
-        <p className="mb-4">
-          You have the right to:
-          <br />- Access, update, or delete your personal information.
-          <br />- Opt out of receiving marketing communications by clicking the
-          "unsubscribe" link in our emails.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">Use of Cookies</h2>
-        <p className="mb-4">
-          Our website uses cookies to enhance your browsing experience. Cookies
-          allow us to:
-          <br />- Track and analyze website traffic.
-          <br />- Remember your preferences for future visits.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">Third-Party Links</h2>
-        <p className="mb-4">
-          Our website may contain links to third-party websites. Nuvante India
-          is not responsible for their privacy practices. Please review their
-          policies before providing personal information.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">Children's Privacy</h2>
-        <p className="mb-4">
-          Our website is not designed for children under the age of 13. We do
-          not knowingly collect personal information from children.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">
-          Changes to This Privacy Policy
-        </h2>
-        <p className="mb-4">
-          We may update this Privacy Policy from time to time. Changes will be
-          posted on this page, and we encourage you to review it periodically.
-        </p>
-
-        <h2 className="text-xl font-bold mt-6">Contact Us</h2>
-        <p className="mb-4">
-          If you have any questions, concerns, or requests regarding this
-          Privacy Policy, please contact us:
-          <br />
-          Email:{" "}
-          <a
-            href="mailto:nuvanteindia@gmail.com"
-            className="text-black underline"
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 py-16">
+          {/* Hero Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
           >
-            nuvanteindia@gmail.com
-          </a>
-          <br />
-          Phone: +91 8882587922
-        </p>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">Privacy Policy</h1>
+            <p className="text-lg text-gray-600">
+              Your privacy is important to us. This policy outlines how we collect,
+              use, and protect your personal information.
+            </p>
+          </motion.div>
 
-        <p className="font-semibold">Effective Date: 30th November, 2024</p>
-        <p className="font-bold mt-6">
-          By using our website, you agree to this Privacy Policy. Thank you for
-          trusting Nuvante India!
-        </p>
+          {/* Main Content */}
+          <div className="space-y-12">
+            {/* Introduction */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-lg shadow-sm p-8"
+            >
+              <h2 className="text-2xl font-bold mb-4 text-[#DB4444]">Introduction</h2>
+              <p className="text-gray-600 mb-4">
+                At Nuvante, we are committed to protecting your privacy and ensuring
+                the security of your personal information. This Privacy Policy explains
+                how we collect, use, and safeguard your data when you use our website
+                and services.
+              </p>
+            </motion.section>
+
+            {/* Information We Collect */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-lg shadow-sm p-8"
+            >
+              <h2 className="text-2xl font-bold mb-4 text-[#DB4444]">Information We Collect</h2>
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#DB4444] flex items-center justify-center mt-1">
+                    <span className="text-white text-sm">1</span>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Personal Information</h3>
+                    <p className="text-gray-600">Name, email address, phone number, and shipping address when you create an account or place an order.</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#DB4444] flex items-center justify-center mt-1">
+                    <span className="text-white text-sm">2</span>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Payment Information</h3>
+                    <p className="text-gray-600">Payment details are securely processed through our payment partners and are not stored on our servers.</p>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#DB4444] flex items-center justify-center mt-1">
+                    <span className="text-white text-sm">3</span>
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Usage Data</h3>
+                    <p className="text-gray-600">Information about how you interact with our website, including browsing history and product preferences.</p>
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+
+            {/* How We Use Your Information */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white rounded-lg shadow-sm p-8"
+            >
+              <h2 className="text-2xl font-bold mb-4 text-[#DB4444]">How We Use Your Information</h2>
+              <ul className="space-y-4 text-gray-600">
+                <li className="flex items-start">
+                  <svg className="w-6 h-6 text-[#DB4444] mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Process and fulfill your orders</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="w-6 h-6 text-[#DB4444] mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Communicate with you about your orders and account</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="w-6 h-6 text-[#DB4444] mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Improve our products and services</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="w-6 h-6 text-[#DB4444] mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Send promotional offers and updates (with your consent)</span>
+                </li>
+              </ul>
+            </motion.section>
+
+            {/* Data Security */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="bg-white rounded-lg shadow-sm p-8"
+            >
+              <h2 className="text-2xl font-bold mb-4 text-[#DB4444]">Data Security</h2>
+              <p className="text-gray-600 mb-4">
+                We implement appropriate security measures to protect your personal
+                information from unauthorized access, alteration, disclosure, or
+                destruction. These measures include:
+              </p>
+              <ul className="space-y-4 text-gray-600">
+                <li className="flex items-start">
+                  <svg className="w-6 h-6 text-[#DB4444] mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span>Secure SSL encryption for all data transmission</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="w-6 h-6 text-[#DB4444] mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span>Regular security audits and updates</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="w-6 h-6 text-[#DB4444] mr-2 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span>Restricted access to personal information</span>
+                </li>
+              </ul>
+            </motion.section>
+
+            {/* Contact Information */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="bg-white rounded-lg shadow-sm p-8"
+            >
+              <h2 className="text-2xl font-bold mb-4 text-[#DB4444]">Contact Us</h2>
+              <p className="text-gray-600 mb-4">
+                If you have any questions about our Privacy Policy, please contact us:
+              </p>
+              <div className="space-y-2 text-gray-600">
+                <p>Email: nuvanteindia@gmail.com</p>
+                <p>Phone: +91 9899044148</p>
+                <p>Address: New Delhi, India</p>
+              </div>
+            </motion.section>
+          </div>
+        </div>
       </div>
       <Footer />
     </>

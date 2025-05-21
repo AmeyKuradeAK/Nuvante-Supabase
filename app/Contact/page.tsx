@@ -86,6 +86,22 @@ export default function Page() {
                     <p className="text-sm text-gray-500 mt-1">By appointment only</p>
                   </div>
                 </div>
+                <div className="border-t pt-6 mt-6">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-[#DB4444] rounded-full flex items-center justify-center">
+                        <span className="text-white text-xl font-bold">AN</span>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-gray-600 italic">
+                        "I'm always excited to explore new opportunities and collaborations that align with our vision of premium fashion and exceptional quality."
+                      </p>
+                      <p className="mt-2 text-[#DB4444] font-semibold">Alan Nobel</p>
+                      <p className="text-sm text-gray-500">Founder, Nuvante</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
 
