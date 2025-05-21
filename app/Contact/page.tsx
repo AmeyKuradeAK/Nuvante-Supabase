@@ -51,7 +51,7 @@ export default function Page() {
                   <div>
                     <h3 className="font-semibold text-gray-800">Phone Support</h3>
                     <p className="text-gray-600">+91 9899044148</p>
-                    <p className="text-sm text-gray-500 mt-1">Monday to Friday, 9 AM - 6 PM IST</p>
+                    <p className="text-sm text-gray-500 mt-1">Monday to Friday, 10 AM - 6 PM IST</p>
                   </div>
                 </div>
               </div>
@@ -97,7 +97,7 @@ export default function Page() {
                       <p className="text-gray-600 italic">
                         "I'm always excited to explore new opportunities and collaborations that align with our vision of premium fashion and exceptional quality."
                       </p>
-                      <p className="mt-2 text-[#DB4444] font-semibold">Alan Nobel</p>
+                      <p className="mt-2 text-[#DB4444] font-semibold">Alan Noble</p>
                       <p className="text-sm text-gray-500">Founder, Nuvante</p>
                     </div>
                   </div>

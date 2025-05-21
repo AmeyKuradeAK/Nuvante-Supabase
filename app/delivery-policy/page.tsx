@@ -47,18 +47,8 @@ export default function Page() {
                   </div>
                   <div className="ml-4">
                     <h3 className="font-semibold text-gray-800">Standard Delivery</h3>
-                    <p className="text-gray-600">4-5 business days</p>
+                    <p className="text-gray-600">4-7 business days</p>
                     <p className="text-sm text-gray-500">Free shipping on orders above ₹999</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-8 h-8 bg-[#DB4444] rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white font-bold">2</span>
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="font-semibold text-gray-800">Express Delivery</h3>
-                    <p className="text-gray-600">2-3 business days</p>
-                    <p className="text-sm text-gray-500">Additional charges apply</p>
                   </div>
                 </div>
               </div>
@@ -194,7 +184,7 @@ export default function Page() {
               <div className="space-y-2 text-gray-600">
                 <p>Email: nuvanteindia@gmail.com</p>
                 <p>Phone: +91 9899044148</p>
-                <p>Hours: Monday to Friday, 9 AM - 6 PM IST</p>
+                <p>Hours: Monday to Friday, 10 AM - 6 PM IST</p>
               </div>
             </motion.section>
           </div>

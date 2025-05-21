@@ -156,6 +156,37 @@ export default function Card({
           </div>
         )}
 
+        {isWishlist && (
+          <button
+            onClick={handleWishlistPresence}
+            disabled={loadingWishlist}
+            className={`absolute top-3 right-3 w-[35px] h-[35px] rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-all duration-200 ${
+              loadingWishlist ? "opacity-50" : "opacity-100"
+            }`}
+          >
+            {loadingWishlist ? (
+              <div className="w-5 h-5 border-2 border-[#DB4444] border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#DB4444"
+                xmlns="http://www.w3.org/2000/svg"
+                className="transition-all duration-200"
+              >
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+          </button>
+        )}
+
         {!isWishlist && (
           <button
             onClick={handleWishlistPresence}

@@ -41,7 +41,7 @@ export default function Page() {
                 <h2 className="text-2xl font-bold text-[#DB4444]">Return Window</h2>
               </div>
               <p className="text-gray-600 mb-4">
-                You have 7 days from the date of delivery to initiate a return.
+                You have 24 hours from the date of delivery to initiate a return.
                 This ensures you have enough time to check your purchase while
                 maintaining our quality standards.
               </p>
@@ -136,7 +136,7 @@ export default function Page() {
                     <span className="text-white font-bold">3</span>
                   </div>
                   <div className="ml-4">
-                    <p className="text-gray-600">Refund initiated (3-5 business days)</p>
+                    <p className="text-gray-600">Refund initiated (7-14 business days)</p>
                   </div>
                 </div>
               </div>
@@ -193,7 +193,7 @@ export default function Page() {
               <div className="space-y-2 text-gray-600">
                 <p>Email: nuvanteindia@gmail.com</p>
                 <p>Phone: +91 9899044148</p>
-                <p>Hours: Monday to Friday, 9 AM - 6 PM IST</p>
+                <p>Hours: Monday to Friday, 10 AM - 6 PM IST</p>
               </div>
             </motion.section>
           </div>

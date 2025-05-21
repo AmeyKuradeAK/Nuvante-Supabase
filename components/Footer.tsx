@@ -44,8 +44,8 @@ export default function Footer() {
               <span className="text-white text-sm font-bold">AN</span>
             </div>
             <div>
-              <p className="text-white text-sm font-semibold">Alan Nobel</p>
-              <p className="text-gray-400 text-xs">Founder & Creative Director</p>
+              <p className="text-white text-sm font-semibold">Alan Noble</p>
+              <p className="text-gray-400 text-xs">Founder</p>
             </div>
           </div>
           <div className="items-center border w-fit border-white rounded-md overflow-hidden hidden">
@@ -123,12 +123,17 @@ export default function Footer() {
           <ul className="text-gray-400 flex flex-col gap-2">
             <li>
               <a href="/Contact" className="hover:text-white">
-                Contact
+                Contact us
               </a>
             </li>
             <li>
               <a href="/about" className="hover:text-white">
                 About us
+              </a>
+            </li>
+            <li>
+              <a href="/faq" className="hover:text-white">
+                FAQs
               </a>
             </li>
             <li>
@@ -138,7 +143,7 @@ export default function Footer() {
             </li>
             <li>
               <a href="/delivery-policy" className="hover:text-white">
-                Delivery Policy
+                Shipping Policy
               </a>
             </li>
             <li>
