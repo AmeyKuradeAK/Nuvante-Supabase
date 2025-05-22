@@ -120,8 +120,7 @@ export default function Card({
         const updatedCart = isPresent
           ? GlobalCart.filter((item) => item !== id)
           : [...GlobalCart, id];
-
-        changeGlobalCart(updatedCart[0]); // Since changeGlobalCart expects a single string
+        changeGlobalCart(updatedCart[0] || "");
         showAlert(
           isPresent ? "Removed from cart" : "Added to cart",
           "success"

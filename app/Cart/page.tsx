@@ -97,7 +97,7 @@ const CartPage = () => {
         identifier: id,
       });
       
-      if (response.data === 200) {
+      if (response.status === 200) {
         const updatedCart = GlobalCart.filter((element: string) => element !== id);
         changeGlobalCart(updatedCart[0] || "");
         showAlert("Item removed from cart", "success");

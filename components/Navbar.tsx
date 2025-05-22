@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useAlert } from "@/context/AlertContext";
 import { useRouter } from "next/navigation";
+import { ShoppingCart, Heart, User as UserIcon, Package } from "lucide-react";
 
 const logo_l = "/logo_l.svg";
 const logo_r = "/logo_r.svg";
@@ -91,41 +92,17 @@ export default function Navbar() {
           
           <div className="flex lg:flex-row items-center gap-4">
             <Link href="/Wishlist" className="hidden lg:flex items-center gap-2">
-              <Image
-                src={heart}
-                width={30}
-                height={30}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                alt="heart"
-              />
+              <Heart className="h-6 w-6" />
               <span className="text-sm font-medium lg:hidden">Wishlist</span>
             </Link>
             <Link href="/Cart">
-              <Image
-                src={cart}
-                width={30}
-                height={30}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                alt="cart"
-              />
+              <ShoppingCart className="h-6 w-6" />
             </Link>
             <Link href="/orders">
-              <Image
-                src={Orders}
-                width={30}
-                height={30}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                alt="orders"
-              />
+              <Package className="h-6 w-6" />
             </Link>
             <Link href="/Profile" onClick={handleProfileClick}>
-              <Image
-                src={User}
-                width={30}
-                height={30}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                alt="user"
-              />
+              <UserIcon className="h-6 w-6" />
             </Link>
           </div>
         </div>
@@ -168,33 +145,18 @@ export default function Navbar() {
               <source src={animated_logo} type="video/mp4"></source>
             </video>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/Cart">
-              <Image
-                src={cart}
-                width={30}
-                height={30}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                alt="cart"
-              />
+          <div className="flex flex-col gap-4">
+            <Link href="/wishlist" className="text-gray-600 hover:text-[#DB4444]">
+              <Heart className="h-6 w-6" />
             </Link>
-            <Link href="/orders">
-              <Image
-                src={Orders}
-                width={30}
-                height={30}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                alt="orders"
-              />
+            <Link href="/Cart" className="text-gray-600 hover:text-[#DB4444]">
+              <ShoppingCart className="h-6 w-6" />
             </Link>
-            <Link href="/Profile" onClick={handleProfileClick}>
-              <Image
-                src={User}
-                width={30}
-                height={30}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
-                alt="user"
-              />
+            <Link href="/orders" className="text-gray-600 hover:text-[#DB4444]">
+              <Package className="h-6 w-6" />
+            </Link>
+            <Link href="/Profile" className="text-gray-600 hover:text-[#DB4444]">
+              <UserIcon className="h-6 w-6" />
             </Link>
           </div>
         </div>
