@@ -30,6 +30,34 @@ const CheckoutPage = () => {
   const { GlobalCart } = globalContext;
   const [products, setProducts] = useState<any[]>([]);
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    address: '',
+    apartment: '',
+    city: '',
+    phone: '',
+    email: ''
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const isFormValid = () => {
+    return (
+      formData.firstName.trim() !== '' &&
+      formData.lastName.trim() !== '' &&
+      formData.address.trim() !== '' &&
+      formData.city.trim() !== '' &&
+      formData.phone.trim() !== '' &&
+      formData.email.trim() !== ''
+    );
+  };
 
   useEffect(() => {
     // Redirect if cart is empty
@@ -159,6 +187,7 @@ const CheckoutPage = () => {
                       First Name <span className="text-[#DB4444]">*</span>
                     </label>
                     <input
+                      name="firstName"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                       required
@@ -169,6 +198,7 @@ const CheckoutPage = () => {
                       Last Name <span className="text-[#DB4444]">*</span>
                     </label>
                     <input
+                      name="lastName"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                       required
@@ -179,6 +209,7 @@ const CheckoutPage = () => {
                       Street Address <span className="text-[#DB4444]">*</span>
                     </label>
                     <input
+                      name="streetAddress"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                       required
@@ -189,6 +220,7 @@ const CheckoutPage = () => {
                       Apartment, Floor, etc.
                     </label>
                     <input
+                      name="apartment"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                     />
@@ -198,6 +230,7 @@ const CheckoutPage = () => {
                       Town/City <span className="text-[#DB4444]">*</span>
                     </label>
                     <input
+                      name="city"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                       required
@@ -208,6 +241,7 @@ const CheckoutPage = () => {
                       Phone Number <span className="text-[#DB4444]">*</span>
                     </label>
                     <input
+                      name="phone"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="tel"
                       required
@@ -218,6 +252,7 @@ const CheckoutPage = () => {
                       Email Address <span className="text-[#DB4444]">*</span>
                     </label>
                     <input
+                      name="email"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="email"
                       required
