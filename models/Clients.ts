@@ -39,6 +39,11 @@ let clientSchema = new mongoose.Schema({
     type: Array,
     required: true,
   },
+  cartQuantities: {
+    type: Map,
+    of: Number,
+    default: new Map()
+  },
   wishlist: {
     type: Array,
     required: true,

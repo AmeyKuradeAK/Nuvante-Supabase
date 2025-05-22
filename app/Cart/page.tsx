@@ -28,10 +28,20 @@ interface Product {
   productImages: string[];
 }
 
+interface QuantitiesResponse {
+  quantities: { [key: string]: number };
+}
+
 const CartPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>(() => {
+    if (typeof window !== 'undefined') {
+      const savedQuantities = localStorage.getItem('cartQuantities');
+      return savedQuantities ? JSON.parse(savedQuantities) : {};
+    }
+    return {};
+  });
   const { showAlert } = useAlert();
   const user = useUser();
   const router = useRouter();
@@ -68,19 +78,46 @@ const CartPage = () => {
             setProducts(res.data || []);
           }
         });
+
+      // Load quantities from database
+      const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities');
+      if (quantitiesResponse.status === 200 && quantitiesResponse.data.quantities) {
+        setQuantities(quantitiesResponse.data.quantities);
+        localStorage.setItem('cartQuantities', JSON.stringify(quantitiesResponse.data.quantities));
+      }
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching data:", error);
       showAlert("Error loading cart. Please try again.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuantityChange = (id: string, value: number) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: value < 1 ? 1 : value,
-    }));
+  const handleQuantityChange = async (id: string, value: number) => {
+    try {
+      const newValue = value < 1 ? 1 : value;
+      const newQuantities = {
+        ...quantities,
+        [id]: newValue,
+      };
+      
+      // Update local state
+      setQuantities(newQuantities);
+      localStorage.setItem('cartQuantities', JSON.stringify(newQuantities));
+
+      // Update database
+      const response = await axios.post('/api/cart/quantity', {
+        productId: id,
+        quantity: newValue
+      });
+
+      if (response.status !== 200) {
+        showAlert("Failed to update quantity. Please try again.", "error");
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      showAlert("Error updating quantity. Please try again.", "error");
+    }
   };
 
   const calculateSubtotal = () => {
