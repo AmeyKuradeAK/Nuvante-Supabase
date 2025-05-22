@@ -98,13 +98,20 @@ export default function PaymentButton({
             items: globalContext.GlobalCart,
           };
           
+          // Update orders in global context
           globalContext.changeGlobalOrders(orderData);
+          
+          // Clear cart after successful payment
+          globalContext.GlobalCart.forEach(item => {
+            globalContext.changeGlobalCart(item);
+          });
           
           if (onSuccess) {
             onSuccess(response);
           }
           
           showAlert('Payment successful!', 'success');
+          router.push('/orders');
         },
         prefill: {
           name: `${user.firstName} ${user.lastName}`,
