@@ -1,5 +1,15 @@
 import mongoose from "mongoose";
 
+interface OrderItem {
+  orderId: string;
+  paymentId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  timestamp: string;
+  items: string[];
+}
+
 let clientSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -34,7 +44,15 @@ let clientSchema = new mongoose.Schema({
     required: true,
   },
   orders: {
-    type: Array,
+    type: [{
+      orderId: String,
+      paymentId: String,
+      amount: Number,
+      currency: String,
+      status: String,
+      timestamp: String,
+      items: [String]
+    }],
     required: true,
     default: []
   }

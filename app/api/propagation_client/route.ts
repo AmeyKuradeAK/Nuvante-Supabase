@@ -19,7 +19,7 @@ export async function GET() {
     const database_obj = await clientModel.findOne({ email: global_user_email });
     
     if (!database_obj) {
-      return NextResponse.json({ wishlist: [], cart: [] }, { status: 200 });
+      return NextResponse.json({ wishlist: [], cart: [], orders: [] }, { status: 200 });
     }
 
     // Only return non-sensitive fields
@@ -30,6 +30,7 @@ export async function GET() {
       address: database_obj.address,
       cart: database_obj.cart,
       wishlist: database_obj.wishlist,
+      orders: database_obj.orders,
       // Add any other non-sensitive fields you want to expose
     };
 

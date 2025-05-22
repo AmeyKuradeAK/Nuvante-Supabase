@@ -151,7 +151,7 @@ const OrdersPage = () => {
                 <h1 className="font-medium text-[#DB4444]">My Orders</h1>
               </div>
 
-              {orders.length === 0 ? (
+              {!isLoaded ? (
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -173,32 +173,47 @@ const OrdersPage = () => {
                 </motion.div>
               ) : (
                 <div className="mt-8 ml-4 lg:ml-[80px] mr-4 lg:mr-[80px]">
-                  {orders.map((order, index) => (
-                    <motion.div
-                      key={order.id}
+                  {GlobalOrders && GlobalOrders.length > 0 ? (
+                    GlobalOrders.map((order: any, index: number) => (
+                      <motion.div
+                        key={order.orderId}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="border-b py-6 last:border-b-0"
+                      >
+                        <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
+                          <div className="flex-1">
+                            <h3 className="font-medium">Order ID: {order.orderId}</h3>
+                            <p className="text-gray-600 mt-1">Payment ID: {order.paymentId}</p>
+                            <p className="text-[#DB4444] font-medium mt-1">Rs. {order.amount}</p>
+                            <p className="text-gray-500 text-sm mt-1">Ordered on: {new Date(order.timestamp).toLocaleDateString()}</p>
+                            <p className="text-gray-500 text-sm mt-1">Status: {order.status}</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <motion.div 
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="border-b py-6 last:border-b-0"
+                      className="flex flex-col items-center justify-center py-12"
                     >
-                      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
-                        <div className="relative w-[100px] h-[100px]">
-                          <Image
-                            src={order.image}
-                            alt={order.title}
-                            fill
-                            className="object-contain"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-medium">{order.title}</h3>
-                          <p className="text-gray-600 mt-1">Quantity: {order.quantity}</p>
-                          <p className="text-[#DB4444] font-medium mt-1">${order.price}</p>
-                          <p className="text-gray-500 text-sm mt-1">Ordered on: {new Date(order.orderDate).toLocaleDateString()}</p>
-                        </div>
+                      <div className="w-24 h-24 mx-auto mb-6 text-gray-400">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
                       </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders yet</h3>
+                      <p className="text-gray-600 mb-6">Your order history will appear here</p>
+                      <a
+                        href="/Products"
+                        className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-colors duration-200"
+                      >
+                        Start Shopping
+                      </a>
                     </motion.div>
-                  ))}
+                  )}
                 </div>
               )}
             </div>

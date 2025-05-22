@@ -86,32 +86,53 @@ export default function PaymentButton({
         name: 'Nuvante',
         description: 'Payment for your order',
         order_id: data.orderId,
-        handler: function (response: any) {
-          // Add order to global context
-          const orderData = {
-            orderId: data.orderId,
-            paymentId: response.razorpay_payment_id,
-            amount,
-            currency,
-            status: 'completed',
-            timestamp: new Date().toISOString(),
-            items: globalContext.GlobalCart,
-          };
-          
-          // Update orders in global context
-          globalContext.changeGlobalOrders(orderData);
-          
-          // Clear cart after successful payment
-          globalContext.GlobalCart.forEach(item => {
-            globalContext.changeGlobalCart(item);
-          });
-          
-          if (onSuccess) {
-            onSuccess(response);
+        handler: async function (response: any) {
+          try {
+            // Add order to global context
+            const orderData = {
+              orderId: data.orderId,
+              paymentId: response.razorpay_payment_id,
+              amount,
+              currency,
+              status: 'completed',
+              timestamp: new Date().toISOString(),
+              items: globalContext.GlobalCart,
+            };
+            
+            // Save order to database
+            const saveResponse = await fetch('/api/verify-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                razorpay_order_id: data.orderId,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderData,
+              }),
+            });
+
+            if (!saveResponse.ok) {
+              throw new Error('Failed to save order');
+            }
+            
+            // Update orders in global context
+            globalContext.changeGlobalOrders(orderData);
+            
+            // Clear cart after successful payment
+            globalContext.clearGlobalCart();
+            
+            if (onSuccess) {
+              onSuccess(response);
+            }
+            
+            showAlert('Payment successful!', 'success');
+            router.push('/orders');
+          } catch (error) {
+            console.error('Error saving order:', error);
+            showAlert('Payment successful but failed to save order. Please contact support.', 'error');
           }
-          
-          showAlert('Payment successful!', 'success');
-          router.push('/orders');
         },
         prefill: {
           name: `${user.firstName} ${user.lastName}`,

@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useCallback } from "react";
 import React from "react";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
@@ -11,6 +11,7 @@ interface GlobalContextType {
   changeGlobalWishlist: (updatedWishlist: string[]) => void;
   changeGlobalCart: (element: string) => void;
   changeGlobalOrders: (order: any) => void;
+  clearGlobalCart: () => void;
 }
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN;
@@ -25,6 +26,15 @@ interface ApiResponse {
   orders: any[];
 }
 
+// Debounce function
+const debounce = (func: Function, wait: number) => {
+  let timeout: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+};
+
 export const GlobalContextProvider = ({
   children,
 }: {
@@ -36,44 +46,40 @@ export const GlobalContextProvider = ({
 
   const { isSignedIn, user } = useUser();
 
+  // Fetch data from API
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await axios.get<ApiResponse>(`/api/propagation_client`);
+      const { wishlist = [], cart = [], orders = [] } = response.data;
+      setGlobalWishlist(wishlist);
+      setGlobalCart(cart);
+      setGlobalOrders(orders);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  }, []);
+
+  // Debounced fetch data
+  const debouncedFetchData = useCallback(
+    debounce(fetchData, 1000),
+    [fetchData]
+  );
+
   useEffect(() => {
     if (isSignedIn) {
-      (async () => {
-        try {
-          const response = await axios.get<ApiResponse>(`/api/propagation_client`);
-          const { wishlist = [], cart = [], orders = [] } = response.data;
-          setGlobalWishlist(wishlist);
-          setGlobalCart(cart);
-          setGlobalOrders(orders);
-        } catch (error) {
-          console.error("Error fetching initial data:", error);
-          setGlobalWishlist([]);
-          setGlobalCart([]);
-          setGlobalOrders([]);
-        }
-      })();
+      fetchData();
     } else {
       // Reset state when user is not signed in
       setGlobalWishlist([]);
       setGlobalCart([]);
       setGlobalOrders([]);
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, fetchData]);
 
   const changeGlobalWishlist = (updatedWishlist: string[]) => {
     setGlobalWishlist(updatedWishlist);
     if (isSignedIn) {
-      (async () => {
-        try {
-          const response = await axios.get<ApiResponse>(`/api/propagation_client`);
-          const { wishlist = [], cart = [], orders = [] } = response.data;
-          setGlobalWishlist(wishlist);
-          setGlobalCart(cart);
-          setGlobalOrders(orders);
-        } catch (error) {
-          console.error("Error updating wishlist:", error);
-        }
-      })();
+      debouncedFetchData();
     }
   };
 
@@ -84,34 +90,21 @@ export const GlobalContextProvider = ({
       setGlobalCart([...GlobalCart, element]);
     }
     if (isSignedIn) {
-      (async () => {
-        try {
-          const response = await axios.get<ApiResponse>(`/api/propagation_client`);
-          const { wishlist = [], cart = [], orders = [] } = response.data;
-          setGlobalWishlist(wishlist);
-          setGlobalCart(cart);
-          setGlobalOrders(orders);
-        } catch (error) {
-          console.error("Error updating cart:", error);
-        }
-      })();
+      debouncedFetchData();
     }
   };
 
   const changeGlobalOrders = (order: any) => {
     setGlobalOrders([...GlobalOrders, order]);
     if (isSignedIn) {
-      (async () => {
-        try {
-          const response = await axios.get<ApiResponse>(`/api/propagation_client`);
-          const { wishlist = [], cart = [], orders = [] } = response.data;
-          setGlobalWishlist(wishlist);
-          setGlobalCart(cart);
-          setGlobalOrders(orders);
-        } catch (error) {
-          console.error("Error updating orders:", error);
-        }
-      })();
+      debouncedFetchData();
+    }
+  };
+
+  const clearGlobalCart = () => {
+    setGlobalCart([]);
+    if (isSignedIn) {
+      debouncedFetchData();
     }
   };
 
@@ -124,6 +117,7 @@ export const GlobalContextProvider = ({
         changeGlobalWishlist,
         changeGlobalCart,
         changeGlobalOrders,
+        clearGlobalCart,
       }}
     >
       {children}

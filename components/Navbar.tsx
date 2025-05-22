@@ -75,22 +75,26 @@ export default function Navbar() {
       }}
     >
       <div className="py-1" role="menu" aria-orientation="vertical">
-        <Link
-          href="/Profile"
-          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
+        <button
+          onClick={() => {
+            window.location.href = '/Profile';
+            setShowDropdown(false);
+          }}
+          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
           role="menuitem"
-          onClick={() => setShowDropdown(false)}
         >
           Account
-        </Link>
-        <Link
-          href="/orders"
-          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
+        </button>
+        <button
+          onClick={() => {
+            window.location.href = '/orders';
+            setShowDropdown(false);
+          }}
+          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
           role="menuitem"
-          onClick={() => setShowDropdown(false)}
         >
           Orders
-        </Link>
+        </button>
       </div>
     </div>
   );
