@@ -33,6 +33,11 @@ let clientSchema = new mongoose.Schema({
     type: Array,
     required: true,
   },
+  orders: {
+    type: Array,
+    required: true,
+    default: []
+  }
 });
 
 // let clientModel = mongoose.model("Client", clientSchema);

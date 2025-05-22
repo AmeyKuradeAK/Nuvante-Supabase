@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
@@ -27,6 +27,8 @@ const navigation = [
 
 export default function Navbar() {
   const [open, setOpen] = useState<Boolean>(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const user = useUser();
   const { showAlert } = useAlert();
   const router = useRouter();
@@ -42,8 +44,48 @@ export default function Navbar() {
       setTimeout(() => {
         router.push("/sign-in");
       }, 2000);
+    } else {
+      setShowDropdown(!showDropdown);
     }
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const ProfileDropdown = () => (
+    <div 
+      ref={dropdownRef}
+      className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+    >
+      <div className="py-1" role="menu" aria-orientation="vertical">
+        <Link
+          href="/Profile"
+          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
+          role="menuitem"
+        >
+          Account
+        </Link>
+        <Link
+          href="/orders"
+          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
+          role="menuitem"
+        >
+          Orders
+        </Link>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -108,18 +150,17 @@ export default function Navbar() {
                   alt="cart"
                 ></Image>
               </Link>
-              <Link
-                href={user.isLoaded && user.isSignedIn ? "/Profile" : "/sign-in"}
-                onClick={handleProfileClick}
-              >
+              <div className="relative">
                 <Image
                   src={User}
                   width={30}
                   height={30}
                   className="cursor-pointer hover:opacity-80 transition-opacity"
                   alt="user"
-                ></Image>
-              </Link>
+                  onClick={handleProfileClick}
+                />
+                {showDropdown && user.isSignedIn && <ProfileDropdown />}
+              </div>
             </div>
           </div>
         </div>
@@ -172,18 +213,17 @@ export default function Navbar() {
                 alt="cart"
               ></Image>
             </Link>
-            <Link
-              href={user.isLoaded && user.isSignedIn ? "/Profile" : "/sign-in"}
-              onClick={handleProfileClick}
-            >
+            <div className="relative">
               <Image
                 src={User}
                 width={30}
                 height={30}
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 alt="user"
-              ></Image>
-            </Link>
+                onClick={handleProfileClick}
+              />
+              {showDropdown && user.isSignedIn && <ProfileDropdown />}
+            </div>
           </div>
         </div>
         <div className="flex-1">
