@@ -57,7 +57,7 @@ const faqData: FAQItem[] = [
   {
     category: "Returns & Refunds",
     question: "How do I initiate a return or refund?",
-    answer: "Contact us at +91 9899044148 with your order details and unboxing video. Once approved, we will guide you through the return process."
+    answer: "Contact Customer Support with your order details and unboxing video. Once approved, we will guide you through the return process."
   },
   {
     category: "Returns & Refunds",
@@ -67,7 +67,7 @@ const faqData: FAQItem[] = [
   {
     category: "Products & Customization",
     question: "What type of clothing does Nuvante India offer?",
-    answer: "We specialize in high-quality, stylish T-shirts with an option for custom prints. Our collection is designed to offer comfort and style for all occasions."
+    answer: "We specialize in high-quality, stylish clothing accessories with an option for custom printing. Our collection is designed to offer comfort and style for all occasions."
   },
   {
     category: "Products & Customization",

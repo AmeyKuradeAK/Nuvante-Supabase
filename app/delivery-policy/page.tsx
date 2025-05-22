@@ -48,12 +48,11 @@ export default function Page() {
                   <div className="ml-4">
                     <h3 className="font-semibold text-gray-800">Standard Delivery</h3>
                     <p className="text-gray-600">4-7 business days</p>
-                    <p className="text-sm text-gray-500">Free shipping on orders above ₹999</p>
+                    <p className="text-sm text-gray-500">Free shipping on orders above ₹2500</p>
                   </div>
                 </div>
               </div>
             </motion.section>
-
             {/* Delivery Process */}
             <motion.section
               initial={{ opacity: 0, y: 20 }}
