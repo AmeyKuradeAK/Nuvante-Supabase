@@ -1,4 +1,5 @@
 import Razorpay from 'razorpay';
+import crypto from 'crypto';
 
 // Initialize Razorpay instance
 export const razorpay = new Razorpay({
@@ -33,18 +34,17 @@ export const createOrder = async (paymentData: PaymentData) => {
 };
 
 // Verify payment signature
-export const verifyPayment = (
-  razorpay_order_id: string,
-  razorpay_payment_id: string,
-  razorpay_signature: string
-) => {
-  const crypto = require('crypto');
+export function verifyPayment(
+  orderId: string,
+  paymentId: string,
+  signature: string
+): boolean {
   const secret = process.env.RAZORPAY_KEY_SECRET!;
-  
-  const generated_signature = crypto
+  const body = orderId + '|' + paymentId;
+  const expectedSignature = crypto
     .createHmac('sha256', secret)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .update(body)
     .digest('hex');
 
-  return generated_signature === razorpay_signature;
-}; 
+  return expectedSignature === signature;
+} 

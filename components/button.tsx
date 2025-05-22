@@ -1,13 +1,18 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
-const Button = ({ text, width }: { text: string; width: number }) => {
+interface ButtonProps {
+  text: string;
+  width: number;
+  onClick?: () => void;
+}
+
+const Button = ({ text, width, onClick }: ButtonProps) => {
   return (
     <button
-      style={{
-        width: `${width}px`,
-      }}
-      className="p-2 h-[50px] text-white bg-[black] rounded-sm font-bold"
+      onClick={onClick}
+      className="bg-[#DB4444] text-white py-3 px-6 rounded-md hover:bg-[#c13a3a] transition-colors duration-200"
+      style={{ width: `${width}px` }}
     >
       {text}
     </button>

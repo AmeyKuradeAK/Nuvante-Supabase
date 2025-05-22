@@ -1,30 +1,35 @@
 import { NextResponse } from 'next/server';
-import { createOrder } from '@/utils/razorpay';
+import Razorpay from 'razorpay';
 import { currentUser } from '@clerk/nextjs/server';
 
-export async function POST(req: Request) {
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+});
+
+export async function POST(request: Request) {
   try {
     const user = await currentUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { amount, currency, receipt, notes } = body;
+    const { amount, currency, receipt, notes } = await request.json();
 
-    const order = await createOrder({
-      amount,
+    const order = await razorpay.orders.create({
+      amount: amount * 100, // Razorpay expects amount in smallest currency unit (paise for INR)
       currency,
       receipt,
-      notes: {
-        ...notes,
-        userId: user.id,
-      },
+      notes,
     });
 
-    return NextResponse.json({ orderId: order.id });
+    return NextResponse.json({
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+    });
   } catch (error) {
-    console.error('Error in create-payment route:', error);
+    console.error('Error creating Razorpay order:', error);
     return NextResponse.json(
       { error: 'Failed to create payment' },
       { status: 500 }

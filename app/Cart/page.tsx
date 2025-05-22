@@ -292,7 +292,17 @@ const CartPage = () => {
                             </div>
                           </div>
                           <div className="pt-4">
-                            <Button text="Proceed to Checkout" width={250} />
+                            <Button 
+                              text="Proceed to Checkout" 
+                              width={250} 
+                              onClick={() => {
+                                if (cartItems.length === 0) {
+                                  showAlert("Your cart is empty", "warning");
+                                  return;
+                                }
+                                router.push('/CheckOut');
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
