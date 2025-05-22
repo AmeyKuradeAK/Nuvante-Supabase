@@ -29,13 +29,23 @@ const CheckoutPage = () => {
 
   const { GlobalCart } = globalContext;
   const [products, setProducts] = useState<any[]>([]);
-  const [quantities, setQuantities] = useState<{ [key: string]: number }>(() => {
-    if (typeof window !== 'undefined') {
-      const savedQuantities = localStorage.getItem('cartQuantities');
-      return savedQuantities ? JSON.parse(savedQuantities) : {};
-    }
-    return {};
-  });
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+
+  useEffect(() => {
+    // Load quantities from database
+    const fetchQuantities = async () => {
+      try {
+        const response = await axios.get<{ quantities: { [key: string]: number } }>('/api/cart/quantities');
+        if (response.status === 200 && response.data.quantities) {
+          setQuantities(response.data.quantities);
+        }
+      } catch (error) {
+        console.error('Error fetching quantities:', error);
+        showAlert('Error loading quantities. Please try again.', 'error');
+      }
+    };
+    fetchQuantities();
+  }, [showAlert]);
 
   useEffect(() => {
     // Fetch products to calculate total
@@ -59,7 +69,8 @@ const CheckoutPage = () => {
 
   const calculateTotal = () => {
     return products.reduce((total, item) => {
-      return total + (quantities[item._id] || 1) * item.productPrice;
+      const quantity = quantities[item._id] || 1;
+      return total + (quantity * item.productPrice);
     }, 0);
   };
 

@@ -35,13 +35,7 @@ interface QuantitiesResponse {
 const CartPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [quantities, setQuantities] = useState<{ [key: string]: number }>(() => {
-    if (typeof window !== 'undefined') {
-      const savedQuantities = localStorage.getItem('cartQuantities');
-      return savedQuantities ? JSON.parse(savedQuantities) : {};
-    }
-    return {};
-  });
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
   const { showAlert } = useAlert();
   const user = useUser();
   const router = useRouter();
@@ -83,7 +77,6 @@ const CartPage = () => {
       const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities');
       if (quantitiesResponse.status === 200 && quantitiesResponse.data.quantities) {
         setQuantities(quantitiesResponse.data.quantities);
-        localStorage.setItem('cartQuantities', JSON.stringify(quantitiesResponse.data.quantities));
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -103,7 +96,6 @@ const CartPage = () => {
       
       // Update local state
       setQuantities(newQuantities);
-      localStorage.setItem('cartQuantities', JSON.stringify(newQuantities));
 
       // Update database
       const response = await axios.post('/api/cart/quantity', {
@@ -135,8 +127,14 @@ const CartPage = () => {
       });
       
       if (response.status === 200) {
-        const updatedCart = GlobalCart.filter((element: string) => element !== id);
-        changeGlobalCart(updatedCart[0] || "");
+        // Remove from cart
+        changeGlobalCart(id);
+        
+        // Remove quantity from state
+        const newQuantities = { ...quantities };
+        delete newQuantities[id];
+        setQuantities(newQuantities);
+        
         showAlert("Item removed from cart", "success");
       } else {
         showAlert("Failed to remove item. Please try again.", "error");

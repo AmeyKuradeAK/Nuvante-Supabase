@@ -85,8 +85,11 @@ export const GlobalContextProvider = ({
 
   const changeGlobalCart = (element: string) => {
     if (GlobalCart.includes(element)) {
-      setGlobalCart(GlobalCart.filter(item => item !== element));
+      // Remove item from cart
+      const updatedCart = GlobalCart.filter(item => item !== element);
+      setGlobalCart(updatedCart);
     } else {
+      // Add item to cart
       setGlobalCart([...GlobalCart, element]);
     }
     if (isSignedIn) {
