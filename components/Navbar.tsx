@@ -66,13 +66,20 @@ export default function Navbar() {
   const ProfileDropdown = () => (
     <div 
       ref={dropdownRef}
-      className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+      className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[9999] transform origin-top-right"
+      style={{
+        position: 'absolute',
+        top: '100%',
+        right: 0,
+        marginTop: '0.5rem',
+      }}
     >
       <div className="py-1" role="menu" aria-orientation="vertical">
         <Link
           href="/Profile"
           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
           role="menuitem"
+          onClick={() => setShowDropdown(false)}
         >
           Account
         </Link>
@@ -80,6 +87,7 @@ export default function Navbar() {
           href="/orders"
           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
           role="menuitem"
+          onClick={() => setShowDropdown(false)}
         >
           Orders
         </Link>
@@ -95,7 +103,7 @@ export default function Navbar() {
         }}
         className={`navbar_wrapper navbar_main pb-1 w-full ${
           open ? "h-[420px]" : "h-[100px]"
-        } lg:overflow-visible lg:flex overflow-y-hidden hidden`}
+        } lg:overflow-visible lg:flex overflow-y-hidden hidden relative`}
       >
         <div className="flex font-bold uppercase lg:justify-between justify-start lg:flex-row flex-col lg:items-center mt-4 navbar w-[90%] mx-auto">
           <div
@@ -150,7 +158,7 @@ export default function Navbar() {
                   alt="cart"
                 ></Image>
               </Link>
-              <div className="relative">
+              <div className="relative inline-block">
                 <Image
                   src={User}
                   width={30}
@@ -170,7 +178,7 @@ export default function Navbar() {
         style={{
           transition: "all 0.3s ease-in-out",
         }}
-        className={`navbar_responsive lg:hidden flex flex-col py-3 overflow-y-hidden ${
+        className={`navbar_responsive lg:hidden flex flex-col py-3 overflow-y-hidden relative ${
           open ? "h-[300px]" : "h-[90px]"
         }`}
       >
@@ -213,7 +221,7 @@ export default function Navbar() {
                 alt="cart"
               ></Image>
             </Link>
-            <div className="relative">
+            <div className="relative inline-block">
               <Image
                 src={User}
                 width={30}
