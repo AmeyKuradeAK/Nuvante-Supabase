@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
@@ -14,6 +14,7 @@ const heart = "/heart.svg";
 const cart = "/cart.svg";
 const animated_logo = "/nuv_1.webm";
 const User = "/user.svg";
+const Orders = "/orders.svg";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -27,8 +28,6 @@ const navigation = [
 
 export default function Navbar() {
   const [open, setOpen] = useState<Boolean>(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const user = useUser();
   const { showAlert } = useAlert();
   const router = useRouter();
@@ -44,60 +43,8 @@ export default function Navbar() {
       setTimeout(() => {
         router.push("/sign-in");
       }, 2000);
-    } else {
-      setShowDropdown(!showDropdown);
     }
   };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const ProfileDropdown = () => (
-    <div 
-      ref={dropdownRef}
-      className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-[9999] transform origin-top-right"
-      style={{
-        position: 'absolute',
-        top: '100%',
-        right: 0,
-        marginTop: '0.5rem',
-      }}
-    >
-      <div className="py-1" role="menu" aria-orientation="vertical">
-        <button
-          onClick={() => {
-            window.location.href = '/Profile';
-            setShowDropdown(false);
-          }}
-          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
-          role="menuitem"
-        >
-          Account
-        </button>
-        <button
-          onClick={() => {
-            window.location.href = '/orders';
-            setShowDropdown(false);
-          }}
-          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-[#DB4444] transition-colors"
-          role="menuitem"
-        >
-          Orders
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <>
@@ -141,39 +88,45 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-          <div className="gap-4 lg:flex lg:flex-row flex flex-col lg:mt-0 mt-6">
-            <div className="flex lg:flex-row items-center gap-4">
-              <Link href="/Wishlist" className="hidden lg:flex items-center gap-2">
-                <Image
-                  src={heart}
-                  width={30}
-                  height={30}
-                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                  alt="heart"
-                />
-                <span className="text-sm font-medium lg:hidden">Wishlist</span>
-              </Link>
-              <Link href="/Cart">
-                <Image
-                  src={cart}
-                  width={30}
-                  height={30}
-                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                  alt="cart"
-                ></Image>
-              </Link>
-              <div className="relative inline-block">
-                <Image
-                  src={User}
-                  width={30}
-                  height={30}
-                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                  alt="user"
-                  onClick={handleProfileClick}
-                />
-                {showDropdown && user.isSignedIn && <ProfileDropdown />}
-              </div>
-            </div>
+          
+          <div className="flex lg:flex-row items-center gap-4">
+            <Link href="/Wishlist" className="hidden lg:flex items-center gap-2">
+              <Image
+                src={heart}
+                width={30}
+                height={30}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                alt="heart"
+              />
+              <span className="text-sm font-medium lg:hidden">Wishlist</span>
+            </Link>
+            <Link href="/Cart">
+              <Image
+                src={cart}
+                width={30}
+                height={30}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                alt="cart"
+              />
+            </Link>
+            <Link href="/orders">
+              <Image
+                src={Orders}
+                width={30}
+                height={30}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                alt="orders"
+              />
+            </Link>
+            <Link href="/Profile" onClick={handleProfileClick}>
+              <Image
+                src={User}
+                width={30}
+                height={30}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                alt="user"
+              />
+            </Link>
           </div>
         </div>
       </div>
@@ -215,7 +168,7 @@ export default function Navbar() {
               <source src={animated_logo} type="video/mp4"></source>
             </video>
           </div>
-          <div className="flex lg:flex-row items-center gap-4">
+          <div className="flex items-center gap-4">
             <Link href="/Cart">
               <Image
                 src={cart}
@@ -223,19 +176,26 @@ export default function Navbar() {
                 height={30}
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 alt="cart"
-              ></Image>
+              />
             </Link>
-            <div className="relative inline-block">
+            <Link href="/orders">
+              <Image
+                src={Orders}
+                width={30}
+                height={30}
+                className="cursor-pointer hover:opacity-80 transition-opacity"
+                alt="orders"
+              />
+            </Link>
+            <Link href="/Profile" onClick={handleProfileClick}>
               <Image
                 src={User}
                 width={30}
                 height={30}
                 className="cursor-pointer hover:opacity-80 transition-opacity"
                 alt="user"
-                onClick={handleProfileClick}
               />
-              {showDropdown && user.isSignedIn && <ProfileDropdown />}
-            </div>
+            </Link>
           </div>
         </div>
         <div className="flex-1">
@@ -250,6 +210,11 @@ export default function Navbar() {
             <li className="lg:hidden">
               <Link href="/Wishlist" className="hover:text-[#DB4444] transition-colors">
                 Wishlist
+              </Link>
+            </li>
+            <li className="lg:hidden">
+              <Link href="/orders" className="hover:text-[#DB4444] transition-colors">
+                Orders
               </Link>
             </li>
           </ul>
