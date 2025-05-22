@@ -29,6 +29,15 @@ interface OrderItem {
   status: string;
   timestamp: string;
   items: string[];
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    streetAddress: string;
+    apartment: string;
+    city: string;
+    phone: string;
+    email: string;
+  };
 }
 
 interface OrderDetailsModalProps {
@@ -49,25 +58,8 @@ type ApiResponseOr404 = ApiResponse | 404;
 
 const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps) => {
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-      >
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold">Order Details</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              <XCircle className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-        
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 space-y-6">
           {/* Order Info */}
           <div className="grid grid-cols-2 gap-4">
@@ -86,6 +78,19 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
             <div>
               <p className="text-sm text-gray-500">Status</p>
               <p className="font-medium text-[#DB4444]">{order.status}</p>
+            </div>
+          </div>
+
+          {/* Shipping Address */}
+          <div>
+            <h3 className="font-semibold mb-4">Shipping Address</h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="font-medium">{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
+              <p>{order.shippingAddress.streetAddress}</p>
+              {order.shippingAddress.apartment && <p>{order.shippingAddress.apartment}</p>}
+              <p>{order.shippingAddress.city}</p>
+              <p className="mt-2">Phone: {order.shippingAddress.phone}</p>
+              <p>Email: {order.shippingAddress.email}</p>
             </div>
           </div>
 
@@ -115,13 +120,22 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
 
           {/* Order Summary */}
           <div className="border-t border-gray-200 pt-4">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold">Total Amount</span>
-              <span className="text-xl font-bold text-[#DB4444]">Rs. {order.amount}</span>
+            <div className="flex justify-between font-bold text-lg">
+              <span>Total</span>
+              <span>Rs. {order.amount}</span>
             </div>
           </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:text-[#DB4444] transition-colors"
+            >
+              Close
+            </button>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

@@ -50,6 +50,32 @@ export default function PaymentButton({
       return;
     }
 
+    // Get form data
+    const form = document.querySelector('form');
+    if (!form) {
+      showAlert('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const formData = new FormData(form);
+    const shippingAddress = {
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
+      streetAddress: formData.get('streetAddress'),
+      apartment: formData.get('apartment'),
+      city: formData.get('city'),
+      phone: formData.get('phone'),
+      email: formData.get('email')
+    };
+
+    // Validate required fields
+    if (!shippingAddress.firstName || !shippingAddress.lastName || 
+        !shippingAddress.streetAddress || !shippingAddress.city || 
+        !shippingAddress.phone || !shippingAddress.email) {
+      showAlert('Please fill in all required fields', 'error');
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -97,6 +123,7 @@ export default function PaymentButton({
               status: 'completed',
               timestamp: new Date().toISOString(),
               items: globalContext.GlobalCart,
+              shippingAddress
             };
             
             // Save order to database

@@ -56,7 +56,16 @@ let clientSchema = new mongoose.Schema({
       currency: String,
       status: String,
       timestamp: String,
-      items: [String]
+      items: [String],
+      shippingAddress: {
+        firstName: String,
+        lastName: String,
+        streetAddress: String,
+        apartment: String,
+        city: String,
+        phone: String,
+        email: String
+      }
     }],
     required: true,
     default: []
