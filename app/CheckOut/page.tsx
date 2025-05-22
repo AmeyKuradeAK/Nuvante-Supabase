@@ -43,7 +43,11 @@ const CheckoutPage = () => {
       try {
         const response = await axios.post<{ data: any[] }>('/api/propagation', { every: true });
         if (response.data?.data) {
-          setProducts(response.data.data);
+          // Filter products to only include those in cart
+          const cartProducts = response.data.data.filter(product => 
+            GlobalCart.includes(product._id)
+          );
+          setProducts(cartProducts);
         }
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -51,11 +55,10 @@ const CheckoutPage = () => {
       }
     };
     fetchProducts();
-  }, [showAlert]);
+  }, [GlobalCart, showAlert]);
 
   const calculateTotal = () => {
     return products.reduce((total, item) => {
-      if (!GlobalCart.includes(item._id)) return total;
       return total + (quantities[item._id] || 1) * item.productPrice;
     }, 0);
   };
@@ -95,24 +98,22 @@ const CheckoutPage = () => {
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-xl font-bold mb-4 text-gray-800">Order Summary</h2>
                 <div className="space-y-4">
-                  {products
-                    .filter(product => GlobalCart.includes(product._id))
-                    .map(product => (
-                      <div key={product._id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                        <div className="w-20 h-20 relative">
-                          <img
-                            src={product.productImages[0]}
-                            alt={product.productName}
-                            className="w-full h-full object-cover rounded-md"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-800">{product.productName}</h3>
-                          <p className="text-sm text-gray-600">Quantity: {quantities[product._id] || 1}</p>
-                          <p className="text-[#DB4444] font-semibold">Rs. {product.productPrice}</p>
-                        </div>
+                  {products.map(product => (
+                    <div key={product._id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="w-20 h-20 relative">
+                        <img
+                          src={product.productImages[0]}
+                          alt={product.productName}
+                          className="w-full h-full object-cover rounded-md"
+                        />
                       </div>
-                    ))}
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-800">{product.productName}</h3>
+                        <p className="text-sm text-gray-600">Quantity: {quantities[product._id] || 1}</p>
+                        <p className="text-[#DB4444] font-semibold">Rs. {product.productPrice}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
