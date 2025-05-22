@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,6 +16,7 @@ import { useAlert } from "@/context/AlertContext";
 import PaymentButton from "@/components/PaymentButton";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const CheckoutPage = () => {
   const router = useRouter();
@@ -27,9 +28,36 @@ const CheckoutPage = () => {
   }
 
   const { GlobalCart } = globalContext;
+  const [products, setProducts] = useState<any[]>([]);
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>(() => {
+    if (typeof window !== 'undefined') {
+      const savedQuantities = localStorage.getItem('cartQuantities');
+      return savedQuantities ? JSON.parse(savedQuantities) : {};
+    }
+    return {};
+  });
+
+  useEffect(() => {
+    // Fetch products to calculate total
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.post<{ data: any[] }>('/api/propagation', { every: true });
+        if (response.data?.data) {
+          setProducts(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        showAlert('Error loading products. Please try again.', 'error');
+      }
+    };
+    fetchProducts();
+  }, [showAlert]);
 
   const calculateTotal = () => {
-    return 2997; // Replace with actual calculation
+    return products.reduce((total, item) => {
+      if (!GlobalCart.includes(item._id)) return total;
+      return total + (quantities[item._id] || 1) * item.productPrice;
+    }, 0);
   };
 
   return (
@@ -61,11 +89,37 @@ const CheckoutPage = () => {
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="lg:col-span-8"
+              className="lg:col-span-8 space-y-6"
             >
+              {/* Order Summary Card */}
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <h1 className="text-2xl font-bold mb-6">Billing Details</h1>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <h2 className="text-xl font-bold mb-4 text-gray-800">Order Summary</h2>
+                <div className="space-y-4">
+                  {products
+                    .filter(product => GlobalCart.includes(product._id))
+                    .map(product => (
+                      <div key={product._id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div className="w-20 h-20 relative">
+                          <img
+                            src={product.productImages[0]}
+                            alt={product.productName}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-800">{product.productName}</h3>
+                          <p className="text-sm text-gray-600">Quantity: {quantities[product._id] || 1}</p>
+                          <p className="text-[#DB4444] font-semibold">Rs. {product.productPrice}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Billing Details Form */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h1 className="text-2xl font-bold mb-6 text-gray-800">Billing Details</h1>
+                <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       First Name <span className="text-[#DB4444]">*</span>
@@ -135,18 +189,18 @@ const CheckoutPage = () => {
                       required
                     />
                   </div>
-                </div>
+                </form>
               </div>
             </motion.div>
 
-            {/* Order Summary */}
+            {/* Payment Summary */}
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               className="lg:col-span-4"
             >
               <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-                <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+                <h2 className="text-xl font-bold mb-6 text-gray-800">Payment Summary</h2>
                 <div className="space-y-4">
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal ({GlobalCart.length} items)</span>
