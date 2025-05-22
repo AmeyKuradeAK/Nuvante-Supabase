@@ -135,15 +135,20 @@ const ProfilePage = () => {
   const fetchUserData = useCallback(async () => {
     try {
       const [profileResponse, emailResponse] = await Promise.all([
-        axios.get<ProfileData>("/api/propagation_client/"),
-        axios.get<string>("/api/emailify/")
+        axios.get<ProfileData>("/api/propagation_client"),
+        axios.get<string>("/api/emailify")
       ]);
 
-      setProfileData(prev => ({
-        ...prev,
-        ...profileResponse.data,
-        email: emailResponse.data
-      }));
+      if (profileResponse.data) {
+        setProfileData({
+          firstName: profileResponse.data.firstName || "",
+          lastName: profileResponse.data.lastName || "",
+          address: profileResponse.data.address || "",
+          email: emailResponse.data || "",
+          cart: profileResponse.data.cart || [],
+          wishlist: profileResponse.data.wishlist || []
+        });
+      }
       setIsLoaded(true);
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -160,7 +165,7 @@ const ProfilePage = () => {
 
     setIsLoading(true);
     try {
-      await axios.post("/api/populate/", {
+      await axios.post("/api/populate", {
         firstName: profileData.firstName,
         lastName: profileData.lastName,
         password: "existing",
@@ -168,14 +173,14 @@ const ProfilePage = () => {
         email: "existing",
       });
       showAlert("Profile updated successfully!", "success");
-      router.refresh();
+      await fetchUserData(); // Refresh the data after update
     } catch (error) {
       console.error("Error updating profile:", error);
       showAlert("Error updating profile. Please try again.", "error");
     } finally {
       setIsLoading(false);
     }
-  }, [profileData, showAlert, router]);
+  }, [profileData, showAlert, fetchUserData]);
 
   const handleFieldChange = useCallback((field: keyof ProfileData, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
