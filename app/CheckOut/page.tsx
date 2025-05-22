@@ -32,6 +32,13 @@ const CheckoutPage = () => {
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
+    // Redirect if cart is empty
+    if (GlobalCart.length === 0) {
+      showAlert("Your cart is empty", "warning");
+      router.push("/Cart");
+      return;
+    }
+
     // Load quantities from database
     const fetchQuantities = async () => {
       try {
@@ -45,18 +52,27 @@ const CheckoutPage = () => {
       }
     };
     fetchQuantities();
-  }, [showAlert]);
+  }, [GlobalCart, showAlert, router]);
 
   useEffect(() => {
+    // Redirect if cart is empty
+    if (GlobalCart.length === 0) {
+      return;
+    }
+
     // Fetch products to calculate total
     const fetchProducts = async () => {
       try {
-        const response = await axios.post<{ data: any[] }>('/api/propagation', { every: true });
-        if (response.data?.data) {
+        console.log('Fetching products for cart:', GlobalCart);
+        const response = await axios.post<any[]>('/api/propagation', { every: true });
+        console.log('API Response:', response.data);
+        
+        if (response.data) {
           // Filter products to only include those in cart
-          const cartProducts = response.data.data.filter(product => 
+          const cartProducts = response.data.filter((product: { _id: string }) => 
             GlobalCart.includes(product._id)
           );
+          console.log('Filtered cart products:', cartProducts);
           setProducts(cartProducts);
         }
       } catch (error) {
@@ -66,6 +82,12 @@ const CheckoutPage = () => {
     };
     fetchProducts();
   }, [GlobalCart, showAlert]);
+
+  // Add debugging for quantities
+  useEffect(() => {
+    console.log('Current quantities:', quantities);
+    console.log('Current products:', products);
+  }, [quantities, products]);
 
   const calculateTotal = () => {
     return products.reduce((total, item) => {

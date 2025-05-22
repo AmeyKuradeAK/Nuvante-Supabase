@@ -248,15 +248,45 @@ const Preview = () => {
             </div>
 
             {/* Add to Cart Buttons */}
-            <div className="mt-6 space-y-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-3 border-2 border-[#DB4444] text-[#DB4444] hover:bg-[#DB4444] hover:text-white transition-all duration-300 font-medium"
-                onClick={handleAddToCart}
-              >
-                {isInCart ? "Remove from Cart" : "Add to Cart"}
-              </motion.button>
+            <div className="mt-6 space-y-4">
+              {isInCart ? (
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center border rounded-md">
+                    <button
+                      onClick={() => handleQuantityChange(-1)}
+                      className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                      className="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
+                      min={1}
+                    />
+                    <button
+                      onClick={() => handleQuantityChange(1)}
+                      className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleAddToCart}
+                    className="flex-1 bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
+                  >
+                    Remove from Cart
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleAddToCart}
+                  className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
+                >
+                  Add to Cart
+                </button>
+              )}
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

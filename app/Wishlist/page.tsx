@@ -64,42 +64,46 @@ const Page = () => {
   }: any = useContext(GlobalContext);
 
   useEffect(() => {
-    if (!user.isSignedIn) {
-      showAlert("Please sign in to access your wishlist", "warning");
-      router.push("/sign-in");
-      return;
-    }
-
-    const propagate_data = async () => {
-      try {
-        // Fetch both data in parallel
-        const [productsResponse, wishlistResponse] = await Promise.all([
-          axios.post<Product[]>(`/api/propagation/`, { every: true }),
-          axios.get<ApiResponseOr404>(`/api/propagation_client/`)
-        ]);
-
-        setProducts(productsResponse.data || []);
-        
-        if (wishlistResponse.data === 404 || !wishlistResponse.data) {
-          console.error("Could not fetch wishlist data");
-          setCurrentWishlist([]);
-        } else {
-          const { wishlist = [] } = wishlistResponse.data;
-          setCurrentWishlist(wishlist);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setProducts([]);
-        setCurrentWishlist([]);
-      } finally {
-        setLoaded(true);
+    const checkAuth = async () => {
+      if (!user.isSignedIn) {
+        showAlert("Please sign in to access your wishlist", "warning");
+        router.push("/sign-in");
+        return;
       }
-    };
 
+      await propagate_data();
+    };
+    
     if (GlobalWishlist) {
-      propagate_data();
+      checkAuth();
     }
   }, [user.isSignedIn, GlobalWishlist, showAlert, router]);
+
+  const propagate_data = async () => {
+    try {
+      // Fetch both data in parallel
+      const [productsResponse, wishlistResponse] = await Promise.all([
+        axios.post<Product[]>(`/api/propagation/`, { every: true }),
+        axios.get<ApiResponseOr404>(`/api/propagation_client/`)
+      ]);
+
+      setProducts(productsResponse.data || []);
+      
+      if (wishlistResponse.data === 404 || !wishlistResponse.data) {
+        console.error("Could not fetch wishlist data");
+        setCurrentWishlist([]);
+      } else {
+        const { wishlist = [] } = wishlistResponse.data;
+        setCurrentWishlist(wishlist);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setProducts([]);
+      setCurrentWishlist([]);
+    } finally {
+      setLoaded(true);
+    }
+  };
 
   const handleBag = async () => {
     if (!GlobalWishlist?.length) {

@@ -32,7 +32,15 @@ export async function POST(request: any) {
         }
       } else {
         existingModel.cart = popElement(existingModel.cart, body.identifier);
+        // Remove quantity when item is removed from cart
+        existingModel.cartQuantities.delete(body.identifier);
       }
+
+      // If cart is empty, clear all quantities
+      if (existingModel.cart.length === 0) {
+        existingModel.cartQuantities = new Map();
+      }
+
       await existingModel.save();
       return new NextResponse("200");
     } catch (error) {

@@ -48,12 +48,16 @@ const CartPage = () => {
   const { GlobalCart, changeGlobalCart } = context;
 
   useEffect(() => {
-    if (!user.isSignedIn) {
-      showAlert("Please sign in to access your cart", "warning");
-      router.push("/sign-in");
-      return;
-    }
-    asyncHandler();
+    const checkAuth = async () => {
+      if (!user.isSignedIn) {
+        showAlert("Please sign in to access your cart", "warning");
+        router.push("/sign-in");
+        return;
+      }
+      await asyncHandler();
+    };
+    
+    checkAuth();
   }, [user.isSignedIn, showAlert, router]);
 
   const asyncHandler = async () => {
