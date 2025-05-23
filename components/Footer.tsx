@@ -39,15 +39,6 @@ export default function Footer() {
             our passion, enabling you to flaunt the classiest products and
             services available. Discover your next favorite today!
           </p>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-[#DB4444] rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-bold">AN</span>
-            </div>
-            <div>
-              <p className="text-white text-sm font-semibold">Alan Noble</p>
-              <p className="text-gray-400 text-xs">Founder</p>
-            </div>
-          </div>
           <div className="items-center border w-fit border-white rounded-md overflow-hidden hidden">
             <input
               type="email"

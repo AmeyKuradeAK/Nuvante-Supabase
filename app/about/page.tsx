@@ -56,17 +56,6 @@ export default function Page() {
                 desire to bring high-quality, stylish, and premium apparel to people
                 who value comfort, durability, and personalization.
               </p>
-              <div className="mt-4 border-t pt-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-[#DB4444] rounded-full flex items-center justify-center">
-                    <span className="text-white text-xl font-bold">AN</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-800">Alan Noble</h3>
-                    <p className="text-sm text-[#DB4444]">Founder</p>
-                  </div>
-                </div>
-              </div>
             </motion.div>
 
             {/* What Makes Us Different Section */}
