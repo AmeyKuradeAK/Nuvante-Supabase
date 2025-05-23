@@ -179,14 +179,19 @@ const OrdersPage = () => {
 
   const fetchOrders = useCallback(async () => {
     try {
+      console.log("Fetching orders and products...");
       const response = await axios.get<ApiResponseOr404>("/api/propagation_client");
       const productsResponse = await axios.post<{ data: any[] }>("/api/propagation", { every: true });
+      
+      console.log("Orders Response:", response.data);
+      console.log("Products Response:", productsResponse.data);
       
       if (response.data === 404 || !response.data) {
         console.error("Could not fetch orders data");
         setOrders([]);
       } else {
         const { orders = [] } = response.data;
+        console.log("Parsed Orders:", orders);
         // Sort orders by date (latest first)
         const sortedOrders = orders.sort((a, b) => 
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -195,6 +200,7 @@ const OrdersPage = () => {
       }
       
       if (productsResponse.data?.data) {
+        console.log("Setting Products:", productsResponse.data.data);
         setProducts(productsResponse.data.data);
       }
       
@@ -207,6 +213,7 @@ const OrdersPage = () => {
   }, [showAlert]);
 
   useEffect(() => {
+    console.log("Component mounted, user signed in:", user.isSignedIn);
     if (!user.isSignedIn) {
       showAlert("Please sign in to access your orders", "warning");
       router.push("/sign-in");
@@ -215,6 +222,12 @@ const OrdersPage = () => {
 
     fetchOrders();
   }, [user.isSignedIn, showAlert, router, fetchOrders]);
+
+  // Debug effect to log state changes
+  useEffect(() => {
+    console.log("Orders state updated:", orders);
+    console.log("Products state updated:", products);
+  }, [orders, products]);
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
@@ -319,6 +332,11 @@ const OrdersPage = () => {
                       const orderItems = products.filter(product => 
                         order.items.includes(product._id)
                       );
+
+                      console.log("Rendering order:", order.orderId);
+                      console.log("Order items:", order.items);
+                      console.log("Available products:", products);
+                      console.log("Matched order items:", orderItems);
 
                       return (
                         <motion.div
