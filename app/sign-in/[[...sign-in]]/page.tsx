@@ -40,9 +40,10 @@ const page = (props: Props) => {
         
         // Create client record for new users
         try {
+          const userData = await user.user;
           await axios.post("/api/populate/", {
-            firstName: user.user?.firstName || "User",
-            lastName: user.user?.lastName || "User",
+            firstName: userData?.firstName || "User",
+            lastName: userData?.lastName || "User",
             password: "clerk-auth", // Since we're using Clerk for auth
             email: email,
             address: "Address not provided",

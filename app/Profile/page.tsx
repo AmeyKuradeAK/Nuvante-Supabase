@@ -18,6 +18,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useAlert } from "@/context/AlertContext";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 
 const logo = "/logo.png";
 
@@ -131,6 +132,7 @@ const ProfilePage = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const { showAlert } = useAlert();
   const router = useRouter();
+  const user = useUser();
 
   const fetchUserData = useCallback(async () => {
     try {
@@ -140,10 +142,15 @@ const ProfilePage = () => {
       ]);
 
       if (profileResponse.data) {
+        // Use Clerk user data as fallback if database fields are empty
+        const firstName = profileResponse.data.firstName || user.user?.firstName || "";
+        const lastName = profileResponse.data.lastName || user.user?.lastName || "";
+        const address = profileResponse.data.address || "Address not provided";
+
         setProfileData({
-          firstName: profileResponse.data.firstName || "",
-          lastName: profileResponse.data.lastName || "",
-          address: profileResponse.data.address || "",
+          firstName,
+          lastName,
+          address,
           email: emailResponse.data || "",
           cart: profileResponse.data.cart || [],
           wishlist: profileResponse.data.wishlist || []
@@ -155,23 +162,42 @@ const ProfilePage = () => {
       showAlert("Error loading profile data. Please try refreshing.", "error");
       setIsLoaded(false);
     }
-  }, [showAlert]);
+  }, [showAlert, user.user]);
 
   const updateProfile = useCallback(async () => {
-    if (!profileData.firstName.trim() || !profileData.lastName.trim() || !profileData.address.trim()) {
-      showAlert("Please fill in all fields", "error");
+    // Validate input
+    if (!profileData.firstName.trim()) {
+      showAlert("First name is required", "error");
+      return;
+    }
+    if (!profileData.lastName.trim()) {
+      showAlert("Last name is required", "error");
+      return;
+    }
+    if (!profileData.address.trim()) {
+      showAlert("Address is required", "error");
       return;
     }
 
     setIsLoading(true);
     try {
+      // Update client record
       await axios.post("/api/populate", {
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
+        firstName: profileData.firstName.trim(),
+        lastName: profileData.lastName.trim(),
         password: "existing",
-        address: profileData.address,
-        email: "existing",
+        address: profileData.address.trim(),
+        email: profileData.email,
       });
+
+      // Update Clerk user profile
+      if (user.user) {
+        await user.user.update({
+          firstName: profileData.firstName.trim(),
+          lastName: profileData.lastName.trim(),
+        });
+      }
+
       showAlert("Profile updated successfully!", "success");
       await fetchUserData(); // Refresh the data after update
     } catch (error) {
@@ -180,15 +206,20 @@ const ProfilePage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [profileData, showAlert, fetchUserData]);
+  }, [profileData, showAlert, fetchUserData, user.user]);
 
   const handleFieldChange = useCallback((field: keyof ProfileData, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
   }, []);
 
   useEffect(() => {
+    if (!user.isSignedIn) {
+      showAlert("Please sign in to access your profile", "warning");
+      router.push("/sign-in");
+      return;
+    }
     fetchUserData();
-  }, [fetchUserData]);
+  }, [fetchUserData, user.isSignedIn, showAlert, router]);
 
   return (
     <>

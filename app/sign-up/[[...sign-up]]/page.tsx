@@ -105,7 +105,12 @@ const SignUpPage = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const name = formData.get("name") as string;
+    const fullName = formData.get("name") as string;
+
+    // Split full name into first and last name
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || "";
 
     try {
       const signUpAttempt = await signUp.create({
@@ -120,19 +125,22 @@ const SignUpPage = () => {
         return;
       }
 
+      // Update Clerk user profile with full name
       await signUpAttempt.update({
-        firstName: name,
+        firstName,
+        lastName,
       });
 
       await setActive({ session: signUpAttempt.createdSessionId });
 
       try {
+        // Create client record with proper name fields
         await axios.post("/api/populate/", {
-          firstName: name,
-          lastName: "",
+          firstName,
+          lastName,
           password,
           email,
-          address: "Default Address",
+          address: "Address not provided",
         });
         showAlert("Account created successfully!", "success");
         router.push("/");
