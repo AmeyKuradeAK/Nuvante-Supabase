@@ -8,6 +8,20 @@ interface OrderItem {
   status: string;
   timestamp: string;
   items: string[];
+  itemDetails: {
+    productId: string;
+    size: string;
+    quantity: number;
+  }[];
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    streetAddress: string;
+    apartment: string;
+    city: string;
+    phone: string;
+    email: string;
+  };
 }
 
 let clientSchema = new mongoose.Schema({
@@ -44,6 +58,11 @@ let clientSchema = new mongoose.Schema({
     of: Number,
     default: new Map()
   },
+  cartSizes: {
+    type: Map,
+    of: String,
+    default: new Map()
+  },
   wishlist: {
     type: Array,
     required: true,
@@ -57,6 +76,11 @@ let clientSchema = new mongoose.Schema({
       status: String,
       timestamp: String,
       items: [String],
+      itemDetails: [{
+        productId: String,
+        size: String,
+        quantity: Number
+      }],
       shippingAddress: {
         firstName: String,
         lastName: String,

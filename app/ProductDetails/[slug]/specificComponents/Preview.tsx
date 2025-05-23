@@ -200,6 +200,24 @@ const Preview = () => {
     }
   };
 
+  const handleBuyNow = async () => {
+    if (!user.isSignedIn) {
+      showAlert("Please sign in to proceed with checkout", "warning");
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 2000);
+      return;
+    }
+
+    if (!current) {
+      showAlert("Please select a size", "error");
+      return;
+    }
+
+    // Navigate directly to checkout with the product details
+    router.push(`/CheckOut?product=${id}&size=${current}&quantity=${quantity}`);
+  };
+
   return (
     <>
       {loaded && (
@@ -291,7 +309,7 @@ const Preview = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-3 bg-black text-white hover:bg-gray-800 transition-all duration-300 font-medium"
-                onClick={() => showAlert("Coming Soon!", "info")}
+                onClick={handleBuyNow}
               >
                 Buy Now
               </motion.button>

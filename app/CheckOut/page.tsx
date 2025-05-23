@@ -14,14 +14,23 @@ import Navbar from "@/components/Navbar";
 import { GlobalContext } from "@/context/Global";
 import { useAlert } from "@/context/AlertContext";
 import PaymentButton from "@/components/PaymentButton";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import axios from "axios";
+import { useUser } from "@clerk/nextjs";
+
+interface CartData {
+  cart: string[];
+  cartQuantities: Map<string, number>;
+  cartSizes: Map<string, string>;
+}
 
 const CheckoutPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showAlert } = useAlert();
   const globalContext = useContext(GlobalContext);
+  const user = useUser();
 
   if (!globalContext) {
     throw new Error("CheckoutPage must be used within GlobalContextProvider");
@@ -29,7 +38,9 @@ const CheckoutPage = () => {
 
   const { GlobalCart } = globalContext;
   const [products, setProducts] = useState<any[]>([]);
-  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [sizes, setSizes] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -60,62 +71,75 @@ const CheckoutPage = () => {
   };
 
   useEffect(() => {
-    // Redirect if cart is empty
-    if (GlobalCart.length === 0) {
-      showAlert("Your cart is empty", "warning");
-      router.push("/Cart");
+    const fetchCartData = async () => {
+      try {
+        const response = await axios.get<CartData>("/api/propagation_client");
+        const cartItems = response.data.cart || [];
+        const cartQuantities = response.data.cartQuantities || new Map();
+        const cartSizes = response.data.cartSizes || new Map();
+
+        // If we have a direct product from Buy Now
+        const productId = searchParams.get('product');
+        const size = searchParams.get('size');
+        const quantity = searchParams.get('quantity');
+
+        if (productId) {
+          const productResponse = await axios.post("/api/propagation", {
+            id: productId,
+            every: false
+          });
+          
+          if (productResponse.data) {
+            setProducts([productResponse.data]);
+            setQuantities({ [productId]: parseInt(quantity || '1') });
+            if (size) {
+              setSizes({ [productId]: size });
+            }
+          }
+        } else {
+          // Fetch all products in cart
+          const productPromises = cartItems.map(async (itemId: string) => {
+            const response = await axios.post("/api/propagation", {
+              id: itemId,
+              every: false
+            });
+            return response.data;
+          });
+
+          const productsData = await Promise.all(productPromises);
+          setProducts(productsData);
+
+          // Set quantities from cart
+          const quantitiesMap: Record<string, number> = {};
+          cartItems.forEach((itemId: string) => {
+            quantitiesMap[itemId] = cartQuantities.get(itemId) || 1;
+          });
+          setQuantities(quantitiesMap);
+
+          // Set sizes from cart
+          const sizesMap: Record<string, string> = {};
+          cartItems.forEach((itemId: string) => {
+            sizesMap[itemId] = cartSizes.get(itemId) || '';
+          });
+          setSizes(sizesMap);
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching cart data:", error);
+        showAlert("Error loading cart data", "error");
+        setIsLoading(false);
+      }
+    };
+
+    if (!user.isSignedIn) {
+      showAlert("Please sign in to access checkout", "warning");
+      router.push("/sign-in");
       return;
     }
 
-    // Load quantities from database
-    const fetchQuantities = async () => {
-      try {
-        const response = await axios.get<{ quantities: { [key: string]: number } }>('/api/cart/quantities');
-        if (response.status === 200 && response.data.quantities) {
-          setQuantities(response.data.quantities);
-        }
-      } catch (error) {
-        console.error('Error fetching quantities:', error);
-        showAlert('Error loading quantities. Please try again.', 'error');
-      }
-    };
-    fetchQuantities();
-  }, [GlobalCart, showAlert, router]);
-
-  useEffect(() => {
-    // Redirect if cart is empty
-    if (GlobalCart.length === 0) {
-      return;
-    }
-
-    // Fetch products to calculate total
-    const fetchProducts = async () => {
-      try {
-        console.log('Fetching products for cart:', GlobalCart);
-        const response = await axios.post<any[]>('/api/propagation', { every: true });
-        console.log('API Response:', response.data);
-        
-        if (response.data) {
-          // Filter products to only include those in cart
-          const cartProducts = response.data.filter((product: { _id: string }) => 
-            GlobalCart.includes(product._id)
-          );
-          console.log('Filtered cart products:', cartProducts);
-          setProducts(cartProducts);
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        showAlert('Error loading products. Please try again.', 'error');
-      }
-    };
-    fetchProducts();
-  }, [GlobalCart, showAlert]);
-
-  // Add debugging for quantities
-  useEffect(() => {
-    console.log('Current quantities:', quantities);
-    console.log('Current products:', products);
-  }, [quantities, products]);
+    fetchCartData();
+  }, [user.isSignedIn, showAlert, router, searchParams]);
 
   const calculateTotal = () => {
     return products.reduce((total, item) => {
@@ -127,35 +151,11 @@ const CheckoutPage = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Breadcrumb */}
-          <div className="mb-8">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444]">Home</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/Cart" className="text-gray-600 hover:text-[#DB4444]">Cart</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="text-[#DB4444]">Checkout</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Billing Details Form */}
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="lg:col-span-8 space-y-6"
-            >
-              {/* Order Summary Card */}
+            {/* Order Summary Card */}
+            <div className="lg:col-span-8 space-y-6">
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-xl font-bold mb-4 text-gray-800">Order Summary</h2>
                 <div className="space-y-4">
@@ -170,6 +170,7 @@ const CheckoutPage = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium text-gray-800">{product.productName}</h3>
+                        <p className="text-sm text-gray-600">Size: {sizes[product._id] || 'Not selected'}</p>
                         <p className="text-sm text-gray-600">Quantity: {quantities[product._id] || 1}</p>
                         <p className="text-[#DB4444] font-semibold">Rs. {product.productPrice}</p>
                       </div>
@@ -260,7 +261,7 @@ const CheckoutPage = () => {
                   </div>
                 </form>
               </div>
-            </motion.div>
+            </div>
 
             {/* Payment Summary */}
             <motion.div 

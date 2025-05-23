@@ -57,14 +57,25 @@ export async function POST(request: Request) {
       );
     }
 
-    // Add order date to the order data
-    const orderWithDate = {
+    // Add order date and item details to the order data
+    const orderWithDetails = {
       ...orderData,
-      orderDate: new Date().toISOString()
+      orderDate: new Date().toISOString(),
+      itemDetails: orderData.items.map((itemId: string) => ({
+        productId: itemId,
+        size: client.cartSizes.get(itemId) || '',
+        quantity: client.cartQuantities.get(itemId) || 1
+      }))
     };
 
     // Add the new order to the orders array
-    client.orders.push(orderWithDate);
+    client.orders.push(orderWithDetails);
+
+    // Clear the cart after successful order
+    client.cart = [];
+    client.cartQuantities = new Map();
+    client.cartSizes = new Map();
+
     await client.save();
 
     return NextResponse.json({ message: "Order added successfully" });
