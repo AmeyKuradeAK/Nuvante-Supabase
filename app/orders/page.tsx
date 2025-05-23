@@ -180,8 +180,10 @@ const OrdersPage = () => {
   const fetchOrders = useCallback(async () => {
     try {
       console.log("Fetching orders and products...");
-      const response = await axios.get<ApiResponseOr404>("/api/propagation_client");
-      const productsResponse = await axios.post<{ data: any[] }>("/api/propagation", { every: true });
+      const [response, productsResponse] = await Promise.all([
+        axios.get<ApiResponseOr404>("/api/propagation_client"),
+        axios.post<{ data: any[] }>("/api/propagation", { every: true })
+      ]);
       
       console.log("Orders Response:", response.data);
       console.log("Products Response:", productsResponse.data);
