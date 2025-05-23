@@ -24,19 +24,14 @@ export async function POST(request: any) {
       return new NextResponse("404");
     }
 
-    const database = await productModel.find({}).then((data) => {
-      console.log("data from the server: \n", data);
-      return data;
-    });
+    let database;
+    if (full_query) {
+      database = await productModel.find({}).lean();
+    } else {
+      database = await productModel.findOne({ _id: body.id }).lean();
+    }
 
-    const specific = await productModel
-      .findOne({ _id: body.id })
-      .then((data) => {
-        console.log("data from the server: \n", data);
-        return data;
-      });
-
-    return new NextResponse(JSON.stringify(full_query ? database : specific));
+    return NextResponse.json({ data: database });
   } catch (error: any) {
     console.error("in api/propagation/route.ts: ", error);
     return new NextResponse("404");
