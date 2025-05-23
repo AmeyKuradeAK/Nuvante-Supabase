@@ -70,6 +70,31 @@ const CheckoutContent = () => {
     );
   };
 
+  const handleQuantityChange = async (productId: string, delta: number) => {
+    const newQuantity = (quantities[productId] || 1) + delta;
+    if (newQuantity < 1) return;
+
+    // Update local state
+    setQuantities(prev => ({
+      ...prev,
+      [productId]: newQuantity
+    }));
+
+    // If it's a cart item, update the cart
+    if (!searchParams.get('product')) {
+      try {
+        await axios.post("/api/cart", {
+          identifier: productId,
+          append: true,
+          quantity: newQuantity
+        });
+      } catch (error) {
+        console.error("Error updating quantity:", error);
+        showAlert("Error updating quantity", "error");
+      }
+    }
+  };
+
   useEffect(() => {
     const fetchCartData = async () => {
       try {
@@ -171,8 +196,28 @@ const CheckoutContent = () => {
                       <div className="flex-1">
                         <h3 className="font-medium text-gray-800">{product.productName}</h3>
                         <p className="text-sm text-gray-600">Size: {sizes[product._id] || 'Not selected'}</p>
-                        <p className="text-sm text-gray-600">Quantity: {quantities[product._id] || 1}</p>
-                        <p className="text-[#DB4444] font-semibold">Rs. {product.productPrice}</p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="flex items-center border rounded-md">
+                            <button
+                              onClick={() => handleQuantityChange(product._id, -1)}
+                              className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
+                            >
+                              -
+                            </button>
+                            <span className="w-12 text-center">
+                              {quantities[product._id] || 1}
+                            </span>
+                            <button
+                              onClick={() => handleQuantityChange(product._id, 1)}
+                              className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <p className="text-[#DB4444] font-semibold">
+                            Rs. {product.productPrice * (quantities[product._id] || 1)}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   ))}
