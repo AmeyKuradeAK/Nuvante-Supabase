@@ -3,7 +3,7 @@
 import React, { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { CheckCircle, Package, ArrowRight } from "lucide-react";
+import { CheckCircle, Package, ArrowRight, Home } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAlert } from "@/context/AlertContext";
@@ -24,6 +24,13 @@ function PaymentSuccessContent() {
       showAlert("Invalid payment details", "error");
       router.push("/");
     }
+
+    // Auto redirect to home after 8 seconds
+    const timer = setTimeout(() => {
+      router.push("/");
+    }, 8000);
+
+    return () => clearTimeout(timer);
   }, [orderId, paymentId, router, showAlert]);
 
   return (
@@ -78,7 +85,17 @@ function PaymentSuccessContent() {
               Continue Shopping
               <ArrowRight className="w-5 h-5" />
             </button>
+            <button
+              onClick={() => router.push("/")}
+              className="flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 text-gray-600 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              <Home className="w-5 h-5" />
+              Go Home
+            </button>
           </div>
+          <p className="text-sm text-gray-500 mt-6">
+            Redirecting to home page in 8 seconds...
+          </p>
         </motion.div>
       </div>
     </div>

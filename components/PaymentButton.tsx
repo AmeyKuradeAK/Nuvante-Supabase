@@ -95,12 +95,22 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
 
             if (verifyData.success) {
               clearGlobalCart();
+              // Close Razorpay modal
+              const modal = document.querySelector('.razorpay-checkout-frame');
+              if (modal) {
+                modal.remove();
+              }
               // Redirect to success page with order details
               router.push(`/payment-success?orderId=${verifyData.orderId}&paymentId=${verifyData.paymentId}`);
             }
           } catch (error) {
             console.error("Payment verification error:", error);
             showAlert("Payment verification failed", "error");
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            showAlert("Payment cancelled", "warning");
           }
         },
         prefill: {
