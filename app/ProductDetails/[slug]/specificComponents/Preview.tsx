@@ -299,9 +299,9 @@ const Preview = () => {
                 </div>
               ) : (
                 <button
-                  onClick={handleAddToCart}
+                onClick={handleAddToCart}
                   className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
-                >
+              >
                   Add to Cart
                 </button>
               )}
