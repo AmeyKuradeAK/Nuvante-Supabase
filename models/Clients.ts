@@ -45,10 +45,6 @@ let clientSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  address: {
-    type: String,
-    required: true,
-  },
   cart: {
     type: Array,
     required: true,

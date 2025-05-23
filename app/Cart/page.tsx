@@ -304,6 +304,26 @@ const CartPage = () => {
                                     </div>
                                   </div>
 
+                                  {/* Size Selection */}
+                                  <div className="mt-4">
+                                    <p className="text-sm text-gray-600 mb-2">Select Size:</p>
+                                    <div className="grid grid-cols-4 gap-2 max-w-xs">
+                                      {["S", "M", "L", "XL"].map((size) => (
+                                        <button
+                                          key={size}
+                                          className={`border-2 py-1 text-center text-sm transition-colors ${
+                                            selectedSizes[item._id] === size
+                                              ? "bg-black text-white border-black"
+                                              : "border-gray-200 hover:border-gray-300"
+                                          }`}
+                                          onClick={() => handleSizeSelect(item._id, size)}
+                                        >
+                                          {size}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
                                   {/* Quantity Controls */}
                                   <div className="mt-4 flex items-center gap-4">
                                     <div className="flex items-center border rounded-md">

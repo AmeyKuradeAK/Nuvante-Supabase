@@ -49,7 +49,6 @@ export async function GET() {
       firstName: database_obj.firstName,
       lastName: database_obj.lastName,
       email: database_obj.email,
-      address: database_obj.address,
       cart: database_obj.cart,
       wishlist: database_obj.wishlist,
       orders: orders.map((order: OrderItem) => ({
