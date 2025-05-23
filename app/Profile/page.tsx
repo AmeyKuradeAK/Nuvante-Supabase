@@ -181,7 +181,7 @@ const ProfilePage = () => {
 
     setIsLoading(true);
     try {
-      // Update client record
+      // Update client record first
       await axios.post("/api/populate", {
         firstName: profileData.firstName.trim(),
         lastName: profileData.lastName.trim(),
@@ -190,12 +190,17 @@ const ProfilePage = () => {
         email: profileData.email,
       });
 
-      // Update Clerk user profile with correct parameter names
-      if (user.user) {
-        await user.user.update({
-          firstName: profileData.firstName.trim(),
-          lastName: profileData.lastName.trim(),
-        });
+      // Try to update Clerk user profile, but don't fail if it errors
+      try {
+        if (user.user) {
+          await user.user.update({
+            firstName: profileData.firstName.trim(),
+            lastName: profileData.lastName.trim(),
+          });
+        }
+      } catch (clerkError) {
+        console.error("Clerk update failed but database was updated:", clerkError);
+        // Don't show error to user since database update succeeded
       }
 
       showAlert("Profile updated successfully!", "success");
