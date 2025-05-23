@@ -57,6 +57,14 @@ interface ApiResponse {
 type ApiResponseOr404 = ApiResponse | 404;
 
 const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps) => {
+  // Calculate expected delivery date (5 days from order date)
+  const orderDate = new Date(order.timestamp);
+  const expectedDeliveryDate = new Date(orderDate);
+  expectedDeliveryDate.setDate(orderDate.getDate() + 5);
+
+  // Get order items with their details
+  const orderItems = products.filter(product => order.items.includes(product._id));
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -76,8 +84,27 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
               <p className="font-medium">{new Date(order.timestamp).toLocaleDateString()}</p>
             </div>
             <div>
+              <p className="text-sm text-gray-500">Expected Delivery</p>
+              <p className="font-medium text-green-600">{expectedDeliveryDate.toLocaleDateString()}</p>
+            </div>
+            <div>
               <p className="text-sm text-gray-500">Status</p>
               <p className="font-medium text-[#DB4444]">{order.status}</p>
+            </div>
+          </div>
+
+          {/* Order Summary */}
+          <div>
+            <h3 className="font-semibold mb-4">Order Summary</h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="font-medium mb-2">Items in this order:</p>
+              <ul className="list-disc list-inside space-y-1">
+                {orderItems.map(item => (
+                  <li key={item._id} className="text-gray-700">
+                    {item.productName}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
@@ -98,27 +125,25 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
           <div>
             <h3 className="font-semibold mb-4">Order Items</h3>
             <div className="space-y-4">
-              {products
-                .filter(product => order.items.includes(product._id))
-                .map(product => (
-                  <div key={product._id} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="w-20 h-20 relative">
-                      <img
-                        src={product.productImages[0]}
-                        alt={product.productName}
-                        className="w-full h-full object-cover rounded-md"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">{product.productName}</h4>
-                      <p className="text-[#DB4444] font-semibold">Rs. {product.productPrice}</p>
-                    </div>
+              {orderItems.map(product => (
+                <div key={product._id} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="w-20 h-20 relative">
+                    <img
+                      src={product.productImages[0]}
+                      alt={product.productName}
+                      className="w-full h-full object-cover rounded-md"
+                    />
                   </div>
-                ))}
+                  <div className="flex-1">
+                    <h4 className="font-medium">{product.productName}</h4>
+                    <p className="text-[#DB4444] font-semibold">Rs. {product.productPrice}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Order Summary */}
+          {/* Order Total */}
           <div className="border-t border-gray-200 pt-4">
             <div className="flex justify-between font-bold text-lg">
               <span>Total</span>
@@ -280,35 +305,45 @@ const OrdersPage = () => {
                   </motion.div>
                 ) : (
                   <div className="space-y-4">
-                    {orders.map((order, index) => (
-                      <motion.div
-                        key={order.orderId}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => setSelectedOrder(order)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            {getStatusIcon(order.status)}
-                            <div>
-                              <h3 className="font-medium">Order #{order.orderId.slice(-6)}</h3>
-                              <p className="text-sm text-gray-500">
-                                {new Date(order.timestamp).toLocaleDateString()}
-                              </p>
+                    {orders.map((order, index) => {
+                      // Calculate expected delivery date
+                      const orderDate = new Date(order.timestamp);
+                      const expectedDeliveryDate = new Date(orderDate);
+                      expectedDeliveryDate.setDate(orderDate.getDate() + 5);
+
+                      return (
+                        <motion.div
+                          key={order.orderId}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => setSelectedOrder(order)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              {getStatusIcon(order.status)}
+                              <div>
+                                <h3 className="font-medium">Order #{order.orderId.slice(-6)}</h3>
+                                <p className="text-sm text-gray-500">
+                                  {new Date(order.timestamp).toLocaleDateString()}
+                                </p>
+                                <p className="text-sm text-green-600">
+                                  Expected Delivery: {expectedDeliveryDate.toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                <p className="text-[#DB4444] font-semibold">Rs. {order.amount}</p>
+                                <p className="text-sm text-gray-500">{order.items.length} items</p>
+                              </div>
+                              <ChevronRight className="w-5 h-5 text-gray-400" />
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <p className="text-[#DB4444] font-semibold">Rs. {order.amount}</p>
-                              <p className="text-sm text-gray-500">{order.items.length} items</p>
-                            </div>
-                            <ChevronRight className="w-5 h-5 text-gray-400" />
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
