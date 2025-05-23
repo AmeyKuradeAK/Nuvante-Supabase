@@ -201,9 +201,10 @@ const OrdersPage = () => {
         setOrders(sortedOrders);
       }
       
-      if (productsResponse.data?.data) {
-        console.log("Setting Products:", productsResponse.data.data);
-        setProducts(productsResponse.data.data);
+      // The products response is already an array
+      if (Array.isArray(productsResponse.data)) {
+        console.log("Setting Products:", productsResponse.data);
+        setProducts(productsResponse.data);
       }
       
       setIsLoaded(true);
