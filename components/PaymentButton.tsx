@@ -1,198 +1,131 @@
 'use client';
 
-import { useState, useContext } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
-import { GlobalContext } from '@/context/Global';
-import { useAlert } from '@/context/AlertContext';
+import React from "react";
+import { useRouter } from "next/navigation";
+import { useAlert } from "@/context/AlertContext";
+import { GlobalContext } from "@/context/Global";
+import { useContext } from "react";
 
 interface PaymentButtonProps {
   amount: number;
-  currency?: string;
+  currency: string;
   receipt: string;
-  notes?: { [key: string]: string };
-  onSuccess?: (response: any) => void;
-  onError?: (error: any) => void;
   className?: string;
   children: React.ReactNode;
 }
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
-export default function PaymentButton({
+const PaymentButton: React.FC<PaymentButtonProps> = ({
   amount,
-  currency = 'INR',
+  currency,
   receipt,
-  notes,
-  onSuccess,
-  onError,
-  className = '',
+  className,
   children,
-}: PaymentButtonProps) {
-  const [loading, setLoading] = useState(false);
+}) => {
   const router = useRouter();
-  const { user } = useUser();
   const { showAlert } = useAlert();
   const globalContext = useContext(GlobalContext);
 
   if (!globalContext) {
-    throw new Error('PaymentButton must be used within GlobalContextProvider');
+    throw new Error("PaymentButton must be used within GlobalContextProvider");
   }
 
+  const { GlobalCart, clearGlobalCart } = globalContext;
+
   const handlePayment = async () => {
-    if (!user) {
-      showAlert('Please sign in to make a payment', 'warning');
-      router.push('/sign-in');
-      return;
-    }
-
-    // Get form data
-    const form = document.querySelector('form');
-    if (!form) {
-      showAlert('Please fill in all required fields', 'error');
-      return;
-    }
-
-    const formData = new FormData(form);
-    const shippingAddress = {
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      streetAddress: formData.get('streetAddress'),
-      apartment: formData.get('apartment'),
-      city: formData.get('city'),
-      phone: formData.get('phone'),
-      email: formData.get('email')
-    };
-
-    // Validate required fields
-    if (!shippingAddress.firstName || !shippingAddress.lastName || 
-        !shippingAddress.streetAddress || !shippingAddress.city || 
-        !shippingAddress.phone || !shippingAddress.email) {
-      showAlert('Please fill in all required fields', 'error');
-      return;
-    }
-
     try {
-      setLoading(true);
-
       // Create order
-      const response = await fetch('/api/create-payment', {
-        method: 'POST',
+      const orderResponse = await fetch("/api/create-payment", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           amount,
           currency,
           receipt,
           notes: {
-            ...notes,
-            userId: user.id,
-            email: user.emailAddresses[0]?.emailAddress,
-            name: `${user.firstName} ${user.lastName}`,
+            items: GlobalCart,
           },
         }),
       });
 
-      const data = await response.json();
+      const orderData = await orderResponse.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create payment');
+      if (!orderResponse.ok) {
+        throw new Error(orderData.error || "Failed to create order");
       }
 
       // Initialize Razorpay
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: amount * 100,
-        currency,
-        name: 'Nuvante',
-        description: 'Payment for your order',
-        order_id: data.orderId,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Nuvante India",
+        description: "Payment for your order",
+        order_id: orderData.orderId,
         handler: async function (response: any) {
           try {
-            // Add order to global context
-            const orderData = {
-              orderId: data.orderId,
-              paymentId: response.razorpay_payment_id,
-              amount,
-              currency,
-              status: 'completed',
-              timestamp: new Date().toISOString(),
-              items: globalContext.GlobalCart,
-              shippingAddress
-            };
-            
-            // Save order to database
-            const saveResponse = await fetch('/api/verify-payment', {
-              method: 'POST',
+            // Verify payment
+            const verifyResponse = await fetch("/api/verify-payment", {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                razorpay_order_id: data.orderId,
+                razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                orderData,
+                orderData: {
+                  orderId: response.razorpay_order_id,
+                  paymentId: response.razorpay_payment_id,
+                  amount: amount,
+                  currency: currency,
+                  status: "completed",
+                  timestamp: new Date().toISOString(),
+                  items: GlobalCart,
+                },
               }),
             });
 
-            if (!saveResponse.ok) {
-              throw new Error('Failed to save order');
+            const verifyData = await verifyResponse.json();
+
+            if (!verifyResponse.ok) {
+              throw new Error(verifyData.error || "Payment verification failed");
             }
-            
-            // Update orders in global context
-            globalContext.changeGlobalOrders(orderData);
-            
-            // Clear cart after successful payment
-            globalContext.clearGlobalCart();
-            
-            if (onSuccess) {
-              onSuccess(response);
+
+            if (verifyData.success) {
+              clearGlobalCart();
+              // Redirect to success page with order details
+              router.push(`/payment-success?orderId=${verifyData.orderId}&paymentId=${verifyData.paymentId}`);
             }
-            
-            showAlert('Payment successful!', 'success');
-            router.push('/orders');
           } catch (error) {
-            console.error('Error saving order:', error);
-            showAlert('Payment successful but failed to save order. Please contact support.', 'error');
+            console.error("Payment verification error:", error);
+            showAlert("Payment verification failed", "error");
           }
         },
         prefill: {
-          name: `${user.firstName} ${user.lastName}`,
-          email: user.emailAddresses[0]?.emailAddress,
-          contact: user.phoneNumbers[0]?.phoneNumber || '',
+          name: "Customer",
+          email: "customer@example.com",
+          contact: "9999999999",
         },
         theme: {
-          color: '#DB4444',
+          color: "#DB4444",
         },
       };
 
-      const razorpay = new window.Razorpay(options);
+      const razorpay = new (window as any).Razorpay(options);
       razorpay.open();
     } catch (error) {
-      console.error('Payment error:', error);
-      showAlert('Payment failed. Please try again.', 'error');
-      if (onError) {
-        onError(error);
-      }
-    } finally {
-      setLoading(false);
+      console.error("Payment error:", error);
+      showAlert("Failed to initiate payment", "error");
     }
   };
 
   return (
-    <button
-      onClick={handlePayment}
-      disabled={loading}
-      className={`${className} ${
-        loading ? 'opacity-50 cursor-not-allowed' : ''
-      }`}
-    >
-      {loading ? 'Processing...' : children}
+    <button onClick={handlePayment} className={className}>
+      {children}
     </button>
   );
-} 
+};
+
+export default PaymentButton; 

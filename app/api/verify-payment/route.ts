@@ -35,7 +35,12 @@ export async function POST(request: Request) {
     client.cart = [];
     await client.save();
 
-    return NextResponse.json({ message: "Order verified and saved" }, { status: 200 });
+    return NextResponse.json({ 
+      message: "Order verified and saved",
+      success: true,
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id
+    }, { status: 200 });
   } catch (error) {
     console.error("Error in verify-payment route:", error);
     return NextResponse.json({ error: "Failed to verify payment" }, { status: 500 });
