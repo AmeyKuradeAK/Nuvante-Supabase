@@ -185,7 +185,11 @@ const OrdersPage = () => {
         setOrders([]);
       } else {
         const { orders = [] } = response.data;
-        setOrders(orders);
+        // Sort orders by date (latest first)
+        const sortedOrders = orders.sort((a, b) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+        setOrders(sortedOrders);
       }
       
       if (productsResponse.data?.data) {
@@ -311,6 +315,9 @@ const OrdersPage = () => {
                       const expectedDeliveryDate = new Date(orderDate);
                       expectedDeliveryDate.setDate(orderDate.getDate() + 5);
 
+                      // Get order items with their details
+                      const orderItems = products.filter(product => order.items.includes(product._id));
+
                       return (
                         <motion.div
                           key={order.orderId}
@@ -330,6 +337,9 @@ const OrdersPage = () => {
                                 </p>
                                 <p className="text-sm text-green-600">
                                   Expected Delivery: {expectedDeliveryDate.toLocaleDateString()}
+                                </p>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {orderItems.length} items: {orderItems.map(item => item.productName).join(", ")}
                                 </p>
                               </div>
                             </div>
