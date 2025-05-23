@@ -190,7 +190,7 @@ const ProfilePage = () => {
         email: profileData.email,
       });
 
-      // Update Clerk user profile
+      // Update Clerk user profile with correct parameter names
       if (user.user) {
         await user.user.update({
           firstName: profileData.firstName.trim(),
