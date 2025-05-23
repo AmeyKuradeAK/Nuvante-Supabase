@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useAlert } from "@/context/AlertContext";
 import { motion } from "framer-motion";
+import axios from "axios";
 
 const sideImg = "/Side-Image.jpg";
 
@@ -36,6 +37,21 @@ const page = (props: Props) => {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
+        
+        // Create client record for new users
+        try {
+          await axios.post("/api/populate/", {
+            firstName: user.user?.firstName || "User",
+            lastName: user.user?.lastName || "User",
+            password: "clerk-auth", // Since we're using Clerk for auth
+            email: email,
+            address: "Address not provided",
+          });
+        } catch (error) {
+          console.error("Error creating client record:", error);
+          // Don't show error to user since this is a background operation
+        }
+
         showAlert("Successfully signed in!", "success");
         router.push("/");
       } else {
