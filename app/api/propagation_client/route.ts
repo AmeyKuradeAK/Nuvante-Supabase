@@ -7,6 +7,25 @@ import { currentUser } from "@clerk/nextjs/server";
  * Returns proper HTTP status codes and structured responses.
  */
 
+interface OrderItem {
+  orderId: string;
+  paymentId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  timestamp: string;
+  items: string[];
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    streetAddress: string;
+    apartment: string;
+    city: string;
+    phone: string;
+    email: string;
+  };
+}
+
 export async function GET() {
   const user = await currentUser();
   const global_user_email = user?.emailAddresses[0].emailAddress;
@@ -22,6 +41,9 @@ export async function GET() {
       return NextResponse.json({ wishlist: [], cart: [], orders: [] }, { status: 200 });
     }
 
+    // Ensure orders are properly populated
+    const orders = database_obj.orders || [];
+    
     // Only return non-sensitive fields
     const safeProfile = {
       firstName: database_obj.firstName,
@@ -30,8 +52,16 @@ export async function GET() {
       address: database_obj.address,
       cart: database_obj.cart,
       wishlist: database_obj.wishlist,
-      orders: database_obj.orders,
-      // Add any other non-sensitive fields you want to expose
+      orders: orders.map((order: OrderItem) => ({
+        orderId: order.orderId,
+        paymentId: order.paymentId,
+        amount: order.amount,
+        currency: order.currency,
+        status: order.status,
+        timestamp: order.timestamp,
+        items: order.items,
+        shippingAddress: order.shippingAddress
+      }))
     };
 
     return NextResponse.json(safeProfile);
