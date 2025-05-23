@@ -1,111 +1,179 @@
-'use client';
+"use client";
 
-import React from "react";
-import { useRouter } from "next/navigation";
-import { useAlert } from "@/context/AlertContext";
-import { GlobalContext } from "@/context/Global";
-import { useContext } from "react";
+import { useState, useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@clerk/nextjs';
+import { GlobalContext } from '@/context/Global';
+import { useAlert } from '@/context/AlertContext';
 
 interface PaymentButtonProps {
   amount: number;
-  currency: string;
+  currency?: string;
   receipt: string;
+  notes?: { [key: string]: string };
+  onSuccess?: (response: any) => void;
+  onError?: (error: any) => void;
   className?: string;
   children: React.ReactNode;
 }
 
-const PaymentButton: React.FC<PaymentButtonProps> = ({
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+export default function PaymentButton({
   amount,
-  currency,
+  currency = 'INR',
   receipt,
-  className,
+  notes,
+  onSuccess,
+  onError,
+  className = '',
   children,
-}) => {
+}: PaymentButtonProps) {
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { user } = useUser();
   const { showAlert } = useAlert();
   const globalContext = useContext(GlobalContext);
 
   if (!globalContext) {
-    throw new Error("PaymentButton must be used within GlobalContextProvider");
+    throw new Error('PaymentButton must be used within GlobalContextProvider');
   }
 
-  const { GlobalCart, clearGlobalCart } = globalContext;
-
   const handlePayment = async () => {
+    if (!user) {
+      showAlert('Please sign in to make a payment', 'warning');
+      router.push('/sign-in');
+      return;
+    }
+
+    // Get form data
+    const form = document.querySelector('form');
+    if (!form) {
+      showAlert('Please fill in all required fields', 'error');
+      return;
+    }
+
+    const formData = new FormData(form);
+    const shippingAddress = {
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
+      streetAddress: formData.get('streetAddress'),
+      apartment: formData.get('apartment'),
+      city: formData.get('city'),
+      phone: formData.get('phone'),
+      email: formData.get('email')
+    };
+
+    // Validate required fields
+    if (!shippingAddress.firstName || !shippingAddress.lastName || 
+        !shippingAddress.streetAddress || !shippingAddress.city || 
+        !shippingAddress.phone || !shippingAddress.email) {
+      showAlert('Please fill in all required fields', 'error');
+      return;
+    }
+
     try {
+      setLoading(true);
+
       // Create order
-      const orderResponse = await fetch("/api/create-payment", {
-        method: "POST",
+      const response = await fetch('/api/create-payment', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           amount,
           currency,
           receipt,
           notes: {
-            items: GlobalCart,
+            ...notes,
+            userId: user.id,
+            email: user.emailAddresses[0]?.emailAddress,
+            name: `${user.firstName} ${user.lastName}`,
           },
         }),
       });
 
-      const orderData = await orderResponse.json();
+      const data = await response.json();
 
-      if (!orderResponse.ok) {
-        throw new Error(orderData.error || "Failed to create order");
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create payment');
       }
 
       // Initialize Razorpay
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "Nuvante India",
-        description: "Payment for your order",
-        order_id: orderData.orderId,
+        amount: amount * 100,
+        currency,
+        name: 'Nuvante',
+        description: 'Payment for your order',
+        order_id: data.orderId,
         handler: async function (response: any) {
           try {
-            // Verify payment
-            const verifyResponse = await fetch("/api/verify-payment", {
-              method: "POST",
+            // Add order to global context
+            const orderData = {
+              orderId: data.orderId,
+              paymentId: response.razorpay_payment_id,
+              amount,
+              currency,
+              status: 'completed',
+              timestamp: new Date().toISOString(),
+              items: globalContext.GlobalCart,
+              shippingAddress
+            };
+            
+            // Save order to database
+            const saveResponse = await fetch('/api/verify-payment', {
+              method: 'POST',
               headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
+                razorpay_order_id: data.orderId,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-                orderData: {
-                  orderId: response.razorpay_order_id,
-                  paymentId: response.razorpay_payment_id,
-                  amount: amount,
-                  currency: currency,
-                  status: "completed",
-                  timestamp: new Date().toISOString(),
-                  items: GlobalCart,
-                },
+                orderData,
               }),
             });
 
-            const verifyData = await verifyResponse.json();
+            if (!saveResponse.ok) {
+              throw new Error('Failed to save order');
+            }
+            
+            // Update orders in global context
+            globalContext.changeGlobalOrders(orderData);
+            
+            // Clear cart after successful payment
+            globalContext.clearGlobalCart();
 
-            if (!verifyResponse.ok) {
-              throw new Error(verifyData.error || "Payment verification failed");
+            // Close Razorpay modal
+            const modal = document.querySelector('.razorpay-checkout-frame');
+            if (modal) {
+              modal.remove();
+            }
+            // Force close any remaining Razorpay elements
+            const overlay = document.querySelector('.razorpay-overlay');
+            if (overlay) {
+              overlay.remove();
             }
 
-            if (verifyData.success) {
-              clearGlobalCart();
-              // Close Razorpay modal
-              const modal = document.querySelector('.razorpay-checkout-frame');
-              if (modal) {
-                modal.remove();
+            // Wait a bit for Razorpay to finish its animations
+            setTimeout(() => {
+              if (onSuccess) {
+                onSuccess(response);
               }
-              // Redirect to success page with order details
-              router.push(`/payment-success?orderId=${verifyData.orderId}&paymentId=${verifyData.paymentId}`);
-            }
+              
+              showAlert('Payment successful!', 'success');
+              // Redirect to success page
+              window.location.href = `/payment-success?orderId=${data.orderId}&paymentId=${response.razorpay_payment_id}`;
+            }, 1000);
           } catch (error) {
-            console.error("Payment verification error:", error);
-            showAlert("Payment verification failed", "error");
+            console.error('Error saving order:', error);
+            showAlert('Payment successful but failed to save order. Please contact support.', 'error');
           }
         },
         modal: {
@@ -114,28 +182,37 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
           }
         },
         prefill: {
-          name: "Customer",
-          email: "customer@example.com",
-          contact: "9999999999",
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.emailAddresses[0]?.emailAddress,
+          contact: user.phoneNumbers[0]?.phoneNumber || '',
         },
         theme: {
-          color: "#DB4444",
+          color: '#DB4444',
         },
       };
 
-      const razorpay = new (window as any).Razorpay(options);
+      const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
-      console.error("Payment error:", error);
-      showAlert("Failed to initiate payment", "error");
+      console.error('Payment error:', error);
+      showAlert('Payment failed. Please try again.', 'error');
+      if (onError) {
+        onError(error);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <button onClick={handlePayment} className={className}>
-      {children}
+    <button
+      onClick={handlePayment}
+      disabled={loading}
+      className={`${className} ${
+        loading ? 'opacity-50 cursor-not-allowed' : ''
+      }`}
+    >
+      {loading ? 'Processing...' : children}
     </button>
   );
-};
-
-export default PaymentButton; 
+} 
