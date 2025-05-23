@@ -63,7 +63,9 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
   expectedDeliveryDate.setDate(orderDate.getDate() + 5);
 
   // Get order items with their details
-  const orderItems = products.filter(product => order.items.includes(product._id.toString()));
+  const orderItems = products.filter(product => 
+    order.items.some(itemId => itemId === product._id.toString())
+  );
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -316,7 +318,9 @@ const OrdersPage = () => {
                       expectedDeliveryDate.setDate(orderDate.getDate() + 5);
 
                       // Get order items with their details
-                      const orderItems = products.filter(product => order.items.includes(product._id.toString()));
+                      const orderItems = products.filter(product => 
+                        order.items.some(itemId => itemId === product._id.toString())
+                      );
 
                       return (
                         <motion.div
