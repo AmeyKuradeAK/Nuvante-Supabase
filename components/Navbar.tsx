@@ -95,15 +95,17 @@ export default function Navbar() {
               <Heart className="h-6 w-6" />
               <span className="text-sm font-medium lg:hidden">Wishlist</span>
             </Link>
-            <Link href="/Cart">
-              <ShoppingCart className="h-6 w-6" />
-            </Link>
-            <Link href="/orders">
-              <Package className="h-6 w-6" />
-            </Link>
-            <Link href="/Profile" onClick={handleProfileClick}>
-              <UserIcon className="h-6 w-6" />
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/Cart">
+                <ShoppingCart className="h-6 w-6" />
+              </Link>
+              <Link href="/orders" className="hidden lg:flex">
+                <Package className="h-6 w-6" />
+              </Link>
+              <Link href="/Profile" onClick={handleProfileClick}>
+                <UserIcon className="h-6 w-6" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -113,7 +115,7 @@ export default function Navbar() {
           transition: "all 0.3s ease-in-out",
         }}
         className={`navbar_responsive lg:hidden flex flex-col py-3 overflow-y-hidden relative ${
-          open ? "h-[300px]" : "h-[90px]"
+          open ? "h-[200px]" : "h-[90px]"
         }`}
       >
         <div className="flex justify-between items-center px-4">
@@ -145,41 +147,52 @@ export default function Navbar() {
               <source src={animated_logo} type="video/mp4"></source>
             </video>
           </div>
-          <div className="flex flex-col gap-4">
-            <Link href="/wishlist" className="text-gray-600 hover:text-[#DB4444]">
-              <Heart className="h-6 w-6" />
-            </Link>
+          <div className="flex items-center gap-4">
             <Link href="/Cart" className="text-gray-600 hover:text-[#DB4444]">
               <ShoppingCart className="h-6 w-6" />
-            </Link>
-            <Link href="/orders" className="text-gray-600 hover:text-[#DB4444]">
-              <Package className="h-6 w-6" />
             </Link>
             <Link href="/Profile" className="text-gray-600 hover:text-[#DB4444]">
               <UserIcon className="h-6 w-6" />
             </Link>
           </div>
         </div>
-        <div className="flex-1">
-          <ul className="tracking-[2px] flex gap-4 lg:gap-10 ml-3 mt-4 lg:mt-0 lg:ml-0 lg:items-center flex-col text-black lg:flex-row w-fit text-sm">
-            {navigation.map((item) => (
-              <li key={item.name}>
-                <Link href={item.href} className="hover:text-[#DB4444] transition-colors">
+        <div className="flex-1 px-4">
+          <div className="grid grid-cols-2 gap-4 mt-4 pb-6">
+            <div className="space-y-4">
+              {navigation.slice(0, 2).map((item) => (
+                <Link 
+                  key={item.name}
+                  href={item.href} 
+                  className="block hover:text-[#DB4444] transition-colors"
+                >
                   {item.name}
                 </Link>
-              </li>
-            ))}
-            <li className="lg:hidden">
-              <Link href="/Wishlist" className="hover:text-[#DB4444] transition-colors">
+              ))}
+              <Link 
+                href="/Wishlist" 
+                className="block hover:text-[#DB4444] transition-colors"
+              >
                 Wishlist
               </Link>
-            </li>
-            <li className="lg:hidden">
-              <Link href="/orders" className="hover:text-[#DB4444] transition-colors">
+            </div>
+            <div className="space-y-4">
+              {navigation.slice(2).map((item) => (
+                <Link 
+                  key={item.name}
+                  href={item.href} 
+                  className="block hover:text-[#DB4444] transition-colors"
+                >
+                  {item.name}
+                </Link>
+              ))}
+              <Link 
+                href="/orders" 
+                className="block hover:text-[#DB4444] transition-colors"
+              >
                 Orders
               </Link>
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
       </div>
     </>
