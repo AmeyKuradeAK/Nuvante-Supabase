@@ -29,6 +29,8 @@ export async function POST(request: any) {
       if (body.append) {
         if (!existingModel.cart.includes(body.identifier)) {
           existingModel.cart.push(body.identifier);
+          // Set default quantity to 1 when adding to cart
+          existingModel.cartQuantities.set(body.identifier, 1);
         }
       } else {
         existingModel.cart = popElement(existingModel.cart, body.identifier);
