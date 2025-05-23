@@ -29,6 +29,14 @@ interface OrderItem {
   status: string;
   timestamp: string;
   items: string[];
+  itemDetails: {
+    productId: string;
+    size: string;
+    quantity: number;
+    productName: string;
+    productPrice: number;
+    productImages: string[];
+  }[];
   shippingAddress: {
     firstName: string;
     lastName: string;
@@ -246,155 +254,72 @@ const OrdersPage = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Breadcrumb */}
-          <div className="mb-8">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444]">Home</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="text-[#DB4444]">My Orders</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h1 className="text-2xl font-bold mb-8">My Orders</h1>
+          
+          {orders.length > 0 ? (
+            <div className="space-y-6">
+              {orders.map((order) => (
+                <div key={order.orderId} className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h2 className="text-lg font-semibold">Order #{order.orderId}</h2>
+                      <p className="text-sm text-gray-500">
+                        {new Date(order.timestamp).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {order.status}
+                    </span>
+                  </div>
 
-          {!isLoaded ? (
-            <div className="h-[60vh] flex items-center justify-center">
-              <motion.div
-                className="relative"
-                animate={{
-                  rotate: 360,
-                  transition: {
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "linear"
-                  },
-                }}
-              >
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
-                    className="w-[80px] h-[80px] rounded-full border-4 border-[#DB4444] border-t-transparent"
-                    animate={{
-                      rotate: -360,
-                      transition: {
-                        duration: 1,
-                        repeat: Infinity,
-                        ease: "linear"
-                      },
-                    }}
-                  />
+                  <div className="space-y-4">
+                    {order.itemDetails.map((item) => (
+                      <div key={item.productId} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div className="w-20 h-20 relative">
+                          <img
+                            src={item.productImages?.[0]}
+                            alt={item.productName}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-800">{item.productName}</h3>
+                          <p className="text-sm text-gray-600">Size: {item.size}</p>
+                          <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                          <p className="text-[#DB4444] font-semibold">
+                            Rs. {item.productPrice * item.quantity}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-sm text-gray-600">Payment ID: {order.paymentId}</p>
+                        <p className="text-sm text-gray-600">
+                          Total Amount: Rs. {order.amount} {order.currency}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <Image 
-                  src={logo} 
-                  alt="Loading..." 
-                  width={60} 
-                  height={60} 
-                  priority
-                  className="relative z-10"
-                  style={{ background: 'transparent' }}
-                />
-              </motion.div>
+              ))}
             </div>
           ) : (
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h1 className="text-2xl font-bold mb-6">My Orders</h1>
-                
-                {orders.length === 0 ? (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col items-center justify-center py-12"
-                  >
-                    <div className="w-24 h-24 mx-auto mb-6 text-gray-400">
-                      <Package className="w-full h-full" />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders yet</h3>
-                    <p className="text-gray-600 mb-6">Your order history will appear here</p>
-                    <a
-                      href="/Products"
-                      className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-colors duration-200"
-                    >
-                      Start Shopping
-                    </a>
-                  </motion.div>
-                ) : (
-                  <div className="space-y-4">
-                    {orders.map((order, index) => {
-                      // Calculate expected delivery date
-                      const orderDate = new Date(order.timestamp);
-                      const expectedDeliveryDate = new Date(orderDate);
-                      expectedDeliveryDate.setDate(orderDate.getDate() + 5);
-
-                      // Get order items with their details
-                      const orderItems = products.filter(product => 
-                        order.items.includes(product._id)
-                      );
-
-                      console.log("Rendering order:", order.orderId);
-                      console.log("Order items:", order.items);
-                      console.log("Available products:", products);
-                      console.log("Matched order items:", orderItems);
-
-                      return (
-                        <motion.div
-                          key={order.orderId}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="border rounded-lg p-6 hover:shadow-md transition-shadow cursor-pointer"
-                          onClick={() => setSelectedOrder(order)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              {getStatusIcon(order.status)}
-                              <div>
-                                <h3 className="font-medium">Order #{order.orderId.slice(-6)}</h3>
-                                <p className="text-sm text-gray-500">
-                                  {new Date(order.timestamp).toLocaleDateString()}
-                                </p>
-                                <p className="text-sm text-green-600">
-                                  Expected Delivery: {expectedDeliveryDate.toLocaleDateString()}
-                                </p>
-                                <p className="text-sm text-gray-600 mt-1">
-                                  {orderItems.length} items: {orderItems.map(item => item.productName).join(", ")}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <p className="text-[#DB4444] font-semibold">Rs. {order.amount}</p>
-                                <p className="text-sm text-gray-500">{order.items.length} items</p>
-                              </div>
-                              <ChevronRight className="w-5 h-5 text-gray-400" />
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+            <div className="text-center py-12">
+              <p className="text-gray-500">No orders found</p>
             </div>
           )}
         </div>
       </div>
-
-      <AnimatePresence>
-        {selectedOrder && (
-          <OrderDetailsModal
-            order={selectedOrder}
-            onClose={() => setSelectedOrder(null)}
-            products={products}
-          />
-        )}
-      </AnimatePresence>
-
       <Footer />
     </>
   );

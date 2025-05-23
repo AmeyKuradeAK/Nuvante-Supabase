@@ -39,6 +39,7 @@ const CartPage = () => {
   const { showAlert } = useAlert();
   const user = useUser();
   const router = useRouter();
+  const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
 
   const context = useContext(GlobalContext);
   if (!context) {
@@ -155,6 +156,36 @@ const CartPage = () => {
 
   const cartItems = products.filter(item => GlobalCart.includes(item._id));
   const subtotal = calculateSubtotal();
+
+  const handleSizeSelect = async (productId: string, size: string) => {
+    setSelectedSizes(prev => ({
+      ...prev,
+      [productId]: size
+    }));
+
+    try {
+      await axios.post("/api/cart", {
+        identifier: productId,
+        append: true,
+        size: size
+      });
+    } catch (error) {
+      console.error("Error updating size:", error);
+      showAlert("Error updating size", "error");
+    }
+  };
+
+  const handleCheckout = () => {
+    // Check if all items have sizes selected
+    const allItemsHaveSizes = products.every(product => selectedSizes[product._id]);
+    
+    if (!allItemsHaveSizes) {
+      showAlert("Please select sizes for all items before checkout", "error");
+      return;
+    }
+
+    router.push("/CheckOut");
+  };
 
   return (
     <>
@@ -334,13 +365,7 @@ const CartPage = () => {
                             <Button 
                               text="Proceed to Checkout" 
                               width={250} 
-                              onClick={() => {
-                                if (cartItems.length === 0) {
-                                  showAlert("Your cart is empty", "warning");
-                                  return;
-                                }
-                                router.push('/CheckOut');
-                              }}
+                              onClick={handleCheckout}
                             />
                           </div>
                         </div>
