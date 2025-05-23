@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, Suspense } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,7 +25,7 @@ interface CartData {
   cartSizes: Map<string, string>;
 }
 
-const CheckoutPage = () => {
+const CheckoutContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showAlert } = useAlert();
@@ -304,6 +304,18 @@ const CheckoutPage = () => {
       </div>
       <Footer />
     </>
+  );
+};
+
+const CheckoutPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#DB4444]"></div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 };
 
