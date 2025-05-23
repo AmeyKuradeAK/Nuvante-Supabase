@@ -182,15 +182,11 @@ const OrdersPage = () => {
       const response = await axios.get<ApiResponseOr404>("/api/propagation_client");
       const productsResponse = await axios.post<{ data: any[] }>("/api/propagation", { every: true });
       
-      console.log("Orders Response:", response.data);
-      console.log("Products Response:", productsResponse.data);
-      
       if (response.data === 404 || !response.data) {
         console.error("Could not fetch orders data");
         setOrders([]);
       } else {
         const { orders = [] } = response.data;
-        console.log("Parsed Orders:", orders);
         // Sort orders by date (latest first)
         const sortedOrders = orders.sort((a, b) => 
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -199,7 +195,6 @@ const OrdersPage = () => {
       }
       
       if (productsResponse.data?.data) {
-        console.log("Setting Products:", productsResponse.data.data);
         setProducts(productsResponse.data.data);
       }
       
@@ -218,10 +213,8 @@ const OrdersPage = () => {
       return;
     }
 
-    if (GlobalOrders) {
-      fetchOrders();
-    }
-  }, [user.isSignedIn, GlobalOrders, showAlert, router, fetchOrders]);
+    fetchOrders();
+  }, [user.isSignedIn, showAlert, router, fetchOrders]);
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
@@ -324,12 +317,8 @@ const OrdersPage = () => {
 
                       // Get order items with their details
                       const orderItems = products.filter(product => 
-                        order.items.some(itemId => itemId === product._id.toString())
+                        order.items.includes(product._id)
                       );
-
-                      console.log("Order:", order);
-                      console.log("Order Items:", orderItems);
-                      console.log("Products:", products);
 
                       return (
                         <motion.div
