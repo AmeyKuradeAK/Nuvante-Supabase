@@ -219,8 +219,8 @@ const CheckoutContent = () => {
         currency: 'INR',
         status: 'completed',
         timestamp: new Date().toISOString(),
-        items: products,
-        itemDetails: products.map((product, index) => ({
+        items: products.map(p => p._id), // Only send product IDs
+        itemDetails: products.map((product) => ({
           productId: product._id,
           size: sizes[product._id] || '',
           quantity: quantities[product._id] || 1
@@ -246,7 +246,8 @@ const CheckoutContent = () => {
       });
 
       if (!saveResponse.ok) {
-        throw new Error('Failed to save order');
+        const errorData = await saveResponse.json();
+        throw new Error(errorData.message || 'Failed to save order');
       }
 
       // Update orders in global context
@@ -269,9 +270,9 @@ const CheckoutContent = () => {
       // Show success message and redirect
       showAlert('Payment successful!', 'success');
       window.location.href = `/payment-success?orderId=${orderId}&paymentId=${paymentId}`;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving order:', error);
-      showAlert('Payment successful but failed to save order. Please contact support.', 'error');
+      showAlert(error.message || 'Payment successful but failed to save order. Please contact support.', 'error');
     }
   };
 

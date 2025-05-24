@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server";
 import connect from "@/db";
 import clientModel from "@/models/Clients";
-import { cookies } from "next/headers";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function GET() {
   try {
     await connect();
-    const cookieStore = await cookies();
-    const username = cookieStore.get("username")?.value;
+    const user = await currentUser();
+    const global_user_email = user?.emailAddresses[0].emailAddress;
 
-    if (!username) {
+    if (!user || !global_user_email) {
       return NextResponse.json(
         { error: "User not authenticated" },
         { status: 401 }
       );
     }
 
-    const client = await clientModel.findOne({ username });
+    const client = await clientModel.findOne({ email: global_user_email });
     if (!client) {
       return NextResponse.json(
         { error: "Client not found" },
@@ -37,10 +37,10 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await connect();
-    const cookieStore = await cookies();
-    const username = cookieStore.get("username")?.value;
+    const user = await currentUser();
+    const global_user_email = user?.emailAddresses[0].emailAddress;
 
-    if (!username) {
+    if (!user || !global_user_email) {
       return NextResponse.json(
         { error: "User not authenticated" },
         { status: 401 }
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     const orderData = await request.json();
-    const client = await clientModel.findOne({ username });
+    const client = await clientModel.findOne({ email: global_user_email });
 
     if (!client) {
       return NextResponse.json(
@@ -57,19 +57,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // Add order date and item details to the order data
-    const orderWithDetails = {
-      ...orderData,
-      orderDate: new Date().toISOString(),
-      itemDetails: orderData.items.map((itemId: string) => ({
-        productId: itemId,
-        size: client.cartSizes.get(itemId) || '',
-        quantity: client.cartQuantities.get(itemId) || 1
-      }))
-    };
+    // Validate required fields
+    const requiredFields = ['orderId', 'paymentId', 'amount', 'items', 'itemDetails', 'shippingAddress'];
+    for (const field of requiredFields) {
+      if (!orderData[field]) {
+        return NextResponse.json(
+          { error: `Missing required field: ${field}` },
+          { status: 400 }
+        );
+      }
+    }
 
     // Add the new order to the orders array
-    client.orders.push(orderWithDetails);
+    client.orders.push(orderData);
 
     // Clear the cart after successful order
     client.cart = [];
@@ -78,11 +78,14 @@ export async function POST(request: Request) {
 
     await client.save();
 
-    return NextResponse.json({ message: "Order added successfully" });
-  } catch (error) {
+    return NextResponse.json({ 
+      message: "Order added successfully",
+      orderId: orderData.orderId
+    });
+  } catch (error: any) {
     console.error("Error adding order:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: error.message || "Internal server error" },
       { status: 500 }
     );
   }
