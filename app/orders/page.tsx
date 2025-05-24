@@ -29,6 +29,8 @@ interface OrderItem {
   status: string;
   timestamp: string;
   items: string[];
+  trackingId: string;
+  itemStatus: string;
   itemDetails: {
     productId: string;
     size: string;
@@ -92,6 +94,10 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                   <p className="font-medium text-gray-800">{order.status}</p>
                 </div>
                 <div className="bg-white p-3 rounded-md shadow-sm">
+                  <p className="text-gray-600">Order Status</p>
+                  <p className="font-medium text-[#DB4444]">{order.itemStatus}</p>
+                </div>
+                <div className="bg-white p-3 rounded-md shadow-sm">
                   <p className="text-gray-600">Estimated Delivery</p>
                   <p className="font-medium text-[#DB4444]">
                     {order.estimatedDeliveryDate ? 
@@ -104,6 +110,12 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                   <p className="text-gray-600">Total Amount</p>
                   <p className="font-medium text-[#DB4444]">Rs. {order.amount}</p>
                 </div>
+                {order.trackingId && (
+                  <div className="bg-white p-3 rounded-md shadow-sm sm:col-span-2">
+                    <p className="text-gray-600">Tracking ID</p>
+                    <p className="font-medium text-[#DB4444]">{order.trackingId}</p>
+                  </div>
+                )}
               </div>
             </div>
 

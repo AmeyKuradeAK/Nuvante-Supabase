@@ -9,6 +9,8 @@ interface OrderItem {
   timestamp: string;
   estimatedDeliveryDate: string;
   items: string[];
+  trackingId: string;
+  itemStatus: string;
   itemDetails: {
     productId: string;
     size: string;
@@ -74,6 +76,14 @@ let clientSchema = new mongoose.Schema({
       timestamp: String,
       estimatedDeliveryDate: String,
       items: [String],
+      trackingId: {
+        type: String,
+        default: ""
+      },
+      itemStatus: {
+        type: String,
+        default: "Order Accepted"
+      },
       itemDetails: [{
         productId: String,
         size: String,

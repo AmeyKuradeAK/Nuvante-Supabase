@@ -14,6 +14,8 @@ interface OrderItem {
   timestamp: string;
   estimatedDeliveryDate: string;
   items: string[];
+  trackingId: string;
+  itemStatus: string;
   itemDetails: {
     productId: string;
     size: string;
