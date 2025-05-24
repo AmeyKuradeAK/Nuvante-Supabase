@@ -101,6 +101,27 @@ const CheckoutContent = () => {
       ...prev,
       [name]: value
     }));
+
+    // If email or phone is changed, update profile
+    if (name === 'email' || name === 'phone') {
+      updateProfileField(name, value);
+    }
+  };
+
+  const updateProfileField = async (field: string, value: string) => {
+    try {
+      const fieldMap = {
+        'email': 'email',
+        'phone': 'mobileNumber'
+      };
+
+      await axios.post("/api/populate", {
+        [fieldMap[field as keyof typeof fieldMap]]: value
+      });
+    } catch (error) {
+      console.error(`Error updating ${field}:`, error);
+      showAlert(`Error updating ${field}`, "error");
+    }
   };
 
   const isFormValid = () => {
@@ -425,10 +446,8 @@ const CheckoutContent = () => {
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300 bg-gray-100 cursor-not-allowed"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
                           placeholder="Enter your phone number"
-                          readOnly
-                          disabled
                         />
                       </motion.div>
                       <motion.div whileHover={{ scale: 1.02 }} className="space-y-2">
@@ -438,10 +457,8 @@ const CheckoutContent = () => {
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300 bg-gray-100 cursor-not-allowed"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
                           placeholder="Enter your email"
-                          readOnly
-                          disabled
                         />
                       </motion.div>
                     </div>
