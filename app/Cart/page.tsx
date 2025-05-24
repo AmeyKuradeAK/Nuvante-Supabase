@@ -81,7 +81,15 @@ const CartPage = () => {
       // Load quantities from database
       const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities');
       if (quantitiesResponse.status === 200 && quantitiesResponse.data.quantities) {
-        setQuantities(quantitiesResponse.data.quantities);
+        // Ensure all quantities are at least 1
+        const normalizedQuantities = Object.entries(quantitiesResponse.data.quantities).reduce(
+          (acc, [key, value]) => ({
+            ...acc,
+            [key]: Math.max(1, value)
+          }),
+          {}
+        );
+        setQuantities(normalizedQuantities);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -93,7 +101,7 @@ const CartPage = () => {
 
   const handleQuantityChange = async (id: string, value: number) => {
     try {
-      const newValue = value < 1 ? 1 : value;
+      const newValue = Math.max(1, value); // Ensure minimum quantity is 1
       const newQuantities = {
         ...quantities,
         [id]: newValue,
@@ -110,10 +118,20 @@ const CartPage = () => {
 
       if (response.status !== 200) {
         showAlert("Failed to update quantity. Please try again.", "error");
+        // Revert to previous quantity on error
+        setQuantities(prev => ({
+          ...prev,
+          [id]: prev[id]
+        }));
       }
     } catch (error) {
       console.error("Error updating quantity:", error);
       showAlert("Error updating quantity. Please try again.", "error");
+      // Revert to previous quantity on error
+      setQuantities(prev => ({
+        ...prev,
+        [id]: prev[id]
+      }));
     }
   };
 
@@ -169,9 +187,15 @@ const CartPage = () => {
         append: true,
         size: size
       });
+      showAlert("Size updated successfully", "success");
     } catch (error) {
       console.error("Error updating size:", error);
       showAlert("Error updating size", "error");
+      // Revert the size selection on error
+      setSelectedSizes(prev => ({
+        ...prev,
+        [productId]: prev[productId]
+      }));
     }
   };
 
@@ -306,12 +330,12 @@ const CartPage = () => {
 
                                   {/* Size Selection */}
                                   <div className="mt-4">
-                                    <p className="text-sm text-gray-600 mb-2">Select Size:</p>
+                                    <h2 className="text-sm font-medium mb-3">Select Size</h2>
                                     <div className="grid grid-cols-4 gap-2 max-w-xs">
                                       {["S", "M", "L", "XL"].map((size) => (
                                         <button
                                           key={size}
-                                          className={`border-2 py-1 text-center text-sm transition-colors ${
+                                          className={`border-2 py-2 text-center transition-colors ${
                                             selectedSizes[item._id] === size
                                               ? "bg-black text-white border-black"
                                               : "border-gray-200 hover:border-gray-300"
@@ -322,6 +346,9 @@ const CartPage = () => {
                                         </button>
                                       ))}
                                     </div>
+                                    <p className="text-xs text-gray-500 mt-2">
+                                      This product has a larger fit than usual. Model is wearing L.
+                                    </p>
                                   </div>
 
                                   {/* Quantity Controls */}

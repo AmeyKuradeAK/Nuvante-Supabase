@@ -190,33 +190,39 @@ const CheckoutContent = () => {
                         <img
                           src={product.productImages[0]}
                           alt={product.productName}
-                          className="w-full h-full object-cover rounded-md"
+                          className="w-full h-full object-contain rounded-lg"
                         />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium text-gray-800">{product.productName}</h3>
-                        <p className="text-sm text-gray-600">Size: {sizes[product._id] || 'Not selected'}</p>
-                        <div className="flex items-center gap-4 mt-2">
-                          <div className="flex items-center border rounded-md">
-                            <button
-                              onClick={() => handleQuantityChange(product._id, -1)}
-                              className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
-                            >
-                              -
-                            </button>
-                            <span className="w-12 text-center">
-                              {quantities[product._id] || 1}
-                            </span>
-                            <button
-                              onClick={() => handleQuantityChange(product._id, 1)}
-                              className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
-                            >
-                              +
-                            </button>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600">Size: {sizes[product._id] || 'Not selected'}</p>
+                          <div className="flex items-center gap-4 mt-2">
+                            <div className="flex items-center border rounded-md">
+                              <button
+                                onClick={() => handleQuantityChange(product._id, -1)}
+                                className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                value={quantities[product._id] || 1}
+                                onChange={(e) => handleQuantityChange(product._id, parseInt(e.target.value) || 1)}
+                                className="w-12 text-center border-x focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
+                                min={1}
+                              />
+                              <button
+                                onClick={() => handleQuantityChange(product._id, 1)}
+                                className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <p className="text-[#DB4444] font-semibold">
+                              Rs. {product.productPrice * (quantities[product._id] || 1)}
+                            </p>
                           </div>
-                          <p className="text-[#DB4444] font-semibold">
-                            Rs. {product.productPrice * (quantities[product._id] || 1)}
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -237,6 +243,8 @@ const CheckoutContent = () => {
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                       required
+                      value={formData.firstName}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div>
@@ -248,6 +256,8 @@ const CheckoutContent = () => {
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                       required
+                      value={formData.lastName}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -259,6 +269,8 @@ const CheckoutContent = () => {
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                       required
+                      value={formData.address}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -269,6 +281,8 @@ const CheckoutContent = () => {
                       name="apartment"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
+                      value={formData.apartment}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div>
@@ -280,6 +294,8 @@ const CheckoutContent = () => {
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                       required
+                      value={formData.city}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div>
@@ -291,6 +307,8 @@ const CheckoutContent = () => {
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="tel"
                       required
+                      value={formData.phone}
+                      onChange={handleInputChange}
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -302,6 +320,8 @@ const CheckoutContent = () => {
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="email"
                       required
+                      value={formData.email}
+                      onChange={handleInputChange}
                     />
                   </div>
                 </form>
@@ -335,10 +355,17 @@ const CheckoutContent = () => {
                     <PaymentButton
                       amount={calculateTotal()}
                       currency="INR"
-                      receipt={`order_${Date.now()}`}
-                      className="w-full bg-[#DB4444] text-white py-3 px-6 rounded-md hover:bg-[#c13a3a] transition-colors duration-200 font-medium"
+                      receipt={`ORDER_${Date.now()}`}
+                      notes={{
+                        items: JSON.stringify(products.map(p => ({
+                          id: p._id,
+                          quantity: quantities[p._id] || 1,
+                          size: sizes[p._id] || ''
+                        })))
+                      }}
+                      className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
                     >
-                      Place Order
+                      Pay Rs. {calculateTotal()}
                     </PaymentButton>
                   </div>
                 </div>

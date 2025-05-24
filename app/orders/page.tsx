@@ -22,30 +22,16 @@ import { Package, Clock, CheckCircle, XCircle, ChevronRight } from "lucide-react
 const logo = "/logo.png";
 
 interface OrderItem {
-  orderId: string;
-  paymentId: string;
-  amount: number;
-  currency: string;
+  _id: string;
+  orderNumber: string;
+  orderDate: string;
   status: string;
-  timestamp: string;
-  items: string[];
-  itemDetails: {
+  totalAmount: number;
+  items: {
     productId: string;
-    size: string;
     quantity: number;
-    productName: string;
-    productPrice: number;
-    productImages: string[];
+    size: string;
   }[];
-  shippingAddress: {
-    firstName: string;
-    lastName: string;
-    streetAddress: string;
-    apartment: string;
-    city: string;
-    phone: string;
-    email: string;
-  };
 }
 
 interface OrderDetailsModalProps {
@@ -64,110 +50,69 @@ interface ApiResponse {
 
 type ApiResponseOr404 = ApiResponse | 404;
 
-const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps) => {
-  // Calculate expected delivery date (5 days from order date)
-  const orderDate = new Date(order.timestamp);
-  const expectedDeliveryDate = new Date(orderDate);
-  expectedDeliveryDate.setDate(orderDate.getDate() + 5);
-
-  // Get order items with their details
-  const orderItems = products.filter(product => 
-    order.items.some(itemId => itemId === product._id.toString())
-  );
-
+const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose, products }) => {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 space-y-6">
-          {/* Order Info */}
-          <div className="grid grid-cols-2 gap-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Order Details</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-sm text-gray-500">Order ID</p>
-              <p className="font-medium">{order.orderId}</p>
+              <p className="text-gray-600">Order Number</p>
+              <p className="font-medium">{order.orderNumber}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Payment ID</p>
-              <p className="font-medium">{order.paymentId}</p>
+              <p className="text-gray-600">Order Date</p>
+              <p className="font-medium">{new Date(order.orderDate).toLocaleDateString()}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Order Date</p>
-              <p className="font-medium">{new Date(order.timestamp).toLocaleDateString()}</p>
+              <p className="text-gray-600">Status</p>
+              <p className="font-medium">{order.status}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Expected Delivery</p>
-              <p className="font-medium text-green-600">{expectedDeliveryDate.toLocaleDateString()}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Status</p>
-              <p className="font-medium text-[#DB4444]">{order.status}</p>
+              <p className="text-gray-600">Total Amount</p>
+              <p className="font-medium">Rs. {order.totalAmount}</p>
             </div>
           </div>
 
-          {/* Order Summary */}
-          <div>
-            <h3 className="font-semibold mb-4">Order Summary</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="font-medium mb-2">Items in this order:</p>
-              <ul className="list-disc list-inside space-y-1">
-                {orderItems.map(item => (
-                  <li key={item._id} className="text-gray-700">
-                    {item.productName}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Shipping Address */}
-          <div>
-            <h3 className="font-semibold mb-4">Shipping Address</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="font-medium">{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
-              <p>{order.shippingAddress.streetAddress}</p>
-              {order.shippingAddress.apartment && <p>{order.shippingAddress.apartment}</p>}
-              <p>{order.shippingAddress.city}</p>
-              <p className="mt-2">Phone: {order.shippingAddress.phone}</p>
-              <p>Email: {order.shippingAddress.email}</p>
-            </div>
-          </div>
-
-          {/* Order Items */}
-          <div>
-            <h3 className="font-semibold mb-4">Order Items</h3>
+          <div className="mt-6">
+            <h3 className="font-medium mb-4">Order Items</h3>
             <div className="space-y-4">
-              {orderItems.map(product => (
-                <div key={product._id} className="flex gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-20 h-20 relative">
-                    <img
-                      src={product.productImages[0]}
-                      alt={product.productName}
-                      className="w-full h-full object-cover rounded-md"
-                    />
+              {order.items.map((item, index) => {
+                const product = products.find(p => p._id === item.productId);
+                if (!product) return null;
+                
+                return (
+                  <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="w-20 h-20 relative">
+                      <img
+                        src={product.productImages[0]}
+                        alt={product.productName}
+                        className="w-full h-full object-contain rounded-lg"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-800">{product.productName}</h4>
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-600">Size: {item.size || 'Not selected'}</p>
+                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                        <p className="text-[#DB4444] font-semibold mt-1">
+                          Rs. {product.productPrice * item.quantity}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{product.productName}</h4>
-                    <p className="text-[#DB4444] font-semibold">Rs. {product.productPrice}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          </div>
-
-          {/* Order Total */}
-          <div className="border-t border-gray-200 pt-4">
-            <div className="flex justify-between font-bold text-lg">
-              <span>Total</span>
-              <span>Rs. {order.amount}</span>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-[#DB4444] transition-colors"
-            >
-              Close
-            </button>
           </div>
         </div>
       </div>
@@ -204,7 +149,7 @@ const OrdersPage = () => {
         console.log("Parsed Orders:", orders);
         // Sort orders by date (latest first)
         const sortedOrders = orders.sort((a, b) => 
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
         );
         setOrders(sortedOrders);
       }
@@ -261,12 +206,12 @@ const OrdersPage = () => {
           {orders.length > 0 ? (
             <div className="space-y-6">
               {orders.map((order) => (
-                <div key={order.orderId} className="bg-white rounded-lg shadow-sm p-6">
+                <div key={order._id} className="bg-white rounded-lg shadow-sm p-6">
                   <div className="flex justify-between items-center mb-4">
                     <div>
-                      <h2 className="text-lg font-semibold">Order #{order.orderId}</h2>
+                      <h2 className="text-lg font-semibold">Order #{order.orderNumber}</h2>
                       <p className="text-sm text-gray-500">
-                        {new Date(order.timestamp).toLocaleDateString()}
+                        {new Date(order.orderDate).toLocaleDateString()}
                       </p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm ${
@@ -279,34 +224,38 @@ const OrdersPage = () => {
                   </div>
 
                   <div className="space-y-4">
-                    {order.itemDetails.map((item) => (
-                      <div key={item.productId} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                        <div className="w-20 h-20 relative">
-                          <img
-                            src={item.productImages?.[0]}
-                            alt={item.productName}
-                            className="w-full h-full object-cover rounded-md"
-                          />
+                    {order.items.map((item, index) => {
+                      const product = products.find(p => p._id === item.productId);
+                      if (!product) return null;
+                      
+                      return (
+                        <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                          <div className="w-20 h-20 relative">
+                            <img
+                              src={product.productImages[0]}
+                              alt={product.productName}
+                              className="w-full h-full object-cover rounded-md"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-800">{product.productName}</h3>
+                            <div className="mt-2">
+                              <p className="text-sm text-gray-600">Size: {item.size || 'Not selected'}</p>
+                              <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                              <p className="text-[#DB4444] font-semibold mt-1">
+                                Rs. {product.productPrice * item.quantity}
+                              </p>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-800">{item.productName}</h3>
-                          <p className="text-sm text-gray-600">Size: {item.size}</p>
-                          <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                          <p className="text-[#DB4444] font-semibold">
-                            Rs. {item.productPrice * item.quantity}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-600">Payment ID: {order.paymentId}</p>
-                        <p className="text-sm text-gray-600">
-                          Total Amount: Rs. {order.amount} {order.currency}
-                        </p>
+                        <p className="text-sm text-gray-600">Total Amount: Rs. {order.totalAmount}</p>
                       </div>
                     </div>
                   </div>
