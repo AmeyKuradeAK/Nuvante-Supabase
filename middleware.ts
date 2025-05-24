@@ -11,11 +11,28 @@ const isPublicRoute = createRouteMatcher([
   "/", // Allow home page without auth
   "/products(.*)", // Allow product pages without auth
   "/category(.*)", // Allow category pages without auth
+  "/ProductDetails(.*)", // Allow product details without auth
+  "/about(.*)", // Allow about page without auth
+  "/Contact(.*)", // Allow contact page without auth
+  "/api/products(.*)", // Allow product API without auth
+  "/api/categories(.*)", // Allow categories API without auth
+]);
+
+// Define protected routes that require authentication
+const isProtectedRoute = createRouteMatcher([
+  "/Cart(.*)",
+  "/Wishlist(.*)",
+  "/Profile(.*)",
+  "/orders(.*)",
+  "/CheckOut(.*)",
+  "/api/cart(.*)",
+  "/api/wishlist(.*)",
+  "/api/orders(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  // Protect all routes except public ones
-  if (!isPublicRoute(request)) {
+  // Only protect routes that are explicitly marked as protected
+  if (isProtectedRoute(request)) {
     await auth.protect();
   }
 });

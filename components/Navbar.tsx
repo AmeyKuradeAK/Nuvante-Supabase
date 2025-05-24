@@ -48,6 +48,36 @@ export default function Navbar() {
     }
   };
 
+  const handleCartClick = (e: React.MouseEvent) => {
+    if (!user.isSignedIn) {
+      e.preventDefault();
+      showAlert("Please sign in to access your cart", "warning");
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 2000);
+    }
+  };
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    if (!user.isSignedIn) {
+      e.preventDefault();
+      showAlert("Please sign in to access your wishlist", "warning");
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 2000);
+    }
+  };
+
+  const handleOrdersClick = (e: React.MouseEvent) => {
+    if (!user.isSignedIn) {
+      e.preventDefault();
+      showAlert("Please sign in to access your orders", "warning");
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 2000);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut();
@@ -102,15 +132,15 @@ export default function Navbar() {
           </div>
           
           <div className="flex lg:flex-row items-center gap-4">
-            <Link href="/Wishlist" className="hidden lg:flex items-center gap-2">
+            <Link href="/Wishlist" className="hidden lg:flex items-center gap-2" onClick={handleWishlistClick}>
               <Heart className="h-6 w-6" />
               <span className="text-sm font-medium lg:hidden">Wishlist</span>
             </Link>
             <div className="flex items-center gap-4">
-              <Link href="/Cart">
+              <Link href="/Cart" onClick={handleCartClick}>
                 <ShoppingCart className="h-6 w-6" />
               </Link>
-              <Link href="/orders" className="hidden lg:flex">
+              <Link href="/orders" className="hidden lg:flex" onClick={handleOrdersClick}>
                 <Package className="h-6 w-6" />
               </Link>
               <Link href="/Profile" onClick={handleProfileClick}>
@@ -159,10 +189,10 @@ export default function Navbar() {
             </video>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/Cart" className="text-gray-600 hover:text-[#DB4444]">
+            <Link href="/Cart" className="text-gray-600 hover:text-[#DB4444]" onClick={handleCartClick}>
               <ShoppingCart className="h-6 w-6" />
             </Link>
-            <Link href="/Profile" className="text-gray-600 hover:text-[#DB4444]">
+            <Link href="/Profile" className="text-gray-600 hover:text-[#DB4444]" onClick={handleProfileClick}>
               <UserIcon className="h-6 w-6" />
             </Link>
           </div>
@@ -182,6 +212,7 @@ export default function Navbar() {
               <Link 
                 href="/Wishlist" 
                 className="block hover:text-[#DB4444] transition-colors"
+                onClick={handleWishlistClick}
               >
                 Wishlist
               </Link>
@@ -199,6 +230,7 @@ export default function Navbar() {
               <Link 
                 href="/orders" 
                 className="block hover:text-[#DB4444] transition-colors"
+                onClick={handleOrdersClick}
               >
                 Orders
               </Link>
