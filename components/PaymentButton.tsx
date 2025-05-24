@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { GlobalContext } from '@/context/Global';
@@ -34,6 +34,7 @@ export default function PaymentButton({
   children,
 }: PaymentButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const router = useRouter();
   const { user } = useUser();
   const { showAlert } = useAlert();
@@ -43,8 +44,47 @@ export default function PaymentButton({
     throw new Error('PaymentButton must be used within GlobalContextProvider');
   }
 
+  useEffect(() => {
+    // Load Razorpay script
+    const loadRazorpay = () => {
+      return new Promise((resolve, reject) => {
+        if (window.Razorpay) {
+          setRazorpayLoaded(true);
+          resolve(true);
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => {
+          setRazorpayLoaded(true);
+          resolve(true);
+        };
+        script.onerror = () => {
+          reject(new Error('Failed to load Razorpay script'));
+        };
+        document.body.appendChild(script);
+      });
+    };
+
+    loadRazorpay().catch(error => {
+      console.error('Error loading Razorpay:', error);
+      showAlert('Failed to load payment system. Please try again.', 'error');
+    });
+  }, [showAlert]);
+
   const handlePayment = async () => {
     if (loading) return;
+    if (!razorpayLoaded) {
+      showAlert('Payment system is still loading. Please wait a moment.', 'warning');
+      return;
+    }
+    if (!user) {
+      showAlert('Please sign in to make a payment', 'warning');
+      router.push('/sign-in');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -58,15 +98,25 @@ export default function PaymentButton({
           amount,
           currency,
           receipt,
-          notes
+          notes: {
+            ...notes,
+            userId: user.id,
+            email: user.emailAddresses[0]?.emailAddress,
+            name: `${user.firstName} ${user.lastName}`,
+          }
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create order');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to create order');
       }
 
       const data = await response.json();
+
+      if (!data.orderId) {
+        throw new Error('Invalid order ID received from server');
+      }
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
@@ -77,6 +127,9 @@ export default function PaymentButton({
         order_id: data.orderId,
         handler: async function (response: any) {
           try {
+            if (!response.razorpay_payment_id) {
+              throw new Error('Payment ID not received');
+            }
             // Call onSuccess with payment ID and order ID
             if (onSuccess) {
               onSuccess(response.razorpay_payment_id, data.orderId);
@@ -90,23 +143,28 @@ export default function PaymentButton({
           }
         },
         prefill: {
-          name: 'Customer Name',
-          email: 'customer@example.com',
-          contact: '9999999999'
+          name: `${user.firstName} ${user.lastName}`,
+          email: user.emailAddresses[0]?.emailAddress,
+          contact: user.phoneNumbers[0]?.phoneNumber || ''
         },
         theme: {
           color: '#DB4444'
+        },
+        modal: {
+          ondismiss: function() {
+            showAlert("Payment cancelled", "warning");
+          }
         }
       };
 
-      const razorpay = new (window as any).Razorpay(options);
+      const razorpay = new window.Razorpay(options);
       razorpay.open();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment initialization failed:', error);
       if (onError) {
         onError(error);
       }
-      showAlert('Payment initialization failed. Please try again.', 'error');
+      showAlert(error.message || 'Payment initialization failed. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -115,8 +173,8 @@ export default function PaymentButton({
   return (
     <button
       onClick={handlePayment}
-      disabled={loading}
-      className={`${className} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+      disabled={loading || !razorpayLoaded}
+      className={`${className} ${(loading || !razorpayLoaded) ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       {loading ? (
         <div className="flex items-center justify-center">
