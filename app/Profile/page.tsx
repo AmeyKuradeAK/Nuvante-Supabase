@@ -77,7 +77,7 @@ const ProfileForm = React.memo(({
         />
       </div>
     </div>
-    <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-auto lg:w-[710px] h-auto lg:h-[82px] mt-8">
+    <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-full lg:w-[710px] h-auto lg:h-[82px] mt-8">
       <div className="w-full lg:w-[330px] h-[62px]">
         <h1 className="font-normal">Email</h1>
         <input
