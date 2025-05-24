@@ -14,7 +14,11 @@ export async function POST(request: any) {
 
   try {
     const body = await request.json();
+    console.log("Received request body:", body); // Debug log
+    console.log("User email:", global_user_email); // Debug log
+
     const existingModel = await clientModel.findOne({ email: global_user_email });
+    console.log("Existing model:", existingModel ? "Found" : "Not found"); // Debug log
 
     if (existingModel) {
       // Update all provided fields
@@ -47,6 +51,7 @@ export async function POST(request: any) {
       if (!updatedModel) {
         throw new Error("Failed to update profile");
       }
+      console.log("Updated model:", updatedModel); // Debug log
     } else {
       // Create new client
       const hashedPassword = await hash(body.password || "default", 12);
@@ -65,11 +70,15 @@ export async function POST(request: any) {
         orders: body.orders || []
       });
 
+      console.log("Creating new client:", new_client); // Debug log
+
       const savedClient = await new_client.save();
       
       if (!savedClient) {
         throw new Error("Failed to create profile");
       }
+
+      console.log("Saved client:", savedClient); // Debug log
 
       // Verify the saved data
       const verifiedClient = await clientModel.findOne({ email: global_user_email });
@@ -77,15 +86,23 @@ export async function POST(request: any) {
           verifiedClient.firstName !== body.firstName || 
           verifiedClient.lastName !== body.lastName || 
           verifiedClient.mobileNumber !== body.mobileNumber) {
+        console.error("Verification failed:", {
+          verifiedClient,
+          expected: {
+            firstName: body.firstName,
+            lastName: body.lastName,
+            mobileNumber: body.mobileNumber
+          }
+        });
         throw new Error("Profile data verification failed");
       }
     }
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in API route:", error);
     return NextResponse.json(
-      { message: "Error processing request" },
+      { message: "Error processing request", error: error.message },
       { status: 500 }
     );
   }

@@ -100,7 +100,7 @@ const Preview = () => {
   useEffect(() => {
     // Only check cart state if user is signed in
     if (user.isSignedIn) {
-      setIsInCart(GlobalCart.includes(id));
+    setIsInCart(GlobalCart.includes(id));
     }
   }, [GlobalCart, id, user.isSignedIn]);
 

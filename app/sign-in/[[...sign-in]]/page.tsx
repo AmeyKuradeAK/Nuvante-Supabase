@@ -63,13 +63,13 @@ const page = (props: Props) => {
           
           // Only create new client if one doesn't exist
           if (!clientResponse.data || !clientResponse.data.firstName) {
-            await axios.post("/api/populate/", {
-              firstName: userData?.firstName || "User",
-              lastName: userData?.lastName || "User",
-              password: "clerk-auth", // Since we're using Clerk for auth
-              email: email,
-              address: "Address not provided",
-            });
+          await axios.post("/api/populate/", {
+            firstName: userData?.firstName || "User",
+            lastName: userData?.lastName || "User",
+            password: "clerk-auth", // Since we're using Clerk for auth
+            email: email,
+            address: "Address not provided",
+          });
           }
         } catch (error) {
           console.error("Error handling client record:", error);
@@ -108,14 +108,14 @@ const page = (props: Props) => {
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.3 }}
-                >
-                  <Image
-                    src={sideImg}
-                    alt="side-image"
-                    height={600}
-                    width={800}
-                    className="rounded-2xl shadow-xl"
-                  />
+              >
+                <Image
+                  src={sideImg}
+                  alt="side-image"
+                  height={600}
+                  width={800}
+                  className="rounded-2xl shadow-xl"
+                />
                 </motion.div>
               </motion.div>
 

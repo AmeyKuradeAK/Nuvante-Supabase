@@ -201,6 +201,9 @@ const SignUpPage = () => {
       await setActive({ session: signUpAttempt.createdSessionId });
 
       try {
+        // Wait for Clerk session to be fully established
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
         // Create client record with proper name fields and email
         const response = await axios.post("/api/populate/", {
           firstName,
@@ -219,8 +222,8 @@ const SignUpPage = () => {
           throw new Error("Failed to save profile data");
         }
 
-        // Wait a moment for the database to update
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait for database to update
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Verify the data was saved by fetching it
         const profileResponse = await axios.get<ProfileResponse>("/api/propagation_client");
