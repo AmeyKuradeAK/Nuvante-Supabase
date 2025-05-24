@@ -14,10 +14,7 @@ export async function POST(request: any) {
 
   try {
     const body = await request.json();
-    const existingModel =
-      body.email === "existing"
-        ? await clientModel.findOne({ email: global_user_email })
-        : await clientModel.findOne({ email: body.email });
+    const existingModel = await clientModel.findOne({ email: global_user_email });
 
     if (existingModel) {
       // Only update fields that are provided and not "existing"
@@ -39,7 +36,7 @@ export async function POST(request: any) {
       
       const new_client = new clientModel({
         username: body.firstName,
-        email: body.email,
+        email: global_user_email,
         firstName: body.firstName,
         lastName: body.lastName,
         password: hashedPassword,

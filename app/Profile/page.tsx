@@ -187,7 +187,7 @@ const ProfilePage = () => {
         lastName: profileData.lastName.trim(),
         password: "existing",
         address: profileData.address.trim(),
-        email: profileData.email,
+        email: "existing",
       });
 
       // Try to update Clerk user profile, but don't fail if it errors
