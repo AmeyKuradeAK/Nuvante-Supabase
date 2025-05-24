@@ -116,6 +116,16 @@ const SignUpForm = React.memo(({ onSubmit, isLoading }: { onSubmit: (e: React.Fo
 
 SignUpForm.displayName = 'SignUpForm';
 
+interface ProfileResponse {
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobileNumber: string;
+  cart: string[];
+  wishlist: string[];
+  orders: any[];
+}
+
 const SignUpPage = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
@@ -160,19 +170,32 @@ const SignUpPage = () => {
       await setActive({ session: signUpAttempt.createdSessionId });
 
       try {
-        // Create client record with proper name fields
+        // Create client record with proper name fields and email
         await axios.post("/api/populate/", {
           firstName,
           lastName,
           password,
           email,
-          address: "Address not provided",
+          mobileNumber: "Not provided", // Set default mobile number
+          cart: [],
+          wishlist: [],
+          cartQuantities: new Map(),
+          cartSizes: new Map(),
+          orders: []
         });
+
+        // Verify the data was saved by fetching it
+        const profileResponse = await axios.get<ProfileResponse>("/api/propagation_client");
+        if (!profileResponse.data.firstName || !profileResponse.data.lastName || !profileResponse.data.email) {
+          throw new Error("Profile data not properly saved");
+        }
+
         showAlert("Account created successfully!", "success");
         router.push("/");
       } catch (error) {
         console.error("Error populating database:", error);
-        showAlert("Account created but database population failed", "warning");
+        showAlert("Account created but database population failed. Please try updating your profile.", "warning");
+        router.push("/profile");
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
