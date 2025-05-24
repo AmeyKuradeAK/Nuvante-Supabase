@@ -24,6 +24,18 @@ export default function Footer() {
     }
   };
 
+  const handleProfileClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (isSignedIn) {
+      router.push("/Profile");
+    } else {
+      showAlert("Please sign in to access your profile", "warning");
+      setTimeout(() => {
+        router.push("/sign-in");
+      }, 2000);
+    }
+  };
+
   return (
     <footer className="bg-black text-white py-20 mt-40">
       <div className="w-[96%] mx-auto flex lg:flex-row flex-wrap justify-between px-2  lg:gap-10 gap-10">
@@ -81,7 +93,7 @@ export default function Footer() {
           <h3 className="font-semibold text-lg">Account</h3>
           <ul className="text-gray-400 flex flex-col gap-2">
             <li>
-              <a href="/Profile" className="hover:text-white">
+              <a href="/Profile" onClick={handleProfileClick} className="hover:text-white">
                 My Account
               </a>
             </li>
