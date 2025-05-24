@@ -230,6 +230,11 @@ const CartPage = () => {
   };
 
   const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      showAlert("Your cart is empty", "warning");
+      return;
+    }
+
     // Check if all items have sizes selected
     const allItemsHaveSizes = cartItems.every(item => selectedSizes[item._id]);
     
@@ -458,6 +463,8 @@ const CartPage = () => {
                               text="Proceed to Checkout" 
                               width={250} 
                               onClick={handleCheckout}
+                              disabled={cartItems.length === 0}
+                              className={cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
                             />
                           </div>
                         </div>

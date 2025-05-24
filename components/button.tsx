@@ -3,16 +3,18 @@ import React, { useState, useEffect } from "react";
 
 interface ButtonProps {
   text: string;
-  width: number;
+  width?: number;
   onClick?: () => void;
+  disabled?: boolean;
+  className?: string;
 }
 
-const Button = ({ text, width, onClick }: ButtonProps) => {
+const Button = ({ text, width = 200, onClick, disabled = false, className = '' }: ButtonProps) => {
   return (
     <button
       onClick={onClick}
-      className="bg-[#DB4444] text-white py-3 px-6 rounded-md hover:bg-[#c13a3a] transition-colors duration-200"
-      style={{ width: `${width}px` }}
+      disabled={disabled}
+      className={`w-[${width}px] bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200 ${className}`}
     >
       {text}
     </button>

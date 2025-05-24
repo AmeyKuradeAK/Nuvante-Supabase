@@ -114,10 +114,20 @@ const Page = () => {
       return;
     }
 
+    if (!currentWishlist.length) {
+      showAlert("Your wishlist is empty", "warning");
+      return;
+    }
+
     try {
       // Get items that are not in cart
       const itemsToAdd = currentWishlist.filter(item => !GlobalCart.includes(item));
       
+      if (itemsToAdd.length === 0) {
+        showAlert("All items are already in your cart", "info");
+        return;
+      }
+
       // Add each item to cart
       for (const item of itemsToAdd) {
         await axios.post(`/api/cart`, {
@@ -127,7 +137,7 @@ const Page = () => {
         changeGlobalCart(item);
       }
 
-      showAlert("All items moved to cart successfully", "success");
+      showAlert(`Successfully moved ${itemsToAdd.length} items to cart`, "success");
     } catch (error) {
       console.error("Error moving items to cart:", error);
       showAlert("Error moving items to cart. Please try again.", "error");
@@ -204,7 +214,12 @@ const Page = () => {
                 </div>
                 <button
                   onClick={handleBag}
-                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-colors duration-200"
+                  disabled={!currentWishlist.length}
+                  className={`inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white ${
+                    currentWishlist.length 
+                      ? 'bg-[#DB4444] hover:bg-[#c13a3a]' 
+                      : 'bg-gray-400 cursor-not-allowed'
+                  } transition-colors duration-200`}
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
