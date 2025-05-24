@@ -25,6 +25,14 @@ interface CartData {
   cartSizes: Map<string, string>;
 }
 
+interface QuantitiesResponse {
+  quantities: { [key: string]: number };
+}
+
+interface SizesResponse {
+  sizes: { [key: string]: string };
+}
+
 const CheckoutContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -98,32 +106,38 @@ const CheckoutContent = () => {
   useEffect(() => {
     const fetchCartData = async () => {
       try {
-        const response = await axios.get<CartData>("/api/propagation_client");
-        const cartItems = response.data.cart || [];
-        const cartQuantities = response.data.cartQuantities || new Map();
-        const cartSizes = response.data.cartSizes || new Map();
+        // Get all product IDs from URL
+        const productIds = searchParams.getAll('product');
+        const sizes = searchParams.getAll('size');
+        const quantities = searchParams.getAll('quantity');
 
-        // If we have a direct product from Buy Now
-        const productId = searchParams.get('product');
-        const size = searchParams.get('size');
-        const quantity = searchParams.get('quantity');
-
-        if (productId) {
-          const productResponse = await axios.post("/api/propagation", {
-            id: productId,
-            every: false
+        if (productIds.length > 0) {
+          // Fetch all products from URL parameters
+          const productPromises = productIds.map(async (productId, index) => {
+            const response = await axios.post("/api/propagation", {
+              id: productId,
+              every: false
+            });
+            return response.data;
           });
+
+          const productsData = await Promise.all(productPromises);
+          setProducts(productsData);
+
+          // Set quantities and sizes from URL parameters
+          const quantitiesMap: Record<string, number> = {};
+          const sizesMap: Record<string, string> = {};
           
-          if (productResponse.data) {
-            setProducts([productResponse.data]);
-            setQuantities({ [productId]: parseInt(quantity || '1') });
-            if (size) {
-              setSizes({ [productId]: size });
-            }
-          }
+          productIds.forEach((productId, index) => {
+            quantitiesMap[productId] = parseInt(quantities[index] || '1');
+            sizesMap[productId] = sizes[index] || '';
+          });
+
+          setQuantities(quantitiesMap);
+          setSizes(sizesMap);
         } else {
           // Fetch all products in cart
-          const productPromises = cartItems.map(async (itemId: string) => {
+          const productPromises = GlobalCart.map(async (itemId: string) => {
             const response = await axios.post("/api/propagation", {
               id: itemId,
               every: false
@@ -134,19 +148,17 @@ const CheckoutContent = () => {
           const productsData = await Promise.all(productPromises);
           setProducts(productsData);
 
-          // Set quantities from cart
-          const quantitiesMap: Record<string, number> = {};
-          cartItems.forEach((itemId: string) => {
-            quantitiesMap[itemId] = cartQuantities.get(itemId) || 1;
-          });
-          setQuantities(quantitiesMap);
+          // Load quantities from database
+          const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities');
+          if (quantitiesResponse.status === 200 && quantitiesResponse.data.quantities) {
+            setQuantities(quantitiesResponse.data.quantities);
+          }
 
-          // Set sizes from cart
-          const sizesMap: Record<string, string> = {};
-          cartItems.forEach((itemId: string) => {
-            sizesMap[itemId] = cartSizes.get(itemId) || '';
-          });
-          setSizes(sizesMap);
+          // Load sizes from database
+          const sizesResponse = await axios.get<SizesResponse>('/api/cart/size');
+          if (sizesResponse.status === 200 && sizesResponse.data.sizes) {
+            setSizes(sizesResponse.data.sizes);
+          }
         }
 
         setIsLoading(false);
@@ -164,7 +176,7 @@ const CheckoutContent = () => {
     }
 
     fetchCartData();
-  }, [user.isSignedIn, showAlert, router, searchParams]);
+  }, [user.isSignedIn, showAlert, router, searchParams, GlobalCart]);
 
   const calculateTotal = () => {
     return products.reduce((total, item) => {

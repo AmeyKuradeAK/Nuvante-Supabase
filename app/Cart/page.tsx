@@ -246,7 +246,12 @@ const CartPage = () => {
       return;
     }
 
-    router.push("/CheckOut");
+    // Build URL with all cart items' sizes and quantities
+    const queryParams = cartItems.map(item => 
+      `product=${item._id}&size=${selectedSizes[item._id]}&quantity=${quantities[item._id]}`
+    ).join('&');
+
+    router.push(`/CheckOut?${queryParams}`);
   };
 
   return (
