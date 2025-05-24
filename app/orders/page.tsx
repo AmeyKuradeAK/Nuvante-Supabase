@@ -63,60 +63,78 @@ interface ApiResponse {
 
 const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps) => {
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+    >
+      <motion.div 
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+      >
         <div className="p-4 sm:p-6">
           <div className="flex justify-between items-center mb-6 border-b pb-4">
             <h2 className="text-2xl font-bold text-gray-800">Order Details</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-[#DB4444] transition-colors p-2 hover:bg-gray-100 rounded-full"
+              className="text-gray-500 hover:text-[#DB4444] transition-all duration-300 p-2 hover:bg-gray-100 rounded-full transform hover:scale-110"
             >
               <XCircle className="w-6 h-6" />
             </button>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl"
+            >
               <h3 className="font-semibold mb-4 text-gray-800 text-lg">Order Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-600 text-sm">Order Number</p>
-                  <p className="font-medium text-gray-800 mt-1">{order.orderId}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-600 text-sm">Date</p>
-                  <p className="font-medium text-gray-800 mt-1">{new Date(order.timestamp).toLocaleDateString()}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-600 text-sm">Order Status</p>
-                  <p className="font-medium text-[#DB4444] mt-1">{order.itemStatus || 'Order Accepted'}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-600 text-sm">Estimated Delivery</p>
-                  <p className="font-medium text-[#DB4444] mt-1">
-                    {order.estimatedDeliveryDate ? 
-                      new Date(order.estimatedDeliveryDate).toLocaleDateString() : 
-                      new Date(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString()
-                    }
-                  </p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                  <p className="text-gray-600 text-sm">Total Amount</p>
-                  <p className="font-medium text-[#DB4444] mt-1">Rs. {order.amount}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow sm:col-span-2">
-                  <p className="text-gray-600 text-sm">Tracking ID</p>
-                  <p className="font-medium text-[#DB4444] mt-1">{order.trackingId || 'Tracking ID will be available soon'}</p>
-                </div>
+                {[
+                  { label: "Order Number", value: order.orderId },
+                  { label: "Date", value: new Date(order.timestamp).toLocaleDateString() },
+                  { label: "Order Status", value: order.itemStatus || 'Order Accepted', isHighlighted: true },
+                  { label: "Estimated Delivery", value: order.estimatedDeliveryDate ? 
+                    new Date(order.estimatedDeliveryDate).toLocaleDateString() : 
+                    new Date(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+                    isHighlighted: true
+                  },
+                  { label: "Total Amount", value: `Rs. ${order.amount}`, isHighlighted: true },
+                  { label: "Tracking ID", value: order.trackingId || 'Tracking ID will be available soon', isHighlighted: true, fullWidth: true }
+                ].map((item, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 * (index + 1) }}
+                    className={`bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-[1.02] ${item.fullWidth ? 'sm:col-span-2' : ''}`}
+                  >
+                    <p className="text-gray-600 text-sm">{item.label}</p>
+                    <p className={`font-medium mt-1 ${item.isHighlighted ? 'text-[#DB4444]' : 'text-gray-800'}`}>{item.value}</p>
+                  </motion.div>
+                ))}
               </div>
-            </div>
+            </motion.div>
 
-            <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl"
+            >
               <h3 className="font-semibold mb-4 text-gray-800 text-lg">Shipping Address</h3>
-              <div className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
+              >
                 <div className="flex items-start gap-4">
-                  <div className="bg-[#DB4444]/10 p-3 rounded-full">
+                  <div className="bg-[#DB4444]/10 p-3 rounded-full transform hover:scale-110 transition-transform duration-300">
                     <MapPin className="w-6 h-6 text-[#DB4444]" />
                   </div>
                   <div>
@@ -124,20 +142,25 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                     <p className="text-gray-600 mt-1">{order.shippingAddress.streetAddress}</p>
                     {order.shippingAddress.apartment && <p className="text-gray-600">{order.shippingAddress.apartment}</p>}
                     <p className="text-gray-600">{order.shippingAddress.city}</p>
-                    <div className="flex items-center gap-3 mt-3">
-                      <Phone className="w-4 h-4 text-[#DB4444]" />
+                    <div className="flex items-center gap-3 mt-3 group">
+                      <Phone className="w-4 h-4 text-[#DB4444] transform group-hover:scale-110 transition-transform duration-300" />
                       <p className="text-gray-600">{order.shippingAddress.phone}</p>
                     </div>
-                    <div className="flex items-center gap-3 mt-2">
-                      <Mail className="w-4 h-4 text-[#DB4444]" />
+                    <div className="flex items-center gap-3 mt-2 group">
+                      <Mail className="w-4 h-4 text-[#DB4444] transform group-hover:scale-110 transition-transform duration-300" />
                       <p className="text-gray-600">{order.shippingAddress.email}</p>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
-            <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl"
+            >
               <h3 className="font-semibold mb-4 text-gray-800 text-lg">Items</h3>
               <div className="space-y-4">
                 {order.itemDetails.map((item, index) => {
@@ -145,41 +168,48 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                   if (!product) return null;
                   
                   return (
-                    <div key={index} className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                    <motion.div
+                      key={index}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.1 * (index + 1) }}
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
+                    >
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                         <div className="w-24 h-24 relative shrink-0 group">
                           <img
                             src={product.productImages[0]}
                             alt={product.productName}
-                            className="w-full h-full object-cover rounded-lg transition-transform group-hover:scale-105"
+                            className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-110"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-800 text-lg truncate">{product.productName}</h3>
+                          <h3 className="font-medium text-gray-800 text-lg truncate group-hover:text-[#DB4444] transition-colors duration-300">{product.productName}</h3>
                           <div className="mt-3 space-y-2">
                             <div className="flex items-center gap-3">
                               <span className="text-sm text-gray-600">Size:</span>
-                              <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full">{item.size || 'Not selected'}</span>
+                              <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full transform hover:scale-105 transition-transform duration-300">{item.size || 'Not selected'}</span>
                             </div>
                             <div className="flex items-center gap-3">
                               <span className="text-sm text-gray-600">Quantity:</span>
-                              <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full">{item.quantity}</span>
+                              <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full transform hover:scale-105 transition-transform duration-300">{item.quantity}</span>
                             </div>
-                            <p className="text-[#DB4444] font-semibold text-lg mt-2">
+                            <p className="text-[#DB4444] font-semibold text-lg mt-2 transform hover:scale-105 transition-transform duration-300">
                               Rs. {product.productPrice * item.quantity}
                             </p>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
@@ -256,74 +286,114 @@ const OrdersPage = () => {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>My Orders</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="mb-8">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444] transition-colors duration-300 ease-in-out">Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-[#DB4444]">Orders</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
 
-          <h1 className="text-3xl font-bold mb-8 text-gray-800">My Orders</h1>
-          
-          {!isLoaded ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="relative">
-                <div className="w-16 h-16 border-4 border-[#DB4444] border-t-transparent rounded-full animate-spin"></div>
-                <Image 
-                  src={logo} 
-                  alt="Loading..." 
-                  width={40} 
-                  height={40} 
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                />
-              </div>
+        {!isLoaded && (
+          <div className="h-screen flex items-center justify-center">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-[#DB4444] border-t-transparent rounded-full animate-spin"></div>
+              <Image 
+                src={logo} 
+                alt="Loading..." 
+                width={40} 
+                height={40} 
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse"
+              />
             </div>
-          ) : orders.length > 0 ? (
-            <div className="space-y-6">
-              {orders.map((order) => (
-                <div key={order.orderId} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-                  <div className="p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div>
-                        <h2 className="text-xl font-semibold text-gray-800">Order #{order.orderId}</h2>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {new Date(order.timestamp).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-[#DB4444] mt-1">
-                          Estimated Delivery: {order.estimatedDeliveryDate ? 
-                            new Date(order.estimatedDeliveryDate).toLocaleDateString() : 
-                            new Date(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString()
-                          }
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className={`px-4 py-2 rounded-full text-sm font-medium ${
-                          order.itemStatus === 'Delivered' ? 'bg-green-100 text-green-800' :
-                          order.itemStatus === 'Processing' ? 'bg-blue-100 text-blue-800' :
-                          order.itemStatus === 'Dispatched' ? 'bg-purple-100 text-purple-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {order.itemStatus || 'Order Accepted'}
-                        </span>
-                        <button
-                          onClick={() => toggleOrder(order.orderId)}
-                          className="text-gray-500 hover:text-[#DB4444] transition-colors p-2 hover:bg-gray-100 rounded-full"
-                        >
-                          <ChevronDown className={`w-5 h-5 transform transition-transform ${
-                            expandedOrders.has(order.orderId) ? 'rotate-180' : ''
-                          }`} />
-                        </button>
+          </div>
+        )}
+
+        {isLoaded && (
+          <div className="space-y-8">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6"
+            >
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-800">My Orders</h1>
+                  <p className="text-gray-600 mt-1">
+                    {orders.length} {orders.length === 1 ? 'order' : 'orders'} placed
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {orders.length === 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-12 text-center"
+              >
+                <div className="w-24 h-24 mx-auto mb-6 text-gray-400 animate-bounce">
+                  <Package className="w-full h-full" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">No orders yet</h3>
+                <p className="text-gray-600 mb-6">Start shopping to see your orders here</p>
+                <a
+                  href="/Products"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md transform hover:scale-105"
+                >
+                  Start Shopping
+                </a>
+              </motion.div>
+            )}
+
+            {orders.length > 0 && (
+              <div className="space-y-4">
+                {orders.map((order, index) => (
+                  <motion.div
+                    key={order.orderId}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out overflow-hidden"
+                  >
+                    <div 
+                      className="p-6 cursor-pointer"
+                      onClick={() => toggleOrder(order.orderId)}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-[#DB4444]/10 p-3 rounded-full transform hover:scale-110 transition-transform duration-300">
+                            <Package className="w-6 h-6 text-[#DB4444]" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-gray-800">Order #{order.orderId.slice(-6)}</h3>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Placed on {new Date(order.timestamp).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="font-medium text-[#DB4444]">Rs. {order.amount}</p>
+                            <p className="text-sm text-gray-600 mt-1">{order.itemStatus || 'Order Accepted'}</p>
+                          </div>
+                          <motion.button
+                            animate={{ rotate: expandedOrders.has(order.orderId) ? 180 : 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="text-gray-400 hover:text-[#DB4444] transition-colors duration-300"
+                          >
+                            <ChevronDown className="w-6 h-6" />
+                          </motion.button>
+                        </div>
                       </div>
                     </div>
 
@@ -333,89 +403,57 @@ const OrdersPage = () => {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
+                          transition={{ duration: 0.3 }}
+                          className="border-t border-gray-100"
                         >
-                          <div className="mt-6 pt-6 border-t border-gray-200">
-                            <div className="space-y-4">
-                              {order.itemDetails.map((item, index) => {
-                                const product = products.find(p => p._id === item.productId);
-                                if (!product) return null;
-                                
-                                return (
-                                  <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-6 p-6 bg-gray-50 rounded-xl">
-                                    <div className="w-24 h-24 relative shrink-0 group">
-                                      <img
-                                        src={product.productImages[0]}
-                                        alt={product.productName}
-                                        className="w-full h-full object-cover rounded-lg transition-transform group-hover:scale-105"
-                                      />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <h3 className="font-medium text-gray-800 text-lg truncate">{product.productName}</h3>
-                                      <div className="mt-3 space-y-2">
-                                        <div className="flex items-center gap-3">
-                                          <span className="text-sm text-gray-600">Size:</span>
-                                          <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full">{item.size || 'Not selected'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                          <span className="text-sm text-gray-600">Quantity:</span>
-                                          <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full">{item.quantity}</span>
-                                        </div>
-                                        <p className="text-[#DB4444] font-semibold text-lg mt-2">
-                                          Rs. {product.productPrice * item.quantity}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                            <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                              <div>
-                                <p className="text-sm text-gray-600">Total Amount: <span className="font-semibold text-[#DB4444] text-lg">Rs. {order.amount}</span></p>
+                          <div className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <p className="text-sm text-gray-600">Items</p>
+                                <p className="font-medium text-gray-800">{order.itemDetails.length} items</p>
                               </div>
+                              <div className="space-y-2">
+                                <p className="text-sm text-gray-600">Estimated Delivery</p>
+                                <p className="font-medium text-[#DB4444]">
+                                  {order.estimatedDeliveryDate ? 
+                                    new Date(order.estimatedDeliveryDate).toLocaleDateString() : 
+                                    new Date(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString()
+                                  }
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-6 flex justify-end">
                               <button
                                 onClick={() => setSelectedOrder(order)}
-                                className="text-[#DB4444] hover:text-white hover:bg-[#DB4444] transition-all flex items-center gap-2 bg-[#DB4444]/5 px-6 py-3 rounded-lg font-medium"
+                                className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md transform hover:scale-105"
                               >
-                                View Full Details
-                                <ChevronRight className="w-4 h-4" />
+                                View Details
+                                <ChevronRight className="w-4 h-4 ml-2" />
                               </button>
                             </div>
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-              <div className="w-24 h-24 mx-auto mb-6 text-gray-400">
-                <Package className="w-full h-full" />
+                  </motion.div>
+                ))}
               </div>
-              <p className="text-gray-500 text-xl mb-4">No orders found</p>
-              <button
-                onClick={() => router.push('/')}
-                className="text-[#DB4444] hover:text-white hover:bg-[#DB4444] transition-all px-6 py-3 rounded-lg font-medium bg-[#DB4444]/5"
-              >
-                Continue Shopping
-              </button>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
       <Footer />
-      {selectedOrder && (
-        <OrderDetailsModal
-          order={selectedOrder}
-          onClose={() => setSelectedOrder(null)}
-          products={products}
-        />
-      )}
-    </>
+
+      <AnimatePresence>
+        {selectedOrder && (
+          <OrderDetailsModal
+            order={selectedOrder}
+            onClose={() => setSelectedOrder(null)}
+            products={products}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 

@@ -17,11 +17,16 @@ const sideImg = "/Side-Image.jpg";
 // Memoize the form component
 const SignUpForm = React.memo(({ onSubmit, isLoading }: { onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>, isLoading: boolean }) => (
   <form onSubmit={onSubmit} className="space-y-6">
-    <div>
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.1 }}
+    >
       <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
         Full Name
       </label>
-      <input
+      <motion.input
+        whileFocus={{ scale: 1.01 }}
         id="name"
         name="name"
         type="text"
@@ -29,13 +34,18 @@ const SignUpForm = React.memo(({ onSubmit, isLoading }: { onSubmit: (e: React.Fo
         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
         placeholder="Enter your full name"
       />
-    </div>
+    </motion.div>
 
-    <div>
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.2 }}
+    >
       <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
         Email
       </label>
-      <input
+      <motion.input
+        whileFocus={{ scale: 1.01 }}
         id="email"
         name="email"
         type="email"
@@ -43,13 +53,18 @@ const SignUpForm = React.memo(({ onSubmit, isLoading }: { onSubmit: (e: React.Fo
         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
         placeholder="Enter your email"
       />
-    </div>
+    </motion.div>
 
-    <div>
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.3 }}
+    >
       <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
         Password
       </label>
-      <input
+      <motion.input
+        whileFocus={{ scale: 1.01 }}
         id="password"
         name="password"
         type="password"
@@ -57,34 +72,45 @@ const SignUpForm = React.memo(({ onSubmit, isLoading }: { onSubmit: (e: React.Fo
         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
         placeholder="Create a password"
       />
-    </div>
+    </motion.div>
 
-    <button
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       type="submit"
       disabled={isLoading}
       className="w-full bg-[#DB4444] text-white py-3 px-4 rounded-lg hover:bg-[#c13a3a] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
     >
       {isLoading ? (
-        <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex items-center"
+        >
           <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
           Creating account...
-        </>
+        </motion.div>
       ) : (
         "Create Account"
       )}
-    </button>
+    </motion.button>
 
-    <div className="text-center mt-6">
+    <motion.div 
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.4 }}
+      className="text-center mt-6"
+    >
       <p className="text-gray-600">
         Already have an account?{" "}
         <Link href="/sign-in" className="text-[#DB4444] hover:text-[#c13a3a] transition-colors font-medium">
           Sign In
         </Link>
       </p>
-    </div>
+    </motion.div>
   </form>
 ));
 
@@ -158,17 +184,23 @@ const SignUpPage = () => {
 
   if (user.isSignedIn) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="min-h-screen flex items-center justify-center"
+      >
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-gray-900 mb-4">You are already signed in</h1>
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => router.push("/")}
             className="text-[#DB4444] hover:text-[#c13a3a] transition-colors"
           >
             Go to Home
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -183,16 +215,21 @@ const SignUpPage = () => {
             transition={{ duration: 0.5 }}
             className="w-full lg:w-1/2"
           >
-            <Image
-              src={sideImg}
-              alt="side-image"
-              height={600}
-              width={800}
-              className="rounded-2xl shadow-xl"
-              priority
-              quality={75}
-              sizes="(max-width: 768px) 100vw, 50vw"
-            />
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Image
+                src={sideImg}
+                alt="side-image"
+                height={600}
+                width={800}
+                className="rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300"
+                priority
+                quality={75}
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </motion.div>
           </motion.div>
 
           <motion.div
@@ -201,13 +238,23 @@ const SignUpPage = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="w-full lg:w-1/2 max-w-md"
           >
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <div className="text-center mb-8">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300"
+            >
+              <motion.div 
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-center mb-8"
+              >
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
                 <p className="text-gray-600">Join Nuvante today</p>
-              </div>
+              </motion.div>
               <SignUpForm onSubmit={handleSubmit} isLoading={isLoading} />
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </div>

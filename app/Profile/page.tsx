@@ -51,12 +51,26 @@ const ProfileForm = React.memo(({
   onAddressChange: (value: string) => void;
   onSave: () => Promise<void>;
 }) => (
-  <div className="flex flex-col w-auto lg:w-[870px] pb-10 rounded-xl border lg:ml-32 bg-white shadow-sm hover:shadow-md transition-all duration-300 ease-in-out">
-    <div className="mt-8 lg:mt-[40px] ml-4 lg:ml-[80px] h-[28px] w-[155px]">
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="flex flex-col w-auto lg:w-[870px] pb-10 rounded-xl border lg:ml-32 bg-white shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
+  >
+    <motion.div 
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.1 }}
+      className="mt-8 lg:mt-[40px] ml-4 lg:ml-[80px] h-[28px] w-[155px]"
+    >
       <h1 className="font-medium text-[#DB4444] text-lg">Edit Your Profile</h1>
-    </div>
+    </motion.div>
     <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-full lg:w-[710px] h-auto lg:h-[82px] mt-8">
-      <div className="w-full lg:w-[330px] h-[62px]">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="w-full lg:w-[330px] h-[62px]"
+      >
         <h1 className="font-medium text-gray-700">First Name</h1>
         <input
           className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-gray-50 rounded-lg border border-gray-200 focus:border-[#DB4444] focus:ring-2 focus:ring-[#DB4444] focus:ring-opacity-20 transition-all duration-300 ease-in-out"
@@ -65,8 +79,13 @@ const ProfileForm = React.memo(({
           value={firstName}
           onChange={(e) => onFirstNameChange(e.target.value)}
         />
-      </div>
-      <div className="w-full lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10">
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="w-full lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10"
+      >
         <h1 className="font-medium text-gray-700">Last Name</h1>
         <input
           className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-gray-50 rounded-lg border border-gray-200 focus:border-[#DB4444] focus:ring-2 focus:ring-[#DB4444] focus:ring-opacity-20 transition-all duration-300 ease-in-out"
@@ -75,10 +94,15 @@ const ProfileForm = React.memo(({
           value={lastName}
           onChange={(e) => onLastNameChange(e.target.value)}
         />
-      </div>
+      </motion.div>
     </div>
     <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-full lg:w-[710px] h-auto lg:h-[82px] mt-8">
-      <div className="w-full lg:w-[330px] h-[62px]">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="w-full lg:w-[330px] h-[62px]"
+      >
         <h1 className="font-medium text-gray-700">Email</h1>
         <input
           className="mt-1 lg:w-[330px] p-2 h-[50px] bg-gray-100 rounded-lg border border-gray-200 cursor-not-allowed transition-all duration-300"
@@ -88,8 +112,13 @@ const ProfileForm = React.memo(({
           readOnly
           disabled
         />
-      </div>
-      <div className="w-auto lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10">
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="w-auto lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10"
+      >
         <h1 className="font-medium text-gray-700">Address</h1>
         <input
           className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-gray-50 rounded-lg border border-gray-200 focus:border-[#DB4444] focus:ring-2 focus:ring-[#DB4444] focus:ring-opacity-20 transition-all duration-300 ease-in-out"
@@ -98,23 +127,32 @@ const ProfileForm = React.memo(({
           value={address}
           onChange={(e) => onAddressChange(e.target.value)}
         />
-      </div>
+      </motion.div>
     </div>
-    <div className="flex flex-row justify-end mt-10">
-      <button 
-        className="mr-4 lg:mr-6 text-gray-600 hover:text-gray-800 transition-all duration-300 ease-in-out px-4 py-2 rounded-lg hover:bg-gray-100 transform hover:scale-105"
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.6 }}
+      className="flex flex-row justify-end mt-10"
+    >
+      <motion.button 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="mr-4 lg:mr-6 text-gray-600 hover:text-gray-800 transition-all duration-300 ease-in-out px-4 py-2 rounded-lg hover:bg-gray-100"
         onClick={() => window.location.reload()}
       >
         Cancel
-      </button>
-      <button
-        className="bg-[#DB4444] w-[250px] lg:w-[250px] h-[56px] font-medium rounded-lg text-white mr-4 lg:mr-[80px] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md transform hover:scale-105"
+      </motion.button>
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        className="bg-[#DB4444] w-[250px] lg:w-[250px] h-[56px] font-medium rounded-lg text-white mr-4 lg:mr-[80px] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md"
         onClick={onSave}
       >
         Save Changes
-      </button>
-    </div>
-  </div>
+      </motion.button>
+    </motion.div>
+  </motion.div>
 ));
 
 ProfileForm.displayName = 'ProfileForm';
@@ -227,10 +265,14 @@ const ProfilePage = () => {
   }, [fetchUserData, user.isSignedIn, showAlert, router]);
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="p-4 bg-gray-50 min-h-screen">
-        <div className="mt-6 ml-4 lg:ml-32">
+      <div className="p-4">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mt-6 ml-4 lg:ml-32"
+        >
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -242,7 +284,7 @@ const ProfilePage = () => {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-        </div>
+        </motion.div>
 
         {isLoading && (
           <div className="h-screen flex items-center justify-center">
@@ -259,22 +301,12 @@ const ProfilePage = () => {
           </div>
         )}
 
-        {!isLoading && isLoaded && (
-          <div className="flex flex-col lg:flex-row ml-4 lg:ml-32 mt-8 lg:mt-24">
-            <div className="flex flex-col">
-              <div className="flex flex-col bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6 mb-6">
-                <h1 className="font-medium text-gray-800 text-lg mb-4">Manage My Account</h1>
-                <div className="flex flex-col ml-4 lg:ml-10 pt-4 font-medium">
-                  <div className="text-[#DB4444] cursor-pointer hover:text-[#c13a3a] transition-all duration-300 ease-in-out transform hover:scale-105">
-                    My Profile
-                  </div>
-                </div>
-              </div>
-              <div className="pt-4 font-medium">
-                <Sidebar />
-              </div>
-            </div>
-
+        {!isLoading && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mt-8"
+          >
             <ProfileForm
               firstName={profileData.firstName}
               lastName={profileData.lastName}
@@ -285,11 +317,11 @@ const ProfilePage = () => {
               onAddressChange={(value) => handleFieldChange('address', value)}
               onSave={updateProfile}
             />
-          </div>
+          </motion.div>
         )}
       </div>
       <Footer />
-    </>
+    </div>
   );
 };
 

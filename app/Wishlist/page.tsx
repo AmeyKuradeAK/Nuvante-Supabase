@@ -183,7 +183,11 @@ const Page = () => {
         {loaded && (
           <div className="space-y-8">
             {/* Header Section */}
-            <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6"
+            >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">My Wishlist</h1>
@@ -191,22 +195,24 @@ const Page = () => {
                     {currentWishlist.length} {currentWishlist.length === 1 ? 'item' : 'items'} saved
                   </p>
                 </div>
-                <button
+                <motion.button
                   onClick={handleBag}
                   disabled={!currentWishlist.length}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   className={`inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white ${
                     currentWishlist.length 
                       ? 'bg-[#DB4444] hover:bg-[#c13a3a]' 
                       : 'bg-gray-400 cursor-not-allowed'
-                  } transition-all duration-300 ease-in-out shadow-sm hover:shadow-md transform hover:scale-105`}
+                  } transition-all duration-300 ease-in-out shadow-sm hover:shadow-md`}
                 >
                   <svg className="w-5 h-5 mr-2 transform group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                   Move All to Cart
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
 
             {/* Empty State */}
             {currentWishlist.length === 0 && (
@@ -215,19 +221,25 @@ const Page = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-12 text-center"
               >
-                <div className="w-24 h-24 mx-auto mb-6 text-gray-400 animate-bounce">
+                <motion.div 
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-24 h-24 mx-auto mb-6 text-gray-400"
+                >
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
-                </div>
+                </motion.div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Your wishlist is empty</h3>
                 <p className="text-gray-600 mb-6">Save items you like to your wishlist to keep track of them</p>
-                <a
+                <motion.a
                   href="/Products"
-                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md transform hover:scale-105"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md"
                 >
                   Start Shopping
-                </a>
+                </motion.a>
               </motion.div>
             )}
 
@@ -242,7 +254,8 @@ const Page = () => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="transform hover:scale-[1.02] transition-all duration-300 ease-in-out"
+                        whileHover={{ scale: 1.02 }}
+                        className="transform transition-all duration-300 ease-in-out"
                       >
                         <Card
                           id={product._id}
