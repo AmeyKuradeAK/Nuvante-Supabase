@@ -109,7 +109,40 @@ const CartPage = () => {
     }
   };
 
+  const handleSizeSelect = async (productId: string, size: string) => {
+    try {
+      // Update local state first
+      setSelectedSizes(prev => ({
+        ...prev,
+        [productId]: size
+      }));
+
+      // Update database
+      await axios.post("/api/cart", {
+        identifier: productId,
+        append: true,
+        size: size
+      });
+      
+      showAlert("Size updated successfully", "success");
+    } catch (error) {
+      console.error("Error updating size:", error);
+      showAlert("Error updating size", "error");
+      // Revert the size selection on error
+      setSelectedSizes(prev => ({
+        ...prev,
+        [productId]: prev[productId]
+      }));
+    }
+  };
+
   const handleQuantityChange = async (id: string, value: number) => {
+    // Check if size is selected before allowing quantity change
+    if (!selectedSizes[id]) {
+      showAlert("Please select a size first", "warning");
+      return;
+    }
+
     try {
       const newValue = Math.max(1, value); // Ensure minimum quantity is 1
       const newQuantities = {
@@ -184,32 +217,6 @@ const CartPage = () => {
 
   const cartItems = products.filter(item => GlobalCart.includes(item._id));
   const subtotal = calculateSubtotal();
-
-  const handleSizeSelect = async (productId: string, size: string) => {
-    try {
-      // Update local state first
-      setSelectedSizes(prev => ({
-        ...prev,
-        [productId]: size
-      }));
-
-      // Update database
-      await axios.post("/api/cart/size", {
-        productId,
-        size
-      });
-      
-      showAlert("Size updated successfully", "success");
-    } catch (error) {
-      console.error("Error updating size:", error);
-      showAlert("Error updating size", "error");
-      // Revert the size selection on error
-      setSelectedSizes(prev => ({
-        ...prev,
-        [productId]: prev[productId]
-      }));
-    }
-  };
 
   const handleCheckout = () => {
     // Check if all items have sizes selected
@@ -365,33 +372,35 @@ const CartPage = () => {
                                     </p>
                                   </div>
 
-                                  {/* Quantity Controls */}
-                                  <div className="mt-4 flex items-center gap-4">
-                                    <div className="flex items-center border rounded-md">
-                                      <button
-                                        onClick={() => handleQuantityChange(item._id, (quantities[item._id] || 1) - 1)}
-                                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
-                                      >
-                                        -
-                                      </button>
-                                      <input
-                                        type="number"
-                                        value={quantities[item._id] || 1}
-                                        onChange={(e) => handleQuantityChange(item._id, parseInt(e.target.value) || 1)}
-                                        className="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
-                                        min={1}
-                                      />
-                                      <button
-                                        onClick={() => handleQuantityChange(item._id, (quantities[item._id] || 1) + 1)}
-                                        className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
-                                      >
-                                        +
-                                      </button>
+                                  {/* Quantity Controls - Only show if size is selected */}
+                                  {selectedSizes[item._id] && (
+                                    <div className="mt-4 flex items-center gap-4">
+                                      <div className="flex items-center border rounded-md">
+                                        <button
+                                          onClick={() => handleQuantityChange(item._id, (quantities[item._id] || 1) - 1)}
+                                          className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                                        >
+                                          -
+                                        </button>
+                                        <input
+                                          type="number"
+                                          value={quantities[item._id] || 1}
+                                          onChange={(e) => handleQuantityChange(item._id, parseInt(e.target.value) || 1)}
+                                          className="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
+                                          min={1}
+                                        />
+                                        <button
+                                          onClick={() => handleQuantityChange(item._id, (quantities[item._id] || 1) + 1)}
+                                          className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                      <div className="text-gray-600">
+                                        Subtotal: <span className="font-semibold">Rs. {(quantities[item._id] || 1) * item.productPrice}</span>
+                                      </div>
                                     </div>
-                                    <div className="text-gray-600">
-                                      Subtotal: <span className="font-semibold">Rs. {(quantities[item._id] || 1) * item.productPrice}</span>
-                                    </div>
-                                  </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
