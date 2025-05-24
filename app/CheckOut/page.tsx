@@ -18,6 +18,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
+import Image from "next/image";
 
 interface CartData {
   cart: string[];
@@ -279,209 +280,291 @@ const CheckoutContent = () => {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Order Summary Card */}
-            <div className="lg:col-span-8 space-y-6">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-bold mb-4 text-gray-800">Order Summary</h2>
-                <div className="space-y-4">
-                  {products.map(product => (
-                    <div key={product._id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                      <div className="w-20 h-20 relative">
-                        <img
-                          src={product.productImages[0]}
-                          alt={product.productName}
-                          className="w-full h-full object-contain rounded-lg"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-800">{product.productName}</h3>
-                        <div className="mt-2">
-                          <p className="text-sm text-gray-600">Size: {sizes[product._id] || 'Not selected'}</p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <div className="flex items-center border rounded-md">
-                              <button
-                                onClick={() => handleQuantityChange(product._id, -1)}
-                                className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
-                              >
-                                -
-                              </button>
-                              <input
-                                type="number"
-                                value={quantities[product._id] || 1}
-                                onChange={(e) => handleQuantityChange(product._id, parseInt(e.target.value) || 1)}
-                                className="w-12 text-center border-x focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
-                                min={1}
-                              />
-                              <button
-                                onClick={() => handleQuantityChange(product._id, 1)}
-                                className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-colors"
-                              >
-                                +
-                              </button>
-                            </div>
-                            <p className="text-[#DB4444] font-semibold">
-                              Rs. {product.productPrice * (quantities[product._id] || 1)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Breadcrumb */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mb-8"
+        >
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444] transition-colors duration-300 ease-in-out">Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-[#DB4444]">Checkout</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </motion.div>
 
-              {/* Billing Details Form */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h1 className="text-2xl font-bold mb-6 text-gray-800">Billing Details</h1>
-                <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      First Name <span className="text-[#DB4444]">*</span>
-                    </label>
-                    <input
-                      name="firstName"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
-                      type="text"
-                      required
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Last Name <span className="text-[#DB4444]">*</span>
-                    </label>
-                    <input
-                      name="lastName"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
-                      type="text"
-                      required
-                      value={formData.lastName}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Street Address <span className="text-[#DB4444]">*</span>
-                    </label>
-                    <input
-                      name="address"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
-                      type="text"
-                      required
-                      value={formData.address}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Apartment, Floor, etc.
-                    </label>
-                    <input
-                      name="apartment"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
-                      type="text"
-                      value={formData.apartment}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Town/City <span className="text-[#DB4444]">*</span>
-                    </label>
-                    <input
-                      name="city"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
-                      type="text"
-                      required
-                      value={formData.city}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number <span className="text-[#DB4444]">*</span>
-                    </label>
-                    <input
-                      name="phone"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
-                      type="tel"
-                      required
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address <span className="text-[#DB4444]">*</span>
-                    </label>
-                    <input
-                      name="email"
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
-                      type="email"
-                      required
-                      value={formData.email}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </form>
-              </div>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-[#DB4444] border-t-transparent rounded-full animate-spin"></div>
+              <Image 
+                src="/logo.png" 
+                alt="Loading..." 
+                width={40} 
+                height={40} 
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse"
+              />
+            </div>
+          </div>
+        )}
+
+        {!isLoading && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Main Checkout Section */}
+            <div className="lg:col-span-8">
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
+              >
+                <div className="p-6 border-b border-gray-100">
+                  <h1 className="text-2xl font-bold text-gray-800">Checkout</h1>
+                </div>
+
+                <div className="p-6 space-y-8">
+                  {/* Shipping Information */}
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="space-y-6"
+                  >
+                    <h2 className="text-xl font-semibold text-gray-800">Shipping Information</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <motion.div whileHover={{ scale: 1.02 }} className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">First Name</label>
+                        <input
+                          type="text"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          placeholder="Enter your first name"
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Last Name</label>
+                        <input
+                          type="text"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          placeholder="Enter your last name"
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} className="space-y-2 md:col-span-2">
+                        <label className="text-sm font-medium text-gray-700">Street Address</label>
+                        <input
+                          type="text"
+                          name="address"
+                          value={formData.address}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          placeholder="Enter your street address"
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Apartment/Suite (Optional)</label>
+                        <input
+                          type="text"
+                          name="apartment"
+                          value={formData.apartment}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          placeholder="Enter apartment or suite number"
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">City</label>
+                        <input
+                          type="text"
+                          name="city"
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          placeholder="Enter your city"
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Phone Number</label>
+                        <input
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          placeholder="Enter your phone number"
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">Email</label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          placeholder="Enter your email"
+                        />
+                      </motion.div>
+                    </div>
+                  </motion.div>
+
+                  {/* Order Items */}
+                  <motion.div 
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="space-y-6"
+                  >
+                    <h2 className="text-xl font-semibold text-gray-800">Order Items</h2>
+                    <div className="space-y-4">
+                      {products.map((product, index) => (
+                        <motion.div
+                          key={product._id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          whileHover={{ scale: 1.02 }}
+                          className="flex items-center gap-6 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all duration-300"
+                        >
+                          <div className="w-20 h-20 relative shrink-0 group">
+                            <img
+                              src={product.productImages[0]}
+                              alt={product.productName}
+                              className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-110"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-gray-800 truncate group-hover:text-[#DB4444] transition-colors duration-300">
+                              {product.productName}
+                            </h3>
+                            <div className="mt-2 flex items-center gap-4">
+                              <div className="flex items-center border rounded-lg overflow-hidden">
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => handleQuantityChange(product._id, -1)}
+                                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-all duration-300"
+                                >
+                                  -
+                                </motion.button>
+                                <span className="px-3 py-1 border-x text-center">
+                                  {quantities[product._id] || 1}
+                                </span>
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() => handleQuantityChange(product._id, 1)}
+                                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-all duration-300"
+                                >
+                                  +
+                                </motion.button>
+                              </div>
+                              <span className="text-[#DB4444] font-semibold">
+                                Rs. {product.productPrice * (quantities[product._id] || 1)}
+                              </span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
             </div>
 
-            {/* Payment Summary */}
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="lg:col-span-4"
-            >
-              <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-                <h2 className="text-xl font-bold mb-6 text-gray-800">Payment Summary</h2>
-                <div className="space-y-4">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Subtotal ({products.length} items)</span>
-                    <span>Rs. {calculateTotal()}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Shipping</span>
-                    <span className="text-[#DB4444]">Free</span>
-                  </div>
-                  <div className="border-t border-gray-200 pt-4">
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Total</span>
-                      <span>Rs. {calculateTotal()}</span>
+            {/* Order Summary Section */}
+            <div className="lg:col-span-4">
+              <div className="sticky top-8 space-y-6">
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6"
+                >
+                  <h2 className="text-xl font-bold mb-6 text-gray-800">Order Summary</h2>
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-gray-600">
+                      <span>Subtotal ({products.length} items)</span>
+                      <span className="font-medium">Rs. {calculateTotal()}</span>
+                    </div>
+                    <div className="flex justify-between text-gray-600">
+                      <span>Shipping</span>
+                      <span className="text-[#DB4444] font-medium">Free</span>
+                    </div>
+                    <div className="border-t border-gray-100 pt-4">
+                      <div className="flex justify-between font-bold text-lg">
+                        <span>Total</span>
+                        <span className="text-[#DB4444]">Rs. {calculateTotal()}</span>
+                      </div>
+                    </div>
+                    <div className="pt-4">
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <PaymentButton
+                          amount={calculateTotal()}
+                          onSuccess={handlePaymentSuccess}
+                          disabled={!isFormValid()}
+                          className={`w-full ${!isFormValid() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          receipt={`ORDER_${Date.now()}`}
+                        >
+                          Pay Rs. {calculateTotal()}
+                        </PaymentButton>
+                      </motion.div>
                     </div>
                   </div>
-                  <div className="pt-4">
-                    <PaymentButton
-                      amount={calculateTotal()}
-                      currency="INR"
-                      receipt={`ORDER_${Date.now()}`}
-                      notes={{
-                        items: JSON.stringify(products.map(p => ({
-                          id: p._id,
-                          quantity: quantities[p._id] || 1,
-                          size: sizes[p._id] || ''
-                        })))
-                      }}
-                      onSuccess={handlePaymentSuccess}
-                      className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
+                </motion.div>
+
+                {/* Help Card */}
+                <motion.div 
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6"
+                >
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">Need Help?</h3>
+                  <div className="space-y-3">
+                    <motion.div 
+                      whileHover={{ scale: 1.02 }}
+                      className="flex items-center text-gray-600 hover:text-[#DB4444] transition-all duration-300 cursor-pointer group"
                     >
-                      Pay Rs. {calculateTotal()}
-                    </PaymentButton>
+                      <svg className="w-5 h-5 mr-2 text-[#DB4444] group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <span>Chat with us</span>
+                    </motion.div>
+                    <motion.div 
+                      whileHover={{ scale: 1.02 }}
+                      className="flex items-center text-gray-600 hover:text-[#DB4444] transition-all duration-300 cursor-pointer group"
+                    >
+                      <svg className="w-5 h-5 mr-2 text-[#DB4444] group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      <span>+91 9899044148</span>
+                    </motion.div>
                   </div>
-                </div>
+                </motion.div>
               </div>
-            </motion.div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       <Footer />
-    </>
+    </div>
   );
 };
 

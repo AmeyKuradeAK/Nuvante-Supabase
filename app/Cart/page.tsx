@@ -263,7 +263,7 @@ const CartPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {loading && (
-        <div className="h-screen flex items-center justify-center">
+        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-[#DB4444] border-t-transparent rounded-full animate-spin"></div>
             <Image 

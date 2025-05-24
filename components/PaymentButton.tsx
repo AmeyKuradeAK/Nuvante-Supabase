@@ -15,6 +15,7 @@ interface PaymentButtonProps {
   onError?: (error: any) => void;
   className?: string;
   children: React.ReactNode;
+  disabled?: boolean;
 }
 
 declare global {
@@ -32,6 +33,7 @@ export default function PaymentButton({
   onError,
   className = '',
   children,
+  disabled = false,
 }: PaymentButtonProps) {
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
@@ -173,8 +175,8 @@ export default function PaymentButton({
   return (
     <button
       onClick={handlePayment}
-      disabled={loading || !razorpayLoaded}
-      className={`${className} ${(loading || !razorpayLoaded) ? 'opacity-50 cursor-not-allowed' : ''}`}
+      disabled={loading || !razorpayLoaded || disabled}
+      className={`${className} ${(loading || !razorpayLoaded || disabled) ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       {loading ? (
         <div className="flex items-center justify-center">
