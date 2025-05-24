@@ -74,35 +74,37 @@ export async function POST(request: any) {
       console.log("Creating new client:", new_client); // Debug log
 
       try {
+        // Save the client
         const savedClient = await new_client.save();
-        
-        if (!savedClient) {
-          throw new Error("Failed to create profile");
-        }
+        console.log("Client saved successfully:", savedClient);
 
-        console.log("Saved client:", savedClient); // Debug log
-
-        // Verify the saved data
+        // Verify the saved data immediately
         const verifiedClient = await clientModel.findOne({ email: global_user_email });
+        console.log("Verification query result:", verifiedClient);
+
         if (!verifiedClient) {
           throw new Error("Client not found after save");
         }
 
-        if (verifiedClient.firstName !== body.firstName || 
-            verifiedClient.lastName !== body.lastName || 
-            verifiedClient.mobileNumber !== body.mobileNumber) {
-          console.error("Verification failed:", {
-            verifiedClient,
-            expected: {
-              firstName: body.firstName,
-              lastName: body.lastName,
-              mobileNumber: body.mobileNumber
-            }
-          });
-          throw new Error("Profile data verification failed");
+        // Verify all required fields
+        const requiredFields = {
+          firstName: body.firstName,
+          lastName: body.lastName,
+          email: global_user_email,
+          mobileNumber: body.mobileNumber
+        };
+
+        const missingFields = Object.entries(requiredFields)
+          .filter(([key, value]) => !verifiedClient[key as keyof typeof verifiedClient] || verifiedClient[key as keyof typeof verifiedClient] !== value)
+          .map(([key]) => key);
+
+        if (missingFields.length > 0) {
+          console.error("Missing or incorrect fields:", missingFields);
+          throw new Error(`Profile data verification failed: Missing or incorrect fields: ${missingFields.join(', ')}`);
         }
 
         console.log("Client created and verified successfully");
+        return NextResponse.json({ message: "Success", client: verifiedClient }, { status: 200 });
       } catch (saveError: any) {
         console.error("Error saving client:", saveError);
         throw new Error(`Failed to save client: ${saveError.message}`);

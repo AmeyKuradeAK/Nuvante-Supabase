@@ -198,16 +198,14 @@ const SignUpPage = () => {
         lastName,
       });
 
-      // Wait for Clerk session to be fully established
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Set active session
+      // Set active session first
       await setActive({ session: signUpAttempt.createdSessionId });
 
-      // Wait for session to be active
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for session to be fully established
+      await new Promise(resolve => setTimeout(resolve, 5000));
 
       try {
+        console.log("Attempting to create user in database...");
         // Create client record with proper name fields and email
         const response = await axios.post("/api/populate/", {
           firstName,
@@ -222,6 +220,8 @@ const SignUpPage = () => {
           orders: []
         });
 
+        console.log("Database response:", response.data);
+
         if (response.status !== 200) {
           throw new Error("Failed to save profile data");
         }
@@ -231,6 +231,8 @@ const SignUpPage = () => {
 
         // Verify the data was saved by fetching it
         const profileResponse = await axios.get<ProfileResponse>("/api/propagation_client");
+        console.log("Profile verification response:", profileResponse.data);
+
         if (!profileResponse.data.firstName || !profileResponse.data.lastName || !profileResponse.data.email || !profileResponse.data.mobileNumber) {
           throw new Error("Profile data not properly saved");
         }
@@ -245,7 +247,7 @@ const SignUpPage = () => {
 
         showAlert("Account created successfully!", "success");
         router.push("/");
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error populating database:", error);
         showAlert("Account created but database population failed. Please try updating your profile.", "warning");
         router.push("/profile");
