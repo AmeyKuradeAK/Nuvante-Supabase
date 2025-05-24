@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle, Package, ArrowRight, Home, ShoppingBag } from "lucide-react";
@@ -18,7 +18,6 @@ function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { showAlert } = useAlert();
-  const [countdown, setCountdown] = useState(5);
 
   const orderId = searchParams.get("orderId");
   const paymentId = searchParams.get("paymentId");
@@ -29,19 +28,6 @@ function PaymentSuccessContent() {
       router.push("/");
       return;
     }
-
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          router.push("/orders");
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
   }, [orderId, paymentId, router, showAlert]);
 
   return (
@@ -124,14 +110,6 @@ function PaymentSuccessContent() {
                 <ShoppingBag className="w-5 h-5" />
                 View Orders
               </button>
-            </div>
-
-            <div className="text-center text-sm text-gray-500 mt-6">
-              <p>
-                Redirecting to orders page in{" "}
-                <span className="font-semibold text-[#DB4444]">{countdown}</span>{" "}
-                seconds...
-              </p>
             </div>
           </div>
         </motion.div>
