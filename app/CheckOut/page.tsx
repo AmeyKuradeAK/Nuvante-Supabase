@@ -211,32 +211,6 @@ const CheckoutContent = () => {
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
     try {
-      // Get form data
-      const form = document.querySelector('form');
-      if (!form) {
-        showAlert('Please fill in all required fields', 'error');
-        return;
-      }
-
-      const formData = new FormData(form);
-      const shippingAddress = {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        streetAddress: formData.get('streetAddress'),
-        apartment: formData.get('apartment'),
-        city: formData.get('city'),
-        phone: formData.get('phone'),
-        email: formData.get('email')
-      };
-
-      // Validate required fields
-      if (!shippingAddress.firstName || !shippingAddress.lastName || 
-          !shippingAddress.streetAddress || !shippingAddress.city || 
-          !shippingAddress.phone || !shippingAddress.email) {
-        showAlert('Please fill in all required fields', 'error');
-        return;
-      }
-
       // Create order data
       const orderData = {
         orderId,
@@ -251,7 +225,15 @@ const CheckoutContent = () => {
           size: sizes[product._id] || '',
           quantity: quantities[product._id] || 1
         })),
-        shippingAddress
+        shippingAddress: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          streetAddress: formData.address,
+          apartment: formData.apartment,
+          city: formData.city,
+          phone: formData.phone,
+          email: formData.email
+        }
       };
 
       // Save order to database
@@ -284,12 +266,9 @@ const CheckoutContent = () => {
         overlay.remove();
       }
 
-      // Wait a bit for Razorpay to finish its animations
-      setTimeout(() => {
-        showAlert('Payment successful!', 'success');
-        // Redirect to success page
-        window.location.href = `/payment-success?orderId=${orderId}&paymentId=${paymentId}`;
-      }, 1000);
+      // Show success message and redirect
+      showAlert('Payment successful!', 'success');
+      window.location.href = `/payment-success?orderId=${orderId}&paymentId=${paymentId}`;
     } catch (error) {
       console.error('Error saving order:', error);
       showAlert('Payment successful but failed to save order. Please contact support.', 'error');
