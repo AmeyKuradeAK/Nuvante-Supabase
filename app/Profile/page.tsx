@@ -18,7 +18,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { useAlert } from "@/context/AlertContext";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
+import { LogOut } from "lucide-react";
 
 const logo = "/logo.png";
 
@@ -171,6 +172,18 @@ const ProfilePage = () => {
   const { showAlert } = useAlert();
   const router = useRouter();
   const user = useUser();
+  const { signOut } = useClerk();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      showAlert("Logged out successfully", "success");
+      router.push("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      showAlert("Error logging out. Please try again.", "error");
+    }
+  };
 
   const fetchUserData = useCallback(async () => {
     try {
@@ -183,7 +196,7 @@ const ProfilePage = () => {
         // Use Clerk user data as fallback if database fields are empty
         const firstName = profileResponse.data.firstName || user.user?.firstName || "";
         const lastName = profileResponse.data.lastName || user.user?.lastName || "";
-        const address = profileResponse.data.address || "Address not provided";
+        const address = profileResponse.data.address || "";
 
         setProfileData({
           firstName,
@@ -267,11 +280,11 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="p-4">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <motion.div 
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="mt-6 ml-4 lg:ml-32"
+          className="mb-8"
         >
           <Breadcrumb>
             <BreadcrumbList>
@@ -286,27 +299,9 @@ const ProfilePage = () => {
           </Breadcrumb>
         </motion.div>
 
-        {isLoading && (
-          <div className="h-screen flex items-center justify-center">
-            <div className="relative">
-              <div className="w-16 h-16 border-4 border-[#DB4444] border-t-transparent rounded-full animate-spin"></div>
-              <Image 
-                src={logo} 
-                alt="Loading..." 
-                width={40} 
-                height={40} 
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse"
-              />
-            </div>
-          </div>
-        )}
-
-        {!isLoading && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-8"
-          >
+        <div className="flex flex-col lg:flex-row gap-8">
+          <Sidebar />
+          <div className="flex-1">
             <ProfileForm
               firstName={profileData.firstName}
               lastName={profileData.lastName}
@@ -317,8 +312,26 @@ const ProfilePage = () => {
               onAddressChange={(value) => handleFieldChange('address', value)}
               onSave={updateProfile}
             />
-          </motion.div>
-        )}
+            
+            {/* Logout Button */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="mt-6 flex justify-end"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLogout}
+                className="flex items-center gap-2 bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-all duration-300 shadow-sm hover:shadow-md"
+              >
+                <LogOut className="w-5 h-5" />
+                Logout
+              </motion.button>
+            </motion.div>
+          </div>
+        </div>
       </div>
       <Footer />
     </div>

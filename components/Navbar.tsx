@@ -113,27 +113,9 @@ export default function Navbar() {
               <Link href="/orders" className="hidden lg:flex">
                 <Package className="h-6 w-6" />
               </Link>
-              {user.isSignedIn ? (
-                <div className="relative group">
-                  <UserIcon className="h-6 w-6 cursor-pointer" />
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden group-hover:block z-50">
-                    <Link href="/Profile" className="block px-4 py-2 text-gray-800 hover:bg-gray-100">
-                      Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 flex items-center gap-2"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <Link href="/Profile" onClick={handleProfileClick}>
-                  <UserIcon className="h-6 w-6" />
-                </Link>
-              )}
+              <Link href="/Profile" onClick={handleProfileClick}>
+                <UserIcon className="h-6 w-6" />
+              </Link>
             </div>
           </div>
         </div>
