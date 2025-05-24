@@ -201,20 +201,22 @@ const OrdersPage = () => {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const [ordersResponse, productsResponse] = await Promise.all([
-        axios.get<ApiResponse>("/api/orders"),
-        axios.post<{ data: any[] }>("/api/propagation", { every: true })
-      ]);
+      // Only fetch products if we have orders
+      const ordersResponse = await axios.get<ApiResponse>("/api/orders");
       
       if (ordersResponse.data.orders) {
         const sortedOrders = ordersResponse.data.orders.sort((a, b) => 
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         setOrders(sortedOrders);
-      }
-      
-      if (Array.isArray(productsResponse.data)) {
-        setProducts(productsResponse.data);
+
+        // Only fetch products if we have orders
+        if (sortedOrders.length > 0) {
+          const productsResponse = await axios.post<{ data: any[] }>("/api/propagation", { every: true });
+          if (Array.isArray(productsResponse.data)) {
+            setProducts(productsResponse.data);
+          }
+        }
       }
       
       setIsLoaded(true);

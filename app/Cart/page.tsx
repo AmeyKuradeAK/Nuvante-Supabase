@@ -82,25 +82,34 @@ const CartPage = () => {
           }
         });
 
-      // Load quantities and sizes from database
-      const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities');
-      if (quantitiesResponse.status === 200 && quantitiesResponse.data.quantities) {
-        // Ensure all quantities are at least 1
-        const normalizedQuantities = Object.entries(quantitiesResponse.data.quantities).reduce(
-          (acc, [key, value]) => ({
-            ...acc,
-            [key]: Math.max(1, value)
-          }),
-          {}
-        );
-        setQuantities(normalizedQuantities);
-      }
+      // Only fetch quantities and sizes if there are items in the cart
+      if (GlobalCart.length > 0) {
+        try {
+          // Load quantities from database
+          const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities');
+          if (quantitiesResponse.status === 200 && quantitiesResponse.data.quantities) {
+            const normalizedQuantities = Object.entries(quantitiesResponse.data.quantities).reduce(
+              (acc, [key, value]) => ({
+                ...acc,
+                [key]: Math.max(1, value)
+              }),
+              {}
+            );
+            setQuantities(normalizedQuantities);
+          }
 
-      // Load sizes from database
-      const sizesResponse = await axios.get<SizesResponse>('/api/cart/size');
-      if (sizesResponse.status === 200 && sizesResponse.data.sizes) {
-        console.log('Loaded sizes:', sizesResponse.data.sizes); // Debug log
-        setSelectedSizes(sizesResponse.data.sizes);
+          // Load sizes from database
+          const sizesResponse = await axios.get<SizesResponse>('/api/cart/size');
+          if (sizesResponse.status === 200 && sizesResponse.data.sizes) {
+            setSelectedSizes(sizesResponse.data.sizes);
+          }
+        } catch (error) {
+          console.error("Error fetching cart details:", error);
+          // Don't show alert for empty cart cases
+          if (GlobalCart.length > 0) {
+            showAlert("Error loading cart details. Please try again.", "error");
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -123,16 +132,6 @@ const CartPage = () => {
 
   const cartItems = products.filter(item => GlobalCart.includes(item._id));
   const subtotal = calculateSubtotal();
-
-  // Debug log when sizes change
-  useEffect(() => {
-    console.log('Current selected sizes:', selectedSizes);
-  }, [selectedSizes]);
-
-  // Debug log when cart items change
-  useEffect(() => {
-    console.log('Current cart items:', cartItems);
-  }, [cartItems]);
 
   const handleSizeSelect = async (productId: string, size: string) => {
     try {
