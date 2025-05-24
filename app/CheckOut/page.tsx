@@ -33,6 +33,30 @@ interface SizesResponse {
   sizes: { [key: string]: string };
 }
 
+interface OrderData {
+  orderId: string;
+  paymentId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  timestamp: string;
+  items: string[];
+  itemDetails: {
+    productId: string;
+    size: string;
+    quantity: number;
+  }[];
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    streetAddress: string;
+    apartment: string;
+    city: string;
+    phone: string;
+    email: string;
+  };
+}
+
 const CheckoutContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,7 +68,7 @@ const CheckoutContent = () => {
     throw new Error("CheckoutPage must be used within GlobalContextProvider");
   }
 
-  const { GlobalCart } = globalContext;
+  const { GlobalCart, changeGlobalOrders, clearGlobalCart } = globalContext;
   const [products, setProducts] = useState<any[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [sizes, setSizes] = useState<Record<string, string>>({});
@@ -185,6 +209,93 @@ const CheckoutContent = () => {
     }, 0);
   };
 
+  const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
+    try {
+      // Get form data
+      const form = document.querySelector('form');
+      if (!form) {
+        showAlert('Please fill in all required fields', 'error');
+        return;
+      }
+
+      const formData = new FormData(form);
+      const shippingAddress = {
+        firstName: formData.get('firstName'),
+        lastName: formData.get('lastName'),
+        streetAddress: formData.get('streetAddress'),
+        apartment: formData.get('apartment'),
+        city: formData.get('city'),
+        phone: formData.get('phone'),
+        email: formData.get('email')
+      };
+
+      // Validate required fields
+      if (!shippingAddress.firstName || !shippingAddress.lastName || 
+          !shippingAddress.streetAddress || !shippingAddress.city || 
+          !shippingAddress.phone || !shippingAddress.email) {
+        showAlert('Please fill in all required fields', 'error');
+        return;
+      }
+
+      // Create order data
+      const orderData = {
+        orderId,
+        paymentId,
+        amount: calculateTotal(),
+        currency: 'INR',
+        status: 'completed',
+        timestamp: new Date().toISOString(),
+        items: products,
+        itemDetails: products.map((product, index) => ({
+          productId: product._id,
+          size: sizes[product._id] || '',
+          quantity: quantities[product._id] || 1
+        })),
+        shippingAddress
+      };
+
+      // Save order to database
+      const saveResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!saveResponse.ok) {
+        throw new Error('Failed to save order');
+      }
+
+      // Update orders in global context
+      changeGlobalOrders(orderData);
+
+      // Clear cart after successful payment
+      clearGlobalCart();
+
+      // Close Razorpay modal
+      const modal = document.querySelector('.razorpay-checkout-frame');
+      if (modal) {
+        modal.remove();
+      }
+      // Force close any remaining Razorpay elements
+      const overlay = document.querySelector('.razorpay-overlay');
+      if (overlay) {
+        overlay.remove();
+      }
+
+      // Wait a bit for Razorpay to finish its animations
+      setTimeout(() => {
+        showAlert('Payment successful!', 'success');
+        // Redirect to success page
+        window.location.href = `/payment-success?orderId=${orderId}&paymentId=${paymentId}`;
+      }, 1000);
+    } catch (error) {
+      console.error('Error saving order:', error);
+      showAlert('Payment successful but failed to save order. Please contact support.', 'error');
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -277,7 +388,7 @@ const CheckoutContent = () => {
                       Street Address <span className="text-[#DB4444]">*</span>
                     </label>
                     <input
-                      name="streetAddress"
+                      name="address"
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-200"
                       type="text"
                       required
@@ -350,7 +461,7 @@ const CheckoutContent = () => {
                 <h2 className="text-xl font-bold mb-6 text-gray-800">Payment Summary</h2>
                 <div className="space-y-4">
                   <div className="flex justify-between text-gray-600">
-                    <span>Subtotal ({GlobalCart.length} items)</span>
+                    <span>Subtotal ({products.length} items)</span>
                     <span>Rs. {calculateTotal()}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
@@ -375,6 +486,7 @@ const CheckoutContent = () => {
                           size: sizes[p._id] || ''
                         })))
                       }}
+                      onSuccess={handlePaymentSuccess}
                       className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
                     >
                       Pay Rs. {calculateTotal()}

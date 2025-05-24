@@ -10,8 +10,8 @@ interface PaymentButtonProps {
   amount: number;
   currency?: string;
   receipt: string;
-  notes?: { [key: string]: string };
-  onSuccess?: (response: any) => void;
+  notes?: Record<string, string>;
+  onSuccess?: (paymentId: string, orderId: string) => void;
   onError?: (error: any) => void;
   className?: string;
   children: React.ReactNode;
@@ -44,43 +44,12 @@ export default function PaymentButton({
   }
 
   const handlePayment = async () => {
-    if (!user) {
-      showAlert('Please sign in to make a payment', 'warning');
-      router.push('/sign-in');
-      return;
-    }
-
-    // Get form data
-    const form = document.querySelector('form');
-    if (!form) {
-      showAlert('Please fill in all required fields', 'error');
-      return;
-    }
-
-    const formData = new FormData(form);
-    const shippingAddress = {
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      streetAddress: formData.get('streetAddress'),
-      apartment: formData.get('apartment'),
-      city: formData.get('city'),
-      phone: formData.get('phone'),
-      email: formData.get('email')
-    };
-
-    // Validate required fields
-    if (!shippingAddress.firstName || !shippingAddress.lastName || 
-        !shippingAddress.streetAddress || !shippingAddress.city || 
-        !shippingAddress.phone || !shippingAddress.email) {
-      showAlert('Please fill in all required fields', 'error');
-      return;
-    }
+    if (loading) return;
+    setLoading(true);
 
     try {
-      setLoading(true);
-
-      // Create order
-      const response = await fetch('/api/create-payment', {
+      // Create order on server
+      const response = await fetch('/api/create-order', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -89,116 +58,55 @@ export default function PaymentButton({
           amount,
           currency,
           receipt,
-          notes: {
-            ...notes,
-            userId: user.id,
-            email: user.emailAddresses[0]?.emailAddress,
-            name: `${user.firstName} ${user.lastName}`,
-          },
+          notes
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create payment');
+        throw new Error('Failed to create order');
       }
 
-      // Initialize Razorpay
+      const data = await response.json();
+
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: amount * 100,
+        amount: amount * 100, // Razorpay expects amount in paise
         currency,
         name: 'Nuvante',
         description: 'Payment for your order',
         order_id: data.orderId,
         handler: async function (response: any) {
           try {
-            // Add order to global context
-            const orderData = {
-              orderId: data.orderId,
-              paymentId: response.razorpay_payment_id,
-              amount,
-              currency,
-              status: 'completed',
-              timestamp: new Date().toISOString(),
-              items: globalContext.GlobalCart,
-              shippingAddress
-            };
-            
-            // Save order to database
-            const saveResponse = await fetch('/api/verify-payment', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                razorpay_order_id: data.orderId,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                orderData,
-              }),
-            });
-
-            if (!saveResponse.ok) {
-              throw new Error('Failed to save order');
+            // Call onSuccess with payment ID and order ID
+            if (onSuccess) {
+              onSuccess(response.razorpay_payment_id, data.orderId);
             }
-            
-            // Update orders in global context
-            globalContext.changeGlobalOrders(orderData);
-            
-            // Clear cart after successful payment
-            globalContext.clearGlobalCart();
-
-            // Close Razorpay modal
-            const modal = document.querySelector('.razorpay-checkout-frame');
-            if (modal) {
-              modal.remove();
-            }
-            // Force close any remaining Razorpay elements
-            const overlay = document.querySelector('.razorpay-overlay');
-            if (overlay) {
-              overlay.remove();
-            }
-
-            // Wait a bit for Razorpay to finish its animations
-            setTimeout(() => {
-              if (onSuccess) {
-                onSuccess(response);
-              }
-              
-              showAlert('Payment successful!', 'success');
-              // Redirect to success page
-              window.location.href = `/payment-success?orderId=${data.orderId}&paymentId=${response.razorpay_payment_id}`;
-            }, 1000);
           } catch (error) {
-            console.error('Error saving order:', error);
-            showAlert('Payment successful but failed to save order. Please contact support.', 'error');
-          }
-        },
-        modal: {
-          ondismiss: function() {
-            showAlert("Payment cancelled", "warning");
+            console.error('Payment verification failed:', error);
+            if (onError) {
+              onError(error);
+            }
+            showAlert('Payment verification failed. Please contact support.', 'error');
           }
         },
         prefill: {
-          name: `${user.firstName} ${user.lastName}`,
-          email: user.emailAddresses[0]?.emailAddress,
-          contact: user.phoneNumbers[0]?.phoneNumber || '',
+          name: 'Customer Name',
+          email: 'customer@example.com',
+          contact: '9999999999'
         },
         theme: {
-          color: '#DB4444',
-        },
+          color: '#DB4444'
+        }
       };
 
-      const razorpay = new window.Razorpay(options);
+      const razorpay = new (window as any).Razorpay(options);
       razorpay.open();
     } catch (error) {
-      console.error('Payment error:', error);
-      showAlert('Payment failed. Please try again.', 'error');
+      console.error('Payment initialization failed:', error);
       if (onError) {
         onError(error);
       }
+      showAlert('Payment initialization failed. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -208,11 +116,15 @@ export default function PaymentButton({
     <button
       onClick={handlePayment}
       disabled={loading}
-      className={`${className} ${
-        loading ? 'opacity-50 cursor-not-allowed' : ''
-      }`}
+      className={`${className} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
-      {loading ? 'Processing...' : children}
+      {loading ? (
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+        </div>
+      ) : (
+        children
+      )}
     </button>
   );
 } 

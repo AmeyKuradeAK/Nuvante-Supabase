@@ -22,16 +22,27 @@ import { Package, Clock, CheckCircle, XCircle, ChevronRight } from "lucide-react
 const logo = "/logo.png";
 
 interface OrderItem {
-  _id: string;
-  orderNumber: string;
-  orderDate: string;
+  orderId: string;
+  paymentId: string;
+  amount: number;
+  currency: string;
   status: string;
-  totalAmount: number;
-  items: {
+  timestamp: string;
+  items: string[];
+  itemDetails: {
     productId: string;
-    quantity: number;
     size: string;
+    quantity: number;
   }[];
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    streetAddress: string;
+    apartment: string;
+    city: string;
+    phone: string;
+    email: string;
+  };
 }
 
 interface OrderDetailsModalProps {
@@ -67,11 +78,11 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose, p
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-gray-600">Order Number</p>
-              <p className="font-medium">{order.orderNumber}</p>
+              <p className="font-medium">{order.orderId}</p>
             </div>
             <div>
               <p className="text-gray-600">Order Date</p>
-              <p className="font-medium">{new Date(order.orderDate).toLocaleDateString()}</p>
+              <p className="font-medium">{new Date(order.timestamp).toLocaleDateString()}</p>
             </div>
             <div>
               <p className="text-gray-600">Status</p>
@@ -79,14 +90,30 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose, p
             </div>
             <div>
               <p className="text-gray-600">Total Amount</p>
-              <p className="font-medium">Rs. {order.totalAmount}</p>
+              <p className="font-medium">Rs. {order.amount}</p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h3 className="font-medium mb-4">Shipping Address</h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm text-gray-600">
+                {order.shippingAddress.firstName} {order.shippingAddress.lastName}
+              </p>
+              <p className="text-sm text-gray-600">{order.shippingAddress.streetAddress}</p>
+              {order.shippingAddress.apartment && (
+                <p className="text-sm text-gray-600">{order.shippingAddress.apartment}</p>
+              )}
+              <p className="text-sm text-gray-600">{order.shippingAddress.city}</p>
+              <p className="text-sm text-gray-600">Phone: {order.shippingAddress.phone}</p>
+              <p className="text-sm text-gray-600">Email: {order.shippingAddress.email}</p>
             </div>
           </div>
 
           <div className="mt-6">
             <h3 className="font-medium mb-4">Order Items</h3>
             <div className="space-y-4">
-              {order.items.map((item, index) => {
+              {order.itemDetails.map((item, index) => {
                 const product = products.find(p => p._id === item.productId);
                 if (!product) return null;
                 
@@ -133,23 +160,19 @@ const OrdersPage = () => {
   const fetchOrders = useCallback(async () => {
     try {
       console.log("Fetching orders and products...");
-      const [response, productsResponse] = await Promise.all([
-        axios.get<ApiResponseOr404>("/api/propagation_client"),
+      const [ordersResponse, productsResponse] = await Promise.all([
+        axios.get<ApiResponse>("/api/orders"),
         axios.post<{ data: any[] }>("/api/propagation", { every: true })
       ]);
       
-      console.log("Orders Response:", response.data);
+      console.log("Orders Response:", ordersResponse.data);
       console.log("Products Response:", productsResponse.data);
       
-      if (response.data === 404 || !response.data) {
-        console.error("Could not fetch orders data");
-        setOrders([]);
-      } else {
-        const { orders = [] } = response.data;
-        console.log("Parsed Orders:", orders);
+      if (ordersResponse.data.orders) {
+        console.log("Parsed Orders:", ordersResponse.data.orders);
         // Sort orders by date (latest first)
-        const sortedOrders = orders.sort((a, b) => 
-          new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
+        const sortedOrders = ordersResponse.data.orders.sort((a, b) => 
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         setOrders(sortedOrders);
       }
@@ -203,15 +226,19 @@ const OrdersPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-bold mb-8">My Orders</h1>
           
-          {orders.length > 0 ? (
+          {!isLoaded ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#DB4444]"></div>
+            </div>
+          ) : orders.length > 0 ? (
             <div className="space-y-6">
               {orders.map((order) => (
-                <div key={order._id} className="bg-white rounded-lg shadow-sm p-6">
+                <div key={order.orderId} className="bg-white rounded-lg shadow-sm p-6">
                   <div className="flex justify-between items-center mb-4">
                     <div>
-                      <h2 className="text-lg font-semibold">Order #{order.orderNumber}</h2>
+                      <h2 className="text-lg font-semibold">Order #{order.orderId}</h2>
                       <p className="text-sm text-gray-500">
-                        {new Date(order.orderDate).toLocaleDateString()}
+                        {new Date(order.timestamp).toLocaleDateString()}
                       </p>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm ${
@@ -224,7 +251,7 @@ const OrdersPage = () => {
                   </div>
 
                   <div className="space-y-4">
-                    {order.items.map((item, index) => {
+                    {order.itemDetails.map((item, index) => {
                       const product = products.find(p => p._id === item.productId);
                       if (!product) return null;
                       
@@ -255,8 +282,15 @@ const OrdersPage = () => {
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-sm text-gray-600">Total Amount: Rs. {order.totalAmount}</p>
+                        <p className="text-sm text-gray-600">Total Amount: Rs. {order.amount}</p>
                       </div>
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="text-[#DB4444] hover:text-black transition-colors flex items-center gap-2"
+                      >
+                        View Details
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -270,6 +304,13 @@ const OrdersPage = () => {
         </div>
       </div>
       <Footer />
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          products={products}
+        />
+      )}
     </>
   );
 };
