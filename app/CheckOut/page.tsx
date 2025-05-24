@@ -451,26 +451,29 @@ const CheckoutContent = () => {
                               {product.productName}
                             </h3>
                             <div className="mt-2 flex items-center gap-4">
-                              <div className="flex items-center border rounded-lg overflow-hidden">
-                                <motion.button
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={() => handleQuantityChange(product._id, -1)}
-                                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-all duration-300"
-                                >
-                                  -
-                                </motion.button>
-                                <span className="px-3 py-1 border-x text-center">
-                                  {quantities[product._id] || 1}
-                                </span>
-                                <motion.button
-                                  whileHover={{ scale: 1.1 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={() => handleQuantityChange(product._id, 1)}
-                                  className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-all duration-300"
-                                >
-                                  +
-                                </motion.button>
+                              <div className="flex items-center gap-4">
+                                <span className="text-sm text-gray-600">Size: {sizes[product._id] || 'Not selected'}</span>
+                                <div className="flex items-center border rounded-lg overflow-hidden">
+                                  <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => handleQuantityChange(product._id, -1)}
+                                    className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-all duration-300"
+                                  >
+                                    -
+                                  </motion.button>
+                                  <span className="px-3 py-1 border-x text-center">
+                                    {quantities[product._id] || 1}
+                                  </span>
+                                  <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => handleQuantityChange(product._id, 1)}
+                                    className="px-3 py-1 text-gray-600 hover:bg-gray-100 transition-all duration-300"
+                                  >
+                                    +
+                                  </motion.button>
+                                </div>
                               </div>
                               <span className="text-[#DB4444] font-semibold">
                                 Rs. {product.productPrice * (quantities[product._id] || 1)}
@@ -519,7 +522,7 @@ const CheckoutContent = () => {
                           amount={calculateTotal()}
                           onSuccess={handlePaymentSuccess}
                           disabled={!isFormValid()}
-                          className={`w-full ${!isFormValid() ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`w-full bg-[#DB4444] text-white font-medium py-3 px-4 rounded-lg hover:bg-black transition-colors duration-300 ${!isFormValid() ? 'opacity-50 cursor-not-allowed' : ''}`}
                           receipt={`ORDER_${Date.now()}`}
                         >
                           Pay Rs. {calculateTotal()}
