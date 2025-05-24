@@ -338,15 +338,6 @@ const ProfilePage = () => {
 
               <div className="flex justify-between items-start mb-8">
                 <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#DB4444] text-white rounded-lg hover:bg-[#c13a3a] transition-all duration-300"
-                >
-                  <LogOut className="w-5 h-5" />
-                  Logout
-                </motion.button>
               </div>
 
               <ProfileForm
@@ -359,6 +350,23 @@ const ProfilePage = () => {
                 onAddressChange={(value) => setProfileData(prev => ({ ...prev, address: value }))}
                 onSave={updateProfile}
               />
+
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                className="flex justify-center mt-8"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Logout
+                </motion.button>
+              </motion.div>
             </div>
           </main>
           <Footer />

@@ -15,6 +15,16 @@ const sideImg = "/Side-Image.jpg";
 
 type Props = {};
 
+interface ClientResponse {
+  firstName: string;
+  lastName: string;
+  email: string;
+  address: string;
+  cart: string[];
+  wishlist: string[];
+  orders: any[];
+}
+
 const page = (props: Props) => {
   const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = React.useState("");
@@ -46,18 +56,23 @@ const page = (props: Props) => {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         
-        // Create client record for new users
+        // Check if client record exists and create if it doesn't
         try {
           const userData = await user.user;
-          await axios.post("/api/populate/", {
-            firstName: userData?.firstName || "User",
-            lastName: userData?.lastName || "User",
-            password: "clerk-auth", // Since we're using Clerk for auth
-            email: email,
-            address: "Address not provided",
-          });
+          const clientResponse = await axios.get<ClientResponse>("/api/propagation_client");
+          
+          // Only create new client if one doesn't exist
+          if (!clientResponse.data || !clientResponse.data.firstName) {
+            await axios.post("/api/populate/", {
+              firstName: userData?.firstName || "User",
+              lastName: userData?.lastName || "User",
+              password: "clerk-auth", // Since we're using Clerk for auth
+              email: email,
+              address: "Address not provided",
+            });
+          }
         } catch (error) {
-          console.error("Error creating client record:", error);
+          console.error("Error handling client record:", error);
           // Don't show error to user since this is a background operation
         }
 
