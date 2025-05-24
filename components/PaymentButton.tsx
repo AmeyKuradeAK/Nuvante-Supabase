@@ -89,7 +89,7 @@ export default function PaymentButton({
 
     try {
       // Create order on server
-      const response = await fetch('/api/create-order', {
+      const response = await fetch('/api/create-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,7 +109,7 @@ export default function PaymentButton({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to create order');
+        throw new Error(errorData.message || 'Failed to create payment');
       }
 
       const data = await response.json();
