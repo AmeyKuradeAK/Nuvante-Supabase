@@ -119,7 +119,7 @@ const Preview = () => {
     if (!user.isSignedIn) {
       showAlert("Please sign in to access cart", "warning");
       setTimeout(() => {
-        router.push("/sign-in");
+        router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`);
       }, 2000);
       return;
     }
@@ -166,7 +166,7 @@ const Preview = () => {
     if (!user.isSignedIn) {
       showAlert("Please sign in to access wishlist", "warning");
       setTimeout(() => {
-        router.push("/sign-in");
+        router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`);
       }, 2000);
       return;
     }
@@ -204,7 +204,7 @@ const Preview = () => {
     if (!user.isSignedIn) {
       showAlert("Please sign in to proceed with checkout", "warning");
       setTimeout(() => {
-        router.push("/sign-in");
+        router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`);
       }, 2000);
       return;
     }

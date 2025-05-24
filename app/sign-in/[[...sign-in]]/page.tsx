@@ -1,11 +1,11 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
 import Link from "next/link";
 import { useSignIn } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
 import { useAlert } from "@/context/AlertContext";
 import { motion } from "framer-motion";
@@ -23,6 +23,14 @@ const page = (props: Props) => {
   const router = useRouter();
   const user = useUser();
   const { showAlert } = useAlert();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (user.isSignedIn) {
+      const redirectUrl = searchParams.get('redirect_url') || '/';
+      router.push(redirectUrl);
+    }
+  }, [user.isSignedIn, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +62,8 @@ const page = (props: Props) => {
         }
 
         showAlert("Successfully signed in!", "success");
-        router.push("/");
+        const redirectUrl = searchParams.get('redirect_url') || '/';
+        router.push(redirectUrl);
       } else {
         console.error(JSON.stringify(result, null, 2));
         showAlert("Sign in process incomplete", "error");
