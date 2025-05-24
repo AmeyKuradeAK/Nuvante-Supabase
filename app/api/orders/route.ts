@@ -3,15 +3,47 @@ import connect from "@/db";
 import clientModel from "@/models/Clients";
 import { currentUser } from "@clerk/nextjs/server";
 
+interface OrderItem {
+  orderId: string;
+  paymentId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  timestamp: string;
+  estimatedDeliveryDate: string;
+  items: string[];
+  itemDetails: {
+    productId: string;
+    size: string;
+    quantity: number;
+  }[];
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    streetAddress: string;
+    apartment: string;
+    city: string;
+    phone: string;
+    email: string;
+  };
+}
+
 export async function GET() {
   try {
     await connect();
     const user = await currentUser();
-    const global_user_email = user?.emailAddresses[0].emailAddress;
-
-    if (!user || !global_user_email) {
+    
+    if (!user) {
       return NextResponse.json(
         { error: "User not authenticated" },
+        { status: 401 }
+      );
+    }
+
+    const global_user_email = user.emailAddresses[0].emailAddress;
+    if (!global_user_email) {
+      return NextResponse.json(
+        { error: "User email not found" },
         { status: 401 }
       );
     }
@@ -24,7 +56,12 @@ export async function GET() {
       );
     }
 
-    return NextResponse.json({ orders: client.orders });
+    // Sort orders by timestamp in descending order (newest first)
+    const sortedOrders = (client.orders as OrderItem[]).sort((a: OrderItem, b: OrderItem) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    return NextResponse.json({ orders: sortedOrders });
   } catch (error) {
     console.error("Error fetching orders:", error);
     return NextResponse.json(
@@ -38,16 +75,23 @@ export async function POST(request: Request) {
   try {
     await connect();
     const user = await currentUser();
-    const global_user_email = user?.emailAddresses[0].emailAddress;
-
-    if (!user || !global_user_email) {
+    
+    if (!user) {
       return NextResponse.json(
         { error: "User not authenticated" },
         { status: 401 }
       );
     }
 
-    const orderData = await request.json();
+    const global_user_email = user.emailAddresses[0].emailAddress;
+    if (!global_user_email) {
+      return NextResponse.json(
+        { error: "User email not found" },
+        { status: 401 }
+      );
+    }
+
+    const orderData = await request.json() as OrderItem;
     const client = await clientModel.findOne({ email: global_user_email });
 
     if (!client) {
@@ -60,7 +104,7 @@ export async function POST(request: Request) {
     // Validate required fields
     const requiredFields = ['orderId', 'paymentId', 'amount', 'items', 'itemDetails', 'shippingAddress'];
     for (const field of requiredFields) {
-      if (!orderData[field]) {
+      if (!orderData[field as keyof OrderItem]) {
         return NextResponse.json(
           { error: `Missing required field: ${field}` },
           { status: 400 }

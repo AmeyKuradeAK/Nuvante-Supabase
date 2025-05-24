@@ -3,15 +3,42 @@ import { createContext, useState, useEffect, useCallback } from "react";
 import React from "react";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+
+interface OrderItem {
+  orderId: string;
+  paymentId: string;
+  amount: number;
+  currency: string;
+  status: string;
+  timestamp: string;
+  estimatedDeliveryDate: string;
+  items: string[];
+  itemDetails: {
+    productId: string;
+    size: string;
+    quantity: number;
+  }[];
+  shippingAddress: {
+    firstName: string;
+    lastName: string;
+    streetAddress: string;
+    apartment: string;
+    city: string;
+    phone: string;
+    email: string;
+  };
+}
 
 interface GlobalContextType {
   GlobalWishlist: string[];
   GlobalCart: string[];
-  GlobalOrders: any[];
+  GlobalOrders: OrderItem[];
   changeGlobalWishlist: (updatedWishlist: string[]) => void;
   changeGlobalCart: (element: string) => void;
-  changeGlobalOrders: (order: any) => void;
+  changeGlobalOrders: (order: OrderItem) => void;
   clearGlobalCart: () => void;
+  isLoading: boolean;
 }
 
 const domain = process.env.NEXT_PUBLIC_DOMAIN;
@@ -23,7 +50,7 @@ export const GlobalContext = createContext<GlobalContextType | undefined>(
 interface ApiResponse {
   wishlist: string[];
   cart: string[];
-  orders: any[];
+  orders: OrderItem[];
 }
 
 // Debounce function
@@ -42,13 +69,21 @@ export const GlobalContextProvider = ({
 }) => {
   const [GlobalWishlist, setGlobalWishlist] = useState<string[]>([]);
   const [GlobalCart, setGlobalCart] = useState<string[]>([]);
-  const [GlobalOrders, setGlobalOrders] = useState<any[]>([]);
+  const [GlobalOrders, setGlobalOrders] = useState<OrderItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
-  const { isSignedIn, user } = useUser();
+  const { isSignedIn, user, isLoaded } = useUser();
 
   // Fetch data from API
   const fetchData = useCallback(async () => {
+    if (!isSignedIn || !user) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      setIsLoading(true);
       const response = await axios.get<ApiResponse>(`/api/propagation_client`);
       const { wishlist = [], cart = [], orders = [] } = response.data;
       setGlobalWishlist(wishlist);
@@ -56,8 +91,20 @@ export const GlobalContextProvider = ({
       setGlobalOrders(orders);
     } catch (error) {
       console.error("Error fetching data:", error);
+      // If unauthorized, redirect to sign in
+      if (error && 
+          typeof error === 'object' && 
+          'response' in error && 
+          error.response && 
+          typeof error.response === 'object' && 
+          'status' in error.response && 
+          error.response.status === 401) {
+        router.push('/sign-in');
+      }
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  }, [isSignedIn, user, router]);
 
   // Debounced fetch data
   const debouncedFetchData = useCallback(
@@ -66,24 +113,33 @@ export const GlobalContextProvider = ({
   );
 
   useEffect(() => {
-    if (isSignedIn) {
+    if (!isLoaded) return; // Wait for Clerk to load
+
+    if (isSignedIn && user) {
       fetchData();
     } else {
       // Reset state when user is not signed in
       setGlobalWishlist([]);
       setGlobalCart([]);
       setGlobalOrders([]);
+      setIsLoading(false);
     }
-  }, [isSignedIn, fetchData]);
+  }, [isSignedIn, isLoaded, user, fetchData]);
 
   const changeGlobalWishlist = (updatedWishlist: string[]) => {
-    setGlobalWishlist(updatedWishlist);
-    if (isSignedIn) {
-      debouncedFetchData();
+    if (!isSignedIn || !user) {
+      router.push('/sign-in');
+      return;
     }
+    setGlobalWishlist(updatedWishlist);
+    debouncedFetchData();
   };
 
   const changeGlobalCart = (element: string) => {
+    if (!isSignedIn || !user) {
+      router.push('/sign-in');
+      return;
+    }
     if (GlobalCart.includes(element)) {
       // Remove item from cart
       const updatedCart = GlobalCart.filter(item => item !== element);
@@ -92,23 +148,25 @@ export const GlobalContextProvider = ({
       // Add item to cart
       setGlobalCart([...GlobalCart, element]);
     }
-    if (isSignedIn) {
-      debouncedFetchData();
-    }
+    debouncedFetchData();
   };
 
-  const changeGlobalOrders = (order: any) => {
-    setGlobalOrders([...GlobalOrders, order]);
-    if (isSignedIn) {
-      debouncedFetchData();
+  const changeGlobalOrders = (order: OrderItem) => {
+    if (!isSignedIn || !user) {
+      router.push('/sign-in');
+      return;
     }
+    setGlobalOrders([...GlobalOrders, order]);
+    debouncedFetchData();
   };
 
   const clearGlobalCart = () => {
-    setGlobalCart([]);
-    if (isSignedIn) {
-      debouncedFetchData();
+    if (!isSignedIn || !user) {
+      router.push('/sign-in');
+      return;
     }
+    setGlobalCart([]);
+    debouncedFetchData();
   };
 
   return (
@@ -121,6 +179,7 @@ export const GlobalContextProvider = ({
         changeGlobalCart,
         changeGlobalOrders,
         clearGlobalCart,
+        isLoading
       }}
     >
       {children}

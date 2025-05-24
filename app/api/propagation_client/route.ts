@@ -14,7 +14,13 @@ interface OrderItem {
   currency: string;
   status: string;
   timestamp: string;
+  estimatedDeliveryDate: string;
   items: string[];
+  itemDetails: {
+    productId: string;
+    size: string;
+    quantity: number;
+  }[];
   shippingAddress: {
     firstName: string;
     lastName: string;
@@ -24,6 +30,15 @@ interface OrderItem {
     phone: string;
     email: string;
   };
+}
+
+interface SafeProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  cart: string[];
+  wishlist: string[];
+  orders: OrderItem[];
 }
 
 export async function GET() {
@@ -41,26 +56,19 @@ export async function GET() {
       return NextResponse.json({ wishlist: [], cart: [], orders: [] }, { status: 200 });
     }
 
-    // Ensure orders are properly populated
-    const orders = database_obj.orders || [];
+    // Ensure orders are properly populated and sorted by timestamp
+    const orders = (database_obj.orders as OrderItem[]).sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
     
     // Only return non-sensitive fields
-    const safeProfile = {
+    const safeProfile: SafeProfile = {
       firstName: database_obj.firstName,
       lastName: database_obj.lastName,
       email: database_obj.email,
       cart: database_obj.cart,
       wishlist: database_obj.wishlist,
-      orders: orders.map((order: OrderItem) => ({
-        orderId: order.orderId,
-        paymentId: order.paymentId,
-        amount: order.amount,
-        currency: order.currency,
-        status: order.status,
-        timestamp: order.timestamp,
-        items: order.items,
-        shippingAddress: order.shippingAddress
-      }))
+      orders: orders
     };
 
     return NextResponse.json(safeProfile);
