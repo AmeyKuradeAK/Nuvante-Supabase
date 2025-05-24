@@ -98,9 +98,11 @@ const Preview = () => {
   }, [hash, slug, showAlert]);
 
   useEffect(() => {
-    // Update local cart state when GlobalCart changes
-    setIsInCart(GlobalCart.includes(id));
-  }, [GlobalCart, id]);
+    // Only check cart state if user is signed in
+    if (user.isSignedIn) {
+      setIsInCart(GlobalCart.includes(id));
+    }
+  }, [GlobalCart, id, user.isSignedIn]);
 
   const handleSwitch = (size: any) => {
     setCurrent(size);
@@ -117,7 +119,7 @@ const Preview = () => {
     event.stopPropagation();
 
     if (!user.isSignedIn) {
-      showAlert("Please sign in to access cart", "warning");
+      showAlert("Please sign in to add items to cart", "warning");
       setTimeout(() => {
         router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`);
       }, 2000);
@@ -164,7 +166,7 @@ const Preview = () => {
   const handleWishlistPresence = async (event: React.MouseEvent) => {
     event.stopPropagation();
     if (!user.isSignedIn) {
-      showAlert("Please sign in to access wishlist", "warning");
+      showAlert("Please sign in to add items to wishlist", "warning");
       setTimeout(() => {
         router.push(`/sign-in?redirect_url=${encodeURIComponent(window.location.pathname)}`);
       }, 2000);
