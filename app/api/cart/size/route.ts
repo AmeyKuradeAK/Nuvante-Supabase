@@ -1,27 +1,40 @@
 import { NextResponse } from "next/server";
-import connect from "@/db";
-import mongoose from "mongoose";
-
-// Define the Cart schema
-const cartSchema = new mongoose.Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  size: { type: String, required: true }
-});
-
-// Create or get the Cart model
-const Cart = mongoose.models.Cart || mongoose.model('Cart', cartSchema);
+import clientModel from "@/models/Clients";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(request: Request) {
   try {
-    await connect();
+    const user = await currentUser();
+    const global_user_email = user?.emailAddresses[0].emailAddress;
+    
+    if (!user || !global_user_email) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { productId, size } = await request.json();
 
-    // Update the size in the cart collection
-    await Cart.findOneAndUpdate(
-      { productId: new mongoose.Types.ObjectId(productId) },
-      { size },
-      { upsert: true, new: true }
-    );
+    if (!productId || !size) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const existingModel = await clientModel.findOne({ email: global_user_email });
+    
+    if (!existingModel) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update the size in the cartSizes map
+    existingModel.cartSizes.set(productId, size);
+    await existingModel.save();
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -35,18 +48,29 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    await connect();
+    const user = await currentUser();
+    const global_user_email = user?.emailAddresses[0].emailAddress;
     
-    // Get all sizes from the cart collection
-    const sizes = await Cart.find({}).select('productId size -_id');
+    if (!user || !global_user_email) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-    // Convert to the format expected by the frontend
-    const sizesMap = sizes.reduce((acc: { [key: string]: string }, curr) => {
-      acc[curr.productId.toString()] = curr.size;
-      return acc;
-    }, {});
+    const existingModel = await clientModel.findOne({ email: global_user_email });
+    
+    if (!existingModel) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
 
-    return NextResponse.json({ sizes: sizesMap });
+    // Convert Map to object for JSON serialization
+    const sizes = Object.fromEntries(existingModel.cartSizes);
+
+    return NextResponse.json({ sizes });
   } catch (error) {
     console.error("Error fetching sizes:", error);
     return NextResponse.json(
