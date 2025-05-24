@@ -59,6 +59,16 @@ interface OrderData {
   };
 }
 
+interface ProfileResponse {
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobileNumber: string;
+  cart: string[];
+  wishlist: string[];
+  orders: any[];
+}
+
 const CheckoutContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -136,6 +146,18 @@ const CheckoutContent = () => {
         const productIds = searchParams.getAll('product');
         const sizes = searchParams.getAll('size');
         const quantities = searchParams.getAll('quantity');
+
+        // Fetch user profile data
+        const profileResponse = await axios.get<ProfileResponse>("/api/propagation_client");
+        if (profileResponse.data) {
+          setFormData(prev => ({
+            ...prev,
+            firstName: profileResponse.data.firstName || '',
+            lastName: profileResponse.data.lastName || '',
+            email: profileResponse.data.email || '',
+            phone: profileResponse.data.mobileNumber || ''
+          }));
+        }
 
         if (productIds.length > 0) {
           // Fetch all products from URL parameters
@@ -403,8 +425,10 @@ const CheckoutContent = () => {
                           name="phone"
                           value={formData.phone}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300 bg-gray-100 cursor-not-allowed"
                           placeholder="Enter your phone number"
+                          readOnly
+                          disabled
                         />
                       </motion.div>
                       <motion.div whileHover={{ scale: 1.02 }} className="space-y-2">
@@ -414,8 +438,10 @@ const CheckoutContent = () => {
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300 bg-gray-100 cursor-not-allowed"
                           placeholder="Enter your email"
+                          readOnly
+                          disabled
                         />
                       </motion.div>
                     </div>

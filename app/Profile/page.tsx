@@ -26,7 +26,7 @@ type ProfileData = {
   firstName: string;
   lastName: string;
   email: string;
-  address: string;
+  mobileNumber: string;
   cart: string[];
   wishlist: string[];
   cartQuantities: Map<string, number>;
@@ -62,20 +62,20 @@ type ProfileData = {
 const ProfileForm = React.memo(({ 
   firstName, 
   lastName, 
-  address,
+  mobileNumber,
   email,
   onFirstNameChange,
   onLastNameChange,
-  onAddressChange,
+  onMobileNumberChange,
   onSave
 }: {
   firstName: string;
   lastName: string;
-  address: string;
+  mobileNumber: string;
   email: string;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
-  onAddressChange: (value: string) => void;
+  onMobileNumberChange: (value: string) => void;
   onSave: () => Promise<void>;
 }) => (
   <motion.div 
@@ -146,13 +146,13 @@ const ProfileForm = React.memo(({
         transition={{ delay: 0.5 }}
         className="w-auto lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10"
       >
-        <h1 className="font-medium text-gray-700">Address</h1>
+        <h1 className="font-medium text-gray-700">Mobile Number</h1>
         <input
           className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-gray-50 rounded-lg border border-gray-200 focus:border-[#DB4444] focus:ring-2 focus:ring-[#DB4444] focus:ring-opacity-20 transition-all duration-300 ease-in-out"
-          type="text"
-          placeholder="Address"
-          value={address}
-          onChange={(e) => onAddressChange(e.target.value)}
+          type="tel"
+          placeholder="Enter your mobile number"
+          value={mobileNumber}
+          onChange={(e) => onMobileNumberChange(e.target.value)}
         />
       </motion.div>
     </div>
@@ -189,7 +189,7 @@ const ProfilePage = () => {
     firstName: "",
     lastName: "",
     email: "",
-    address: "",
+    mobileNumber: "",
     cart: [],
     wishlist: [],
     cartQuantities: new Map(),
@@ -223,7 +223,7 @@ const ProfilePage = () => {
           firstName: response.data.firstName || "",
           lastName: response.data.lastName || "",
           email: response.data.email || "",
-          address: response.data.address || "",
+          mobileNumber: response.data.mobileNumber || "",
           cart: response.data.cart || [],
           wishlist: response.data.wishlist || [],
           cartQuantities: response.data.cartQuantities || new Map(),
@@ -249,8 +249,8 @@ const ProfilePage = () => {
       showAlert("Last name is required", "error");
       return;
     }
-    if (!profileData.address.trim()) {
-      showAlert("Address is required", "error");
+    if (!profileData.mobileNumber.trim()) {
+      showAlert("Mobile number is required", "error");
       return;
     }
 
@@ -260,7 +260,7 @@ const ProfilePage = () => {
       const response = await axios.post("/api/populate", {
         firstName: profileData.firstName.trim(),
         lastName: profileData.lastName.trim(),
-        address: profileData.address.trim(),
+        mobileNumber: profileData.mobileNumber.trim(),
         email: profileData.email,
         cart: profileData.cart,
         wishlist: profileData.wishlist,
@@ -338,35 +338,27 @@ const ProfilePage = () => {
 
               <div className="flex justify-between items-start mb-8">
                 <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-6 py-3 bg-[#DB4444] text-white rounded-lg hover:bg-black transition-all duration-300"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Logout
+                </motion.button>
               </div>
 
               <ProfileForm
                 firstName={profileData.firstName}
                 lastName={profileData.lastName}
-                address={profileData.address}
+                mobileNumber={profileData.mobileNumber}
                 email={profileData.email}
                 onFirstNameChange={(value) => setProfileData(prev => ({ ...prev, firstName: value }))}
                 onLastNameChange={(value) => setProfileData(prev => ({ ...prev, lastName: value }))}
-                onAddressChange={(value) => setProfileData(prev => ({ ...prev, address: value }))}
+                onMobileNumberChange={(value) => setProfileData(prev => ({ ...prev, mobileNumber: value }))}
                 onSave={updateProfile}
               />
-
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-                className="flex justify-center mt-8"
-              >
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-300"
-                >
-                  <LogOut className="w-5 h-5" />
-                  Logout
-                </motion.button>
-              </motion.div>
             </div>
           </main>
           <Footer />

@@ -36,7 +36,7 @@ interface SafeProfile {
   firstName: string;
   lastName: string;
   email: string;
-  address: string;
+  mobileNumber: string;
   cart: string[];
   wishlist: string[];
   orders: OrderItem[];
@@ -67,7 +67,7 @@ export async function GET() {
       firstName: database_obj.firstName,
       lastName: database_obj.lastName,
       email: database_obj.email,
-      address: database_obj.address || "",
+      mobileNumber: database_obj.mobileNumber || "Not provided",
       cart: database_obj.cart,
       wishlist: database_obj.wishlist,
       orders: orders

@@ -23,7 +23,7 @@ export async function POST(request: any) {
       // Update profile fields
       if (body.firstName) updates.firstName = body.firstName;
       if (body.lastName) updates.lastName = body.lastName;
-      if (body.address) updates.address = body.address;
+      if (body.mobileNumber) updates.mobileNumber = body.mobileNumber;
       
       // Update cart and wishlist if provided
       if (body.cart) updates.cart = body.cart;
@@ -53,7 +53,7 @@ export async function POST(request: any) {
         firstName: body.firstName,
         lastName: body.lastName,
         password: hashedPassword,
-        address: body.address || "",
+        mobileNumber: body.mobileNumber || "Not provided",
         cart: body.cart || [],
         wishlist: body.wishlist || [],
         cartQuantities: body.cartQuantities || new Map(),

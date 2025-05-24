@@ -47,6 +47,11 @@ let clientSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  mobileNumber: {
+    type: String,
+    required: true,
+    default: "Not provided"
+  },
   cart: {
     type: Array,
     required: true,
