@@ -29,8 +29,8 @@ interface OrderItem {
   status: string;
   timestamp: string;
   items: string[];
-  trackingId: string;
-  itemStatus: string;
+  trackingId?: string;
+  itemStatus?: string;
   itemDetails: {
     productId: string;
     size: string;
