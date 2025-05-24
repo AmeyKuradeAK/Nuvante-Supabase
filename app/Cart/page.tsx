@@ -97,7 +97,7 @@ const CartPage = () => {
       }
 
       // Load sizes from database
-      const sizesResponse = await axios.get<SizesResponse>('/api/cart/sizes');
+      const sizesResponse = await axios.get<SizesResponse>('/api/cart/size');
       if (sizesResponse.status === 200 && sizesResponse.data.sizes) {
         setSelectedSizes(sizesResponse.data.sizes);
       }

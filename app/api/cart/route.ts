@@ -31,16 +31,22 @@ export async function POST(request: any) {
           existingModel.cart.push(body.identifier);
           // Set default quantity to 1 when adding to cart
           existingModel.cartQuantities.set(body.identifier, 1);
+          // Set size if provided
+          if (body.size) {
+            existingModel.cartSizes.set(body.identifier, body.size);
+          }
         }
       } else {
         existingModel.cart = popElement(existingModel.cart, body.identifier);
-        // Remove quantity when item is removed from cart
+        // Remove quantity and size when item is removed from cart
         existingModel.cartQuantities.delete(body.identifier);
+        existingModel.cartSizes.delete(body.identifier);
       }
 
-      // If cart is empty, clear all quantities
+      // If cart is empty, clear all quantities and sizes
       if (existingModel.cart.length === 0) {
         existingModel.cartQuantities = new Map();
+        existingModel.cartSizes = new Map();
       }
 
       await existingModel.save();
