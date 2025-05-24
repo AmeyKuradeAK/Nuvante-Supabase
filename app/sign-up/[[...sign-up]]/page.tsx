@@ -198,12 +198,16 @@ const SignUpPage = () => {
         lastName,
       });
 
+      // Wait for Clerk session to be fully established
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Set active session
       await setActive({ session: signUpAttempt.createdSessionId });
 
-      try {
-        // Wait for Clerk session to be fully established
-        await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for session to be active
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
+      try {
         // Create client record with proper name fields and email
         const response = await axios.post("/api/populate/", {
           firstName,

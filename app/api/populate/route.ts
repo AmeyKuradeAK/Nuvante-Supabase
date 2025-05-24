@@ -9,6 +9,7 @@ export async function POST(request: any) {
     user?.emailAddresses[0]?.emailAddress;
 
   if (!user || !global_user_email) {
+    console.error("Unauthorized: No user or email found", { user, email: global_user_email });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -72,29 +73,39 @@ export async function POST(request: any) {
 
       console.log("Creating new client:", new_client); // Debug log
 
-      const savedClient = await new_client.save();
-      
-      if (!savedClient) {
-        throw new Error("Failed to create profile");
-      }
+      try {
+        const savedClient = await new_client.save();
+        
+        if (!savedClient) {
+          throw new Error("Failed to create profile");
+        }
 
-      console.log("Saved client:", savedClient); // Debug log
+        console.log("Saved client:", savedClient); // Debug log
 
-      // Verify the saved data
-      const verifiedClient = await clientModel.findOne({ email: global_user_email });
-      if (!verifiedClient || 
-          verifiedClient.firstName !== body.firstName || 
-          verifiedClient.lastName !== body.lastName || 
-          verifiedClient.mobileNumber !== body.mobileNumber) {
-        console.error("Verification failed:", {
-          verifiedClient,
-          expected: {
-            firstName: body.firstName,
-            lastName: body.lastName,
-            mobileNumber: body.mobileNumber
-          }
-        });
-        throw new Error("Profile data verification failed");
+        // Verify the saved data
+        const verifiedClient = await clientModel.findOne({ email: global_user_email });
+        if (!verifiedClient) {
+          throw new Error("Client not found after save");
+        }
+
+        if (verifiedClient.firstName !== body.firstName || 
+            verifiedClient.lastName !== body.lastName || 
+            verifiedClient.mobileNumber !== body.mobileNumber) {
+          console.error("Verification failed:", {
+            verifiedClient,
+            expected: {
+              firstName: body.firstName,
+              lastName: body.lastName,
+              mobileNumber: body.mobileNumber
+            }
+          });
+          throw new Error("Profile data verification failed");
+        }
+
+        console.log("Client created and verified successfully");
+      } catch (saveError: any) {
+        console.error("Error saving client:", saveError);
+        throw new Error(`Failed to save client: ${saveError.message}`);
       }
     }
 
