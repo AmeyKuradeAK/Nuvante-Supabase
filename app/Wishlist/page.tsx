@@ -165,39 +165,18 @@ const Page = () => {
 
         {/* Loading State */}
         {!loaded && (
-          <motion.div
-            className="w-fit mx-auto mt-20 relative"
-            animate={{
-              rotate: 360,
-              transition: {
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "linear"
-              },
-            }}
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <motion.div
-                className="w-[80px] h-[80px] rounded-full border-4 border-[#DB4444] border-t-transparent"
-                animate={{
-                  rotate: -360,
-                  transition: {
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "linear"
-                  },
-                }}
+          <div className="h-screen flex items-center justify-center">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-[#DB4444] border-t-transparent rounded-full animate-spin"></div>
+              <Image 
+                src={logo} 
+                alt="Loading..." 
+                width={40} 
+                height={40} 
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
               />
             </div>
-            <Image 
-              src={logo} 
-              alt="preloader" 
-              width={60} 
-              height={60}
-              className="relative z-10"
-              style={{ background: 'transparent' }}
-            />
-          </motion.div>
+          </div>
         )}
 
         {/* Main Content */}
