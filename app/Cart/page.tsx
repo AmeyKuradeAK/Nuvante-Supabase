@@ -270,7 +270,7 @@ const CartPage = () => {
                 alt="Loading..." 
                 width={40} 
                 height={40} 
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse"
               />
             </div>
           </div>
@@ -284,11 +284,11 @@ const CartPage = () => {
                   <Breadcrumb>
                     <BreadcrumbList>
                       <BreadcrumbItem>
-                        <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                        <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444] transition-colors duration-300 ease-in-out">Home</BreadcrumbLink>
                       </BreadcrumbItem>
                       <BreadcrumbSeparator />
                       <BreadcrumbItem>
-                        <BreadcrumbPage>Cart</BreadcrumbPage>
+                        <BreadcrumbPage className="text-[#DB4444]">Cart</BreadcrumbPage>
                       </BreadcrumbItem>
                     </BreadcrumbList>
                   </Breadcrumb>
@@ -297,35 +297,35 @@ const CartPage = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                   {/* Main Cart Section */}
                   <div className="lg:col-span-8">
-                    <div className="bg-white rounded-lg shadow-sm">
-                      <div className="p-6 border-b border-gray-200">
-                        <h1 className="text-2xl font-bold">Shopping Cart ({cartItems.length} items)</h1>
+                    <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out">
+                      <div className="p-6 border-b border-gray-100">
+                        <h1 className="text-2xl font-bold text-gray-800">Shopping Cart ({cartItems.length} items)</h1>
                       </div>
 
                       {cartItems.length === 0 ? (
                         <div className="p-12 text-center">
-                          <div className="w-20 h-20 mx-auto mb-6 text-gray-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <div className="w-24 h-24 mx-auto mb-6 text-gray-400 animate-bounce">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-full h-full">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                           </div>
                           <h2 className="text-xl font-semibold text-gray-800 mb-2">Your cart is empty</h2>
                           <p className="text-gray-600 mb-6">Looks like you haven't added anything to your cart yet.</p>
-                          <div onClick={handleReturnToShop} className="inline-block">
+                          <div onClick={handleReturnToShop} className="inline-block transform hover:scale-105 transition-transform duration-300">
                             <Button text="Continue Shopping" width={200} />
                           </div>
                         </div>
                       ) : (
-                        <div className="divide-y divide-gray-200">
+                        <div className="divide-y divide-gray-100">
                           {cartItems.map((item) => (
-                            <div key={item._id} className="p-6">
+                            <div key={item._id} className="p-6 hover:bg-gray-50 transition-all duration-300 ease-in-out group">
                               <div className="flex flex-col md:flex-row gap-6 items-start">
                                 {/* Product Image */}
-                                <div className="w-full md:w-24 h-32 relative group shrink-0">
+                                <div className="w-full md:w-24 h-32 relative group-hover:scale-105 transition-transform duration-300 ease-in-out">
                                   <img
                                     src={item.productImages[0]}
                                     alt={item.productName}
-                                    className="w-full h-full object-contain rounded-lg transition-transform group-hover:scale-105"
+                                    className="w-full h-full object-contain rounded-lg"
                                   />
                                 </div>
 
@@ -333,7 +333,7 @@ const CartPage = () => {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                     <div>
-                                      <h3 className="text-lg font-medium text-gray-800">{item.productName}</h3>
+                                      <h3 className="text-lg font-medium text-gray-800 group-hover:text-[#DB4444] transition-colors duration-300">{item.productName}</h3>
                                       <p className="text-sm text-gray-500 mt-1">Product ID: {item._id.slice(-6)}</p>
                                     </div>
                                     <div className="flex items-center gap-4">
@@ -342,7 +342,7 @@ const CartPage = () => {
                                       </div>
                                       <button
                                         onClick={() => handleRemoveItem(item._id)}
-                                        className="text-gray-400 hover:text-[#DB4444] transition-colors"
+                                        className="text-gray-400 hover:text-[#DB4444] transition-all duration-300 p-2 hover:bg-gray-100 rounded-full transform hover:scale-110"
                                         aria-label="Remove item"
                                       >
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -359,10 +359,10 @@ const CartPage = () => {
                                       {["S", "M", "L", "XL"].map((size) => (
                                         <button
                                           key={size}
-                                          className={`border-2 py-2 text-center transition-colors ${
+                                          className={`border-2 py-2 text-center transition-all duration-300 ease-in-out transform hover:scale-105 ${
                                             selectedSizes[item._id] === size
-                                              ? "bg-black text-white border-black"
-                                              : "border-gray-200 hover:border-gray-300"
+                                              ? "bg-[#DB4444] text-white border-[#DB4444]"
+                                              : "border-gray-200 hover:border-[#DB4444] hover:text-[#DB4444]"
                                           }`}
                                           onClick={() => handleSizeSelect(item._id, size)}
                                         >
@@ -375,13 +375,13 @@ const CartPage = () => {
                                     </p>
                                   </div>
 
-                                  {/* Quantity Controls - Only show if size is selected */}
+                                  {/* Quantity Controls */}
                                   {selectedSizes[item._id] && (
                                     <div className="mt-4 flex items-center gap-4">
-                                      <div className="flex items-center border rounded-md">
+                                      <div className="flex items-center border rounded-lg overflow-hidden">
                                         <button
                                           onClick={() => handleQuantityChange(item._id, (quantities[item._id] || 1) - 1)}
-                                          className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                                          className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-all duration-300 ease-in-out hover:text-[#DB4444]"
                                         >
                                           -
                                         </button>
@@ -389,18 +389,18 @@ const CartPage = () => {
                                           type="number"
                                           value={quantities[item._id] || 1}
                                           onChange={(e) => handleQuantityChange(item._id, parseInt(e.target.value) || 1)}
-                                          className="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
+                                          className="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
                                           min={1}
                                         />
                                         <button
                                           onClick={() => handleQuantityChange(item._id, (quantities[item._id] || 1) + 1)}
-                                          className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
+                                          className="px-4 py-2 text-gray-600 hover:bg-gray-100 transition-all duration-300 ease-in-out hover:text-[#DB4444]"
                                         >
                                           +
                                         </button>
                                       </div>
                                       <div className="text-gray-600">
-                                        Subtotal: <span className="font-semibold">Rs. {(quantities[item._id] || 1) * item.productPrice}</span>
+                                        Subtotal: <span className="font-semibold text-[#DB4444]">Rs. {(quantities[item._id] || 1) * item.productPrice}</span>
                                       </div>
                                     </div>
                                   )}
@@ -417,21 +417,21 @@ const CartPage = () => {
                   <div className="lg:col-span-4">
                     <div className="sticky top-8 space-y-6">
                       {/* Order Summary Card */}
-                      <div className="bg-white rounded-lg shadow-sm p-6">
-                        <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+                      <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6">
+                        <h2 className="text-xl font-bold mb-6 text-gray-800">Order Summary</h2>
                         <div className="space-y-4">
                           <div className="flex justify-between text-gray-600">
                             <span>Subtotal ({cartItems.length} items)</span>
-                            <span>Rs. {subtotal}</span>
+                            <span className="font-medium">Rs. {subtotal}</span>
                           </div>
                           <div className="flex justify-between text-gray-600">
                             <span>Shipping</span>
-                            <span className="text-[#DB4444]">Free</span>
+                            <span className="text-[#DB4444] font-medium">Free</span>
                           </div>
-                          <div className="border-t border-gray-200 pt-4">
+                          <div className="border-t border-gray-100 pt-4">
                             <div className="flex justify-between font-bold text-lg">
                               <span>Total</span>
-                              <span>Rs. {subtotal}</span>
+                              <span className="text-[#DB4444]">Rs. {subtotal}</span>
                             </div>
                           </div>
                           <div className="pt-4">
@@ -440,21 +440,21 @@ const CartPage = () => {
                               width={250} 
                               onClick={handleCheckout}
                               disabled={cartItems.length === 0}
-                              className={cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}
+                              className={`transform hover:scale-105 transition-all duration-300 ${cartItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Coupon Card */}
-                      <div className="bg-white rounded-lg shadow-sm p-6">
-                        <h3 className="text-lg font-semibold mb-4">Apply Coupon</h3>
+                      <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6">
+                        <h3 className="text-lg font-semibold mb-4 text-gray-800">Apply Coupon</h3>
                         <div className="space-y-4">
                           <div className="relative">
                             <input
                               type="text"
                               placeholder="Enter coupon code"
-                              className="w-full px-4 py-3 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -462,28 +462,28 @@ const CartPage = () => {
                               </svg>
                             </div>
                           </div>
-                          <Button text="Apply Coupon" width={250} />
+                          <Button text="Apply Coupon" width={250} className="transform hover:scale-105 transition-all duration-300" />
                         </div>
                       </div>
 
                       {/* Help Card */}
-                      <div className="bg-white rounded-lg shadow-sm p-6">
-                        <h3 className="text-lg font-semibold mb-4">Need Help?</h3>
+                      <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6">
+                        <h3 className="text-lg font-semibold mb-4 text-gray-800">Need Help?</h3>
                         <div className="space-y-3">
-                          <div className="flex items-center text-gray-600">
-                            <svg className="w-5 h-5 mr-2 text-[#DB4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="flex items-center text-gray-600 hover:text-[#DB4444] transition-all duration-300 cursor-pointer group">
+                            <svg className="w-5 h-5 mr-2 text-[#DB4444] group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                             <span>Chat with us</span>
                           </div>
-                          <div className="flex items-center text-gray-600">
-                            <svg className="w-5 h-5 mr-2 text-[#DB4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="flex items-center text-gray-600 hover:text-[#DB4444] transition-all duration-300 cursor-pointer group">
+                            <svg className="w-5 h-5 mr-2 text-[#DB4444] group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                             </svg>
                             <span>+91 9899044148</span>
                           </div>
-                          <a href="/faq" className="flex items-center text-gray-600 hover:text-[#DB4444] transition-colors">
-                            <svg className="w-5 h-5 mr-2 text-[#DB4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <a href="/faq" className="flex items-center text-gray-600 hover:text-[#DB4444] transition-all duration-300 group">
+                            <svg className="w-5 h-5 mr-2 text-[#DB4444] group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span>View FAQs</span>

@@ -51,15 +51,15 @@ const ProfileForm = React.memo(({
   onAddressChange: (value: string) => void;
   onSave: () => Promise<void>;
 }) => (
-  <div className="flex flex-col w-auto lg:w-[870px] pb-10 rounded-sm border lg:ml-32 bg-[#FFFFFF]">
+  <div className="flex flex-col w-auto lg:w-[870px] pb-10 rounded-xl border lg:ml-32 bg-white shadow-sm hover:shadow-md transition-all duration-300 ease-in-out">
     <div className="mt-8 lg:mt-[40px] ml-4 lg:ml-[80px] h-[28px] w-[155px]">
-      <h1 className="font-medium text-[#DB4444]">Edit Your Profile</h1>
+      <h1 className="font-medium text-[#DB4444] text-lg">Edit Your Profile</h1>
     </div>
     <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-full lg:w-[710px] h-auto lg:h-[82px] mt-8">
       <div className="w-full lg:w-[330px] h-[62px]">
-        <h1 className="font-normal">First Name</h1>
+        <h1 className="font-medium text-gray-700">First Name</h1>
         <input
-          className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
+          className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-gray-50 rounded-lg border border-gray-200 focus:border-[#DB4444] focus:ring-2 focus:ring-[#DB4444] focus:ring-opacity-20 transition-all duration-300 ease-in-out"
           type="text"
           placeholder="First Name"
           value={firstName}
@@ -67,9 +67,9 @@ const ProfileForm = React.memo(({
         />
       </div>
       <div className="w-full lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10">
-        <h1 className="font-normal">Last Name</h1>
+        <h1 className="font-medium text-gray-700">Last Name</h1>
         <input
-          className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
+          className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-gray-50 rounded-lg border border-gray-200 focus:border-[#DB4444] focus:ring-2 focus:ring-[#DB4444] focus:ring-opacity-20 transition-all duration-300 ease-in-out"
           type="text"
           placeholder="Last Name"
           value={lastName}
@@ -79,9 +79,9 @@ const ProfileForm = React.memo(({
     </div>
     <div className="flex flex-col lg:flex-row ml-4 lg:ml-[80px] w-full lg:w-[710px] h-auto lg:h-[82px] mt-8">
       <div className="w-full lg:w-[330px] h-[62px]">
-        <h1 className="font-normal">Email</h1>
+        <h1 className="font-medium text-gray-700">Email</h1>
         <input
-          className="mt-1 lg:w-[330px] p-2 h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
+          className="mt-1 lg:w-[330px] p-2 h-[50px] bg-gray-100 rounded-lg border border-gray-200 cursor-not-allowed transition-all duration-300"
           type="text"
           placeholder="Email"
           value={email}
@@ -90,9 +90,9 @@ const ProfileForm = React.memo(({
         />
       </div>
       <div className="w-auto lg:w-[330px] h-[62px] mt-4 lg:mt-0 lg:ml-10">
-        <h1 className="font-normal">Address</h1>
+        <h1 className="font-medium text-gray-700">Address</h1>
         <input
-          className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-[#F5F5F5] rounded-sm placeholder:pl-3"
+          className="mt-1 p-2 w-full lg:w-[330px] h-[50px] bg-gray-50 rounded-lg border border-gray-200 focus:border-[#DB4444] focus:ring-2 focus:ring-[#DB4444] focus:ring-opacity-20 transition-all duration-300 ease-in-out"
           type="text"
           placeholder="Address"
           value={address}
@@ -102,13 +102,13 @@ const ProfileForm = React.memo(({
     </div>
     <div className="flex flex-row justify-end mt-10">
       <button 
-        className="mr-4 lg:mr-6 text-gray-600 hover:text-gray-800 transition-colors"
+        className="mr-4 lg:mr-6 text-gray-600 hover:text-gray-800 transition-all duration-300 ease-in-out px-4 py-2 rounded-lg hover:bg-gray-100 transform hover:scale-105"
         onClick={() => window.location.reload()}
       >
         Cancel
       </button>
       <button
-        className="bg-[#DB4444] w-[250px] lg:w-[250px] h-[56px] font-medium rounded-sm text-white mr-4 lg:mr-[80px] hover:bg-[#c13a3a] transition-colors"
+        className="bg-[#DB4444] w-[250px] lg:w-[250px] h-[56px] font-medium rounded-lg text-white mr-4 lg:mr-[80px] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md transform hover:scale-105"
         onClick={onSave}
       >
         Save Changes
@@ -229,16 +229,16 @@ const ProfilePage = () => {
   return (
     <>
       <Navbar />
-      <div className="p-4">
+      <div className="p-4 bg-gray-50 min-h-screen">
         <div className="mt-6 ml-4 lg:ml-32">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444] transition-colors duration-300 ease-in-out">Home</BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>Profile</BreadcrumbPage>
+                <BreadcrumbPage className="text-[#DB4444]">Profile</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -253,7 +253,7 @@ const ProfilePage = () => {
                 alt="Loading..." 
                 width={40} 
                 height={40} 
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse"
               />
             </div>
           </div>
@@ -262,15 +262,15 @@ const ProfilePage = () => {
         {!isLoading && isLoaded && (
           <div className="flex flex-col lg:flex-row ml-4 lg:ml-32 mt-8 lg:mt-24">
             <div className="flex flex-col">
-              <div className="flex flex-col">
-                <h1 className="font-medium">Manage My Account</h1>
-                <div className="flex flex-col ml-4 lg:ml-10 pt-4 font-normal">
-                  <div className="text-[#DB4444] font-normal cursor-pointer">
+              <div className="flex flex-col bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ease-in-out p-6 mb-6">
+                <h1 className="font-medium text-gray-800 text-lg mb-4">Manage My Account</h1>
+                <div className="flex flex-col ml-4 lg:ml-10 pt-4 font-medium">
+                  <div className="text-[#DB4444] cursor-pointer hover:text-[#c13a3a] transition-all duration-300 ease-in-out transform hover:scale-105">
                     My Profile
                   </div>
                 </div>
               </div>
-              <div className="pt-10 font-normal gap-3 flex flex-col">
+              <div className="pt-4 font-medium">
                 <Sidebar />
               </div>
             </div>
