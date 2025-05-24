@@ -106,35 +106,31 @@ const Page = () => {
   };
 
   const handleBag = async () => {
-    if (!GlobalWishlist?.length) {
-      showAlert("Your wishlist is empty", "warning");
+    if (!user.isSignedIn) {
+      showAlert("Please sign in to access cart", "warning");
+      setTimeout(() => {
+        window.location.href = "/sign-in";
+      }, 2000);
       return;
     }
 
     try {
-      let movedItems = 0;
-      for (const wishlistItem of GlobalWishlist) {
-        if (!GlobalCart?.includes(wishlistItem)) {
-          const response = await axios.post(`/api/cart`, {
-            identifier: wishlistItem,
-            append: true,
-          });
-          
-          if (response.data === 200) {
-            changeGlobalCart(wishlistItem);
-            movedItems++;
-          }
-        }
-      }
+      // Get items that are not in cart
+      const itemsToAdd = currentWishlist.filter(item => !GlobalCart.includes(item));
       
-      if (movedItems > 0) {
-        showAlert(`Successfully moved ${movedItems} items to cart`, "success");
-      } else {
-        showAlert("All items are already in your cart", "info");
+      // Add each item to cart
+      for (const item of itemsToAdd) {
+        await axios.post(`/api/cart`, {
+          identifier: item,
+          append: true,
+        });
+        changeGlobalCart(item);
       }
+
+      showAlert("All items moved to cart successfully", "success");
     } catch (error) {
-      console.error("Error updating cart:", error);
-      showAlert("Failed to move items to cart. Please try again.", "error");
+      console.error("Error moving items to cart:", error);
+      showAlert("Error moving items to cart. Please try again.", "error");
     }
   };
 

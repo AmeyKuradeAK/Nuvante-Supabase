@@ -64,7 +64,7 @@ export default function Card({
 
     try {
       const isPresent = GlobalWishlist.includes(id);
-      const response = await axios.post<{ success: boolean; error?: string; details?: string }>(`/api/wishlist`, {
+      const response = await axios.post<{ success: boolean; error?: string }>(`/api/wishlist`, {
         identifier: id,
         append: !isPresent,
       });
@@ -73,26 +73,17 @@ export default function Card({
         const updatedWishlist = isPresent
           ? GlobalWishlist.filter((item) => item !== id)
           : [...GlobalWishlist, id];
-
         changeGlobalWishlist(updatedWishlist);
         showAlert(
           isPresent ? "Removed from wishlist" : "Added to wishlist",
           "success"
         );
       } else {
-        showAlert(response.data.error || "Error updating wishlist. Please try again.", "error");
+        showAlert("Error updating wishlist. Please try again.", "error");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error updating wishlist:", error);
-      if (error.response?.status === 401) {
-        showAlert("Please sign in to access wishlist", "warning");
-        setTimeout(() => {
-          window.location.href = "/sign-in";
-        }, 2000);
-      } else {
-        const errorMessage = error.response?.data?.error || error.response?.data?.details || "Error updating wishlist. Please try again.";
-        showAlert(errorMessage, "error");
-      }
+      showAlert("Error updating wishlist. Please try again.", "error");
     } finally {
       setLoadingWishlist(false);
     }
@@ -117,10 +108,7 @@ export default function Card({
       });
 
       if (response.status === 200) {
-        const updatedCart = isPresent
-          ? GlobalCart.filter((item) => item !== id)
-          : [...GlobalCart, id];
-        changeGlobalCart(updatedCart[0] || "");
+        changeGlobalCart(id);
         showAlert(
           isPresent ? "Removed from cart" : "Added to cart",
           "success"
