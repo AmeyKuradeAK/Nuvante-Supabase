@@ -40,6 +40,7 @@ interface OrderData {
   currency: string;
   status: string;
   timestamp: string;
+  estimatedDeliveryDate: string;
   items: string[];
   itemDetails: {
     productId: string;
@@ -219,7 +220,8 @@ const CheckoutContent = () => {
         currency: 'INR',
         status: 'completed',
         timestamp: new Date().toISOString(),
-        items: products.map(p => p._id), // Only send product IDs
+        estimatedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+        items: products.map(p => p._id),
         itemDetails: products.map((product) => ({
           productId: product._id,
           size: sizes[product._id] || '',

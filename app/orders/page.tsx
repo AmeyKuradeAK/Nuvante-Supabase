@@ -43,6 +43,7 @@ interface OrderItem {
     phone: string;
     email: string;
   };
+  estimatedDeliveryDate: string;
 }
 
 interface OrderDetailsModalProps {
@@ -77,7 +78,7 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-4 rounded-lg">
               <h3 className="font-semibold mb-3 text-gray-800">Order Information</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-white p-3 rounded-md shadow-sm">
                   <p className="text-gray-600">Order Number</p>
                   <p className="font-medium text-gray-800">{order.orderId}</p>
@@ -89,6 +90,10 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                 <div className="bg-white p-3 rounded-md shadow-sm">
                   <p className="text-gray-600">Status</p>
                   <p className="font-medium text-gray-800">{order.status}</p>
+                </div>
+                <div className="bg-white p-3 rounded-md shadow-sm">
+                  <p className="text-gray-600">Estimated Delivery</p>
+                  <p className="font-medium text-[#DB4444]">{new Date(order.estimatedDeliveryDate).toLocaleDateString()}</p>
                 </div>
                 <div className="bg-white p-3 rounded-md shadow-sm">
                   <p className="text-gray-600">Total Amount</p>
@@ -271,6 +276,9 @@ const OrdersPage = () => {
                         <h2 className="text-lg font-semibold text-gray-800">Order #{order.orderId}</h2>
                         <p className="text-sm text-gray-500 mt-1">
                           {new Date(order.timestamp).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-[#DB4444] mt-1">
+                          Estimated Delivery: {new Date(order.estimatedDeliveryDate).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="flex items-center gap-4">

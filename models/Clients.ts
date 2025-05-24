@@ -7,6 +7,7 @@ interface OrderItem {
   currency: string;
   status: string;
   timestamp: string;
+  estimatedDeliveryDate: string;
   items: string[];
   itemDetails: {
     productId: string;

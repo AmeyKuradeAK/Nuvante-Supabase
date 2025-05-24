@@ -68,6 +68,12 @@ function PaymentSuccessContent() {
                   <p className="text-sm text-gray-600">Payment ID</p>
                   <p className="font-medium text-gray-800">{paymentId}</p>
                 </div>
+                <div className="bg-white p-3 rounded-md shadow-sm">
+                  <p className="text-sm text-gray-600">Estimated Delivery</p>
+                  <p className="font-medium text-[#DB4444]">
+                    {new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
             </div>
 
