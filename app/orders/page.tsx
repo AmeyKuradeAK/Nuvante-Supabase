@@ -93,7 +93,12 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                 </div>
                 <div className="bg-white p-3 rounded-md shadow-sm">
                   <p className="text-gray-600">Estimated Delivery</p>
-                  <p className="font-medium text-[#DB4444]">{new Date(order.estimatedDeliveryDate).toLocaleDateString()}</p>
+                  <p className="font-medium text-[#DB4444]">
+                    {order.estimatedDeliveryDate ? 
+                      new Date(order.estimatedDeliveryDate).toLocaleDateString() : 
+                      new Date(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString()
+                    }
+                  </p>
                 </div>
                 <div className="bg-white p-3 rounded-md shadow-sm">
                   <p className="text-gray-600">Total Amount</p>
@@ -278,7 +283,10 @@ const OrdersPage = () => {
                           {new Date(order.timestamp).toLocaleDateString()}
                         </p>
                         <p className="text-sm text-[#DB4444] mt-1">
-                          Estimated Delivery: {new Date(order.estimatedDeliveryDate).toLocaleDateString()}
+                          Estimated Delivery: {order.estimatedDeliveryDate ? 
+                            new Date(order.estimatedDeliveryDate).toLocaleDateString() : 
+                            new Date(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString()
+                          }
                         </p>
                       </div>
                       <div className="flex items-center gap-4">

@@ -72,6 +72,7 @@ let clientSchema = new mongoose.Schema({
       currency: String,
       status: String,
       timestamp: String,
+      estimatedDeliveryDate: String,
       items: [String],
       itemDetails: [{
         productId: String,
