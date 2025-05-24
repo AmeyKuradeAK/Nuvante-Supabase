@@ -99,6 +99,7 @@ const CartPage = () => {
       // Load sizes from database
       const sizesResponse = await axios.get<SizesResponse>('/api/cart/size');
       if (sizesResponse.status === 200 && sizesResponse.data.sizes) {
+        console.log('Loaded sizes:', sizesResponse.data.sizes); // Debug log
         setSelectedSizes(sizesResponse.data.sizes);
       }
     } catch (error) {
@@ -108,6 +109,30 @@ const CartPage = () => {
       setLoading(false);
     }
   };
+
+  const handleReturnToShop = () => {
+    window.location.href = "/";
+  };
+
+  const calculateSubtotal = () => {
+    return products.reduce((total, item) => {
+      if (!GlobalCart.includes(item._id)) return total;
+      return total + (quantities[item._id] || 1) * item.productPrice;
+    }, 0);
+  };
+
+  const cartItems = products.filter(item => GlobalCart.includes(item._id));
+  const subtotal = calculateSubtotal();
+
+  // Debug log when sizes change
+  useEffect(() => {
+    console.log('Current selected sizes:', selectedSizes);
+  }, [selectedSizes]);
+
+  // Debug log when cart items change
+  useEffect(() => {
+    console.log('Current cart items:', cartItems);
+  }, [cartItems]);
 
   const handleSizeSelect = async (productId: string, size: string) => {
     try {
@@ -178,13 +203,6 @@ const CartPage = () => {
     }
   };
 
-  const calculateSubtotal = () => {
-    return products.reduce((total, item) => {
-      if (!GlobalCart.includes(item._id)) return total;
-      return total + (quantities[item._id] || 1) * item.productPrice;
-    }, 0);
-  };
-
   const handleRemoveItem = async (id: string) => {
     try {
       const response = await axios.post(`/api/cart`, {
@@ -211,21 +229,20 @@ const CartPage = () => {
     }
   };
 
-  const handleReturnToShop = () => {
-    window.location.href = "/";
-  };
-
-  const cartItems = products.filter(item => GlobalCart.includes(item._id));
-  const subtotal = calculateSubtotal();
-
   const handleCheckout = () => {
     // Check if all items have sizes selected
-    const allItemsHaveSizes = products.every(product => 
-      GlobalCart.includes(product._id) && selectedSizes[product._id]
-    );
+    const allItemsHaveSizes = cartItems.every(item => selectedSizes[item._id]);
     
     if (!allItemsHaveSizes) {
       showAlert("Please select sizes for all items before checkout", "error");
+      return;
+    }
+
+    // Check if all items have quantities
+    const allItemsHaveQuantities = cartItems.every(item => quantities[item._id] >= 1);
+    
+    if (!allItemsHaveQuantities) {
+      showAlert("Please set quantities for all items before checkout", "error");
       return;
     }
 
