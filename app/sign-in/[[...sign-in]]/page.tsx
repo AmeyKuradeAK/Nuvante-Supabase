@@ -138,7 +138,7 @@ const page = (props: Props) => {
 
                     <div className="flex items-center justify-end">
                       <Link
-                        href="/forgot-password"
+                        href="/forgot"
                         className="text-sm text-[#DB4444] hover:text-[#c13a3a] transition-colors"
                       >
                         Forgot password?
