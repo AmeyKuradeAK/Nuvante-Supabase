@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Sidebar from "@/components/Sidebar";
 import axios from "axios";
 import { useEffect } from "react";
 import Image from "next/image";
@@ -26,17 +25,44 @@ const logo = "/logo.png";
 type ProfileData = {
   firstName: string;
   lastName: string;
-  address: string;
   email: string;
+  address: string;
   cart: string[];
   wishlist: string[];
+  cartQuantities: Map<string, number>;
+  cartSizes: Map<string, string>;
+  orders: Array<{
+    orderId: string;
+    paymentId: string;
+    amount: number;
+    currency: string;
+    timestamp: string;
+    estimatedDeliveryDate: string;
+    items: string[];
+    trackingId: string;
+    itemStatus: string;
+    itemDetails: {
+      productId: string;
+      size: string;
+      quantity: number;
+    }[];
+    shippingAddress: {
+      firstName: string;
+      lastName: string;
+      streetAddress: string;
+      apartment: string;
+      city: string;
+      phone: string;
+      email: string;
+    };
+  }>;
 };
 
 // Memoize the profile form component
 const ProfileForm = React.memo(({ 
   firstName, 
   lastName, 
-  address, 
+  address,
   email,
   onFirstNameChange,
   onLastNameChange,
@@ -162,10 +188,13 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: "",
     lastName: "",
-    address: "",
     email: "",
+    address: "",
     cart: [],
-    wishlist: []
+    wishlist: [],
+    cartQuantities: new Map(),
+    cartSizes: new Map(),
+    orders: []
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -187,24 +216,19 @@ const ProfilePage = () => {
 
   const fetchUserData = useCallback(async () => {
     try {
-      const [profileResponse, emailResponse] = await Promise.all([
-        axios.get<ProfileData>("/api/propagation_client"),
-        axios.get<string>("/api/emailify")
-      ]);
-
-      if (profileResponse.data) {
-        // Use Clerk user data as fallback if database fields are empty
-        const firstName = profileResponse.data.firstName || user.user?.firstName || "";
-        const lastName = profileResponse.data.lastName || user.user?.lastName || "";
-        const address = profileResponse.data.address || "";
-
+      const response = await axios.get<ProfileData>("/api/propagation_client");
+      
+      if (response.data) {
         setProfileData({
-          firstName,
-          lastName,
-          address,
-          email: emailResponse.data || "",
-          cart: profileResponse.data.cart || [],
-          wishlist: profileResponse.data.wishlist || []
+          firstName: response.data.firstName || "",
+          lastName: response.data.lastName || "",
+          email: response.data.email || "",
+          address: response.data.address || "",
+          cart: response.data.cart || [],
+          wishlist: response.data.wishlist || [],
+          cartQuantities: response.data.cartQuantities || new Map(),
+          cartSizes: response.data.cartSizes || new Map(),
+          orders: response.data.orders || []
         });
       }
       setIsLoaded(true);
@@ -213,7 +237,7 @@ const ProfilePage = () => {
       showAlert("Error loading profile data. Please try refreshing.", "error");
       setIsLoaded(false);
     }
-  }, [showAlert, user.user]);
+  }, [showAlert]);
 
   const updateProfile = useCallback(async () => {
     // Validate input
@@ -232,37 +256,33 @@ const ProfilePage = () => {
 
     setIsLoading(true);
     try {
-      // Update client record first
-      await axios.post("/api/populate", {
+      // Update client record in database
+      const response = await axios.post("/api/populate", {
         firstName: profileData.firstName.trim(),
         lastName: profileData.lastName.trim(),
-        password: "existing",
         address: profileData.address.trim(),
-        email: "existing",
+        email: profileData.email,
+        cart: profileData.cart,
+        wishlist: profileData.wishlist,
+        cartQuantities: profileData.cartQuantities,
+        cartSizes: profileData.cartSizes,
+        orders: profileData.orders
       });
 
-      // Try to update Clerk user profile, but don't fail if it errors
-      try {
-        if (user.user) {
-          await user.user.update({
-            firstName: profileData.firstName.trim(),
-            lastName: profileData.lastName.trim(),
-          });
-        }
-      } catch (clerkError) {
-        console.error("Clerk update failed but database was updated:", clerkError);
-        // Don't show error to user since database update succeeded
+      if (response.status === 200) {
+        showAlert("Profile updated successfully!", "success");
+        // Refresh the data after successful update
+        await fetchUserData();
+      } else {
+        throw new Error("Failed to update profile");
       }
-
-      showAlert("Profile updated successfully!", "success");
-      await fetchUserData(); // Refresh the data after update
     } catch (error) {
       console.error("Error updating profile:", error);
       showAlert("Error updating profile. Please try again.", "error");
     } finally {
       setIsLoading(false);
     }
-  }, [profileData, showAlert, fetchUserData, user.user]);
+  }, [profileData, showAlert, fetchUserData]);
 
   const handleFieldChange = useCallback((field: keyof ProfileData, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
@@ -279,61 +299,71 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="mb-8"
-        >
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444] transition-colors duration-300 ease-in-out">Home</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage className="text-[#DB4444]">Profile</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </motion.div>
-
-        <div className="flex flex-col lg:flex-row gap-8">
-          <Sidebar />
-          <div className="flex-1">
-            <ProfileForm
-              firstName={profileData.firstName}
-              lastName={profileData.lastName}
-              address={profileData.address}
-              email={profileData.email}
-              onFirstNameChange={(value) => handleFieldChange('firstName', value)}
-              onLastNameChange={(value) => handleFieldChange('lastName', value)}
-              onAddressChange={(value) => handleFieldChange('address', value)}
-              onSave={updateProfile}
+      {isLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-[#DB4444] border-t-transparent rounded-full animate-spin"></div>
+            <Image 
+              src={logo} 
+              alt="Loading..." 
+              width={40} 
+              height={40} 
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse"
             />
-            
-            {/* Logout Button */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="mt-6 flex justify-end"
-            >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleLogout}
-                className="flex items-center gap-2 bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition-all duration-300 shadow-sm hover:shadow-md"
-              >
-                <LogOut className="w-5 h-5" />
-                Logout
-              </motion.button>
-            </motion.div>
           </div>
         </div>
-      </div>
-      <Footer />
+      )}
+      {!isLoading && (
+        <>
+          <Navbar />
+          <main className="container mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto">
+              <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="mb-8"
+              >
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444] transition-colors duration-300 ease-in-out">Home</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="text-[#DB4444]">Profile</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </motion.div>
+
+              <div className="flex justify-between items-start mb-8">
+                <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 bg-[#DB4444] text-white rounded-lg hover:bg-[#c13a3a] transition-all duration-300"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Logout
+                </motion.button>
+              </div>
+
+              <ProfileForm
+                firstName={profileData.firstName}
+                lastName={profileData.lastName}
+                address={profileData.address}
+                email={profileData.email}
+                onFirstNameChange={(value) => setProfileData(prev => ({ ...prev, firstName: value }))}
+                onLastNameChange={(value) => setProfileData(prev => ({ ...prev, lastName: value }))}
+                onAddressChange={(value) => setProfileData(prev => ({ ...prev, address: value }))}
+                onSave={updateProfile}
+              />
+            </div>
+          </main>
+          <Footer />
+        </>
+      )}
     </div>
   );
 };

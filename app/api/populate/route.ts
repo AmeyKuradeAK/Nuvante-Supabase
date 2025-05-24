@@ -17,22 +17,35 @@ export async function POST(request: any) {
     const existingModel = await clientModel.findOne({ email: global_user_email });
 
     if (existingModel) {
-      // Only update fields that are provided and not "existing"
+      // Update all provided fields
       const updates: any = {};
-      if (body.password !== "existing") {
+      
+      // Update profile fields
+      if (body.firstName) updates.firstName = body.firstName;
+      if (body.lastName) updates.lastName = body.lastName;
+      if (body.address) updates.address = body.address;
+      
+      // Update cart and wishlist if provided
+      if (body.cart) updates.cart = body.cart;
+      if (body.wishlist) updates.wishlist = body.wishlist;
+      if (body.cartQuantities) updates.cartQuantities = body.cartQuantities;
+      if (body.cartSizes) updates.cartSizes = body.cartSizes;
+      if (body.orders) updates.orders = body.orders;
+
+      // Only update password if explicitly provided
+      if (body.password && body.password !== "existing") {
         updates.password = await hash(body.password, 12);
       }
-      if (body.firstName !== "existing") updates.firstName = body.firstName;
-      if (body.lastName !== "existing") updates.lastName = body.lastName;
-      if (body.address !== "existing") updates.address = body.address;
 
-      await clientModel.updateOne(
+      // Use findOneAndUpdate to ensure atomic update
+      await clientModel.findOneAndUpdate(
         { email: global_user_email },
-        { $set: updates }
+        { $set: updates },
+        { new: true }
       );
     } else {
-      // Hash password before storing
-      const hashedPassword = await hash(body.password, 12);
+      // Create new client
+      const hashedPassword = await hash(body.password || "default", 12);
       
       const new_client = new clientModel({
         username: body.firstName,
@@ -40,9 +53,12 @@ export async function POST(request: any) {
         firstName: body.firstName,
         lastName: body.lastName,
         password: hashedPassword,
-        address: body.address,
-        cart: [],
-        wishlist: [],
+        address: body.address || "",
+        cart: body.cart || [],
+        wishlist: body.wishlist || [],
+        cartQuantities: body.cartQuantities || new Map(),
+        cartSizes: body.cartSizes || new Map(),
+        orders: body.orders || []
       });
       await new_client.save();
     }
