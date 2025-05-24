@@ -62,8 +62,10 @@ const CartPage = () => {
       await asyncHandler();
     };
     
-    checkAuth();
-  }, [user.isSignedIn, showAlert, router]);
+    if (user.isLoaded) {  // Only check auth after user state is loaded
+      checkAuth();
+    }
+  }, [user.isLoaded, user.isSignedIn, showAlert, router]);
 
   const asyncHandler = async () => {
     try {

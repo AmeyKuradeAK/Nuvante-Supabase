@@ -74,10 +74,10 @@ const Page = () => {
       await propagate_data();
     };
     
-    if (GlobalWishlist) {
+    if (user.isLoaded) {  // Only check auth after user state is loaded
       checkAuth();
     }
-  }, [user.isSignedIn, GlobalWishlist, showAlert, router]);
+  }, [user.isLoaded, user.isSignedIn, GlobalWishlist, showAlert, router]);
 
   const propagate_data = async () => {
     try {
