@@ -5,7 +5,6 @@ interface OrderItem {
   paymentId: string;
   amount: number;
   currency: string;
-  status: string;
   timestamp: string;
   estimatedDeliveryDate: string;
   items: string[];
@@ -72,13 +71,12 @@ let clientSchema = new mongoose.Schema({
       paymentId: String,
       amount: Number,
       currency: String,
-      status: String,
       timestamp: String,
       estimatedDeliveryDate: String,
       items: [String],
       trackingId: {
         type: String,
-        default: ""
+        default: "Tracking ID will be available soon"
       },
       itemStatus: {
         type: String,

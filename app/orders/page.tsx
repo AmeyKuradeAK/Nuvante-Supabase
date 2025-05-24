@@ -26,7 +26,6 @@ interface OrderItem {
   paymentId: string;
   amount: number;
   currency: string;
-  status: string;
   timestamp: string;
   items: string[];
   trackingId?: string;
@@ -90,12 +89,8 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                   <p className="font-medium text-gray-800">{new Date(order.timestamp).toLocaleDateString()}</p>
                 </div>
                 <div className="bg-white p-3 rounded-md shadow-sm">
-                  <p className="text-gray-600">Status</p>
-                  <p className="font-medium text-gray-800">{order.status}</p>
-                </div>
-                <div className="bg-white p-3 rounded-md shadow-sm">
                   <p className="text-gray-600">Order Status</p>
-                  <p className="font-medium text-[#DB4444]">{order.itemStatus}</p>
+                  <p className="font-medium text-[#DB4444]">{order.itemStatus || 'Order Accepted'}</p>
                 </div>
                 <div className="bg-white p-3 rounded-md shadow-sm">
                   <p className="text-gray-600">Estimated Delivery</p>
@@ -113,7 +108,7 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                 {order.trackingId && (
                   <div className="bg-white p-3 rounded-md shadow-sm sm:col-span-2">
                     <p className="text-gray-600">Tracking ID</p>
-                    <p className="font-medium text-[#DB4444]">{order.trackingId}</p>
+                    <p className="font-medium text-[#DB4444]">{order.trackingId || 'Tracking ID will be available soon'}</p>
                   </div>
                 )}
               </div>
@@ -305,11 +300,12 @@ const OrdersPage = () => {
                       </div>
                       <div className="flex items-center gap-4">
                         <span className={`px-3 py-1 rounded-full text-sm ${
-                          order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                          order.itemStatus === 'Delivered' ? 'bg-green-100 text-green-800' :
+                          order.itemStatus === 'Processing' ? 'bg-blue-100 text-blue-800' :
+                          order.itemStatus === 'Dispatched' ? 'bg-purple-100 text-purple-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {order.status}
+                          {order.itemStatus || 'Order Accepted'}
                         </span>
                         <button
                           onClick={() => toggleOrder(order.orderId)}

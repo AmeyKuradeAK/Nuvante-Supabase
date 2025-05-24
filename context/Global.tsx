@@ -10,7 +10,6 @@ interface OrderItem {
   paymentId: string;
   amount: number;
   currency: string;
-  status: string;
   timestamp: string;
   estimatedDeliveryDate: string;
   items: string[];
