@@ -17,7 +17,7 @@ import { useAlert } from "@/context/AlertContext";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { GlobalContext } from "@/context/Global";
-import { Package, Clock, CheckCircle, XCircle, ChevronRight } from "lucide-react";
+import { Package, Clock, CheckCircle, XCircle, ChevronRight, ChevronDown, MapPin, Phone, Mail } from "lucide-react";
 
 const logo = "/logo.png";
 
@@ -59,86 +59,105 @@ interface ApiResponse {
   orders: OrderItem[];
 }
 
-type ApiResponseOr404 = ApiResponse | 404;
-
-const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({ order, onClose, products }) => {
+const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Order Details</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <p className="text-gray-600">Order Number</p>
-              <p className="font-medium">{order.orderId}</p>
-            </div>
-            <div>
-              <p className="text-gray-600">Order Date</p>
-              <p className="font-medium">{new Date(order.timestamp).toLocaleDateString()}</p>
-            </div>
-            <div>
-              <p className="text-gray-600">Status</p>
-              <p className="font-medium">{order.status}</p>
-            </div>
-            <div>
-              <p className="text-gray-600">Total Amount</p>
-              <p className="font-medium">Rs. {order.amount}</p>
-            </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-4 sm:p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-bold text-gray-800">Order Details</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <XCircle className="w-6 h-6" />
+            </button>
           </div>
 
-          <div className="mt-6">
-            <h3 className="font-medium mb-4">Shipping Address</h3>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
-                {order.shippingAddress.firstName} {order.shippingAddress.lastName}
-              </p>
-              <p className="text-sm text-gray-600">{order.shippingAddress.streetAddress}</p>
-              {order.shippingAddress.apartment && (
-                <p className="text-sm text-gray-600">{order.shippingAddress.apartment}</p>
-              )}
-              <p className="text-sm text-gray-600">{order.shippingAddress.city}</p>
-              <p className="text-sm text-gray-600">Phone: {order.shippingAddress.phone}</p>
-              <p className="text-sm text-gray-600">Email: {order.shippingAddress.email}</p>
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-4 rounded-lg">
+              <h3 className="font-semibold mb-3 text-gray-800">Order Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div className="bg-white p-3 rounded-md shadow-sm">
+                  <p className="text-gray-600">Order Number</p>
+                  <p className="font-medium text-gray-800">{order.orderId}</p>
+                </div>
+                <div className="bg-white p-3 rounded-md shadow-sm">
+                  <p className="text-gray-600">Date</p>
+                  <p className="font-medium text-gray-800">{new Date(order.timestamp).toLocaleDateString()}</p>
+                </div>
+                <div className="bg-white p-3 rounded-md shadow-sm">
+                  <p className="text-gray-600">Status</p>
+                  <p className="font-medium text-gray-800">{order.status}</p>
+                </div>
+                <div className="bg-white p-3 rounded-md shadow-sm">
+                  <p className="text-gray-600">Total Amount</p>
+                  <p className="font-medium text-[#DB4444]">Rs. {order.amount}</p>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-6">
-            <h3 className="font-medium mb-4">Order Items</h3>
-            <div className="space-y-4">
-              {order.itemDetails.map((item, index) => {
-                const product = products.find(p => p._id === item.productId);
-                if (!product) return null;
-                
-                return (
-                  <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                    <div className="w-20 h-20 relative">
-                      <img
-                        src={product.productImages[0]}
-                        alt={product.productName}
-                        className="w-full h-full object-contain rounded-lg"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-800">{product.productName}</h4>
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-600">Size: {item.size || 'Not selected'}</p>
-                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                        <p className="text-[#DB4444] font-semibold mt-1">
-                          Rs. {product.productPrice * item.quantity}
-                        </p>
+            <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-4 rounded-lg">
+              <h3 className="font-semibold mb-3 text-gray-800">Shipping Address</h3>
+              <div className="bg-white p-4 rounded-lg text-sm shadow-sm">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-[#DB4444] mt-1" />
+                  <div>
+                    <p className="font-medium text-gray-800">{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
+                    <p className="text-gray-600">{order.shippingAddress.streetAddress}</p>
+                    {order.shippingAddress.apartment && <p className="text-gray-600">{order.shippingAddress.apartment}</p>}
+                    <p className="text-gray-600">{order.shippingAddress.city}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 mt-3">
+                  <Phone className="w-4 h-4 text-[#DB4444]" />
+                  <p className="text-gray-600">{order.shippingAddress.phone}</p>
+                </div>
+                <div className="flex items-center gap-3 mt-2">
+                  <Mail className="w-4 h-4 text-[#DB4444]" />
+                  <p className="text-gray-600">{order.shippingAddress.email}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-4 rounded-lg">
+              <h3 className="font-semibold mb-3 text-gray-800">Items</h3>
+              <div className="space-y-4">
+                {order.itemDetails.map((item, index) => {
+                  const product = products.find(p => p._id === item.productId);
+                  if (!product) return null;
+                  
+                  return (
+                    <div key={index} className="bg-white p-4 rounded-lg shadow-sm">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div className="w-20 h-20 relative shrink-0">
+                          <img
+                            src={product.productImages[0]}
+                            alt={product.productName}
+                            className="w-full h-full object-cover rounded-md"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-800 truncate">{product.productName}</h3>
+                          <div className="mt-2 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">Size:</span>
+                              <span className="text-sm font-medium text-gray-800">{item.size || 'Not selected'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-600">Quantity:</span>
+                              <span className="text-sm font-medium text-gray-800">{item.quantity}</span>
+                            </div>
+                            <p className="text-[#DB4444] font-semibold mt-1">
+                              Rs. {product.productPrice * item.quantity}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -152,34 +171,39 @@ const OrdersPage = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const { showAlert } = useAlert();
   const user = useUser();
   const router = useRouter();
   const { GlobalOrders } = useContext(GlobalContext) as GlobalContextType;
 
+  const toggleOrder = (orderId: string) => {
+    setExpandedOrders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
+
   const fetchOrders = useCallback(async () => {
     try {
-      console.log("Fetching orders and products...");
       const [ordersResponse, productsResponse] = await Promise.all([
         axios.get<ApiResponse>("/api/orders"),
         axios.post<{ data: any[] }>("/api/propagation", { every: true })
       ]);
       
-      console.log("Orders Response:", ordersResponse.data);
-      console.log("Products Response:", productsResponse.data);
-      
       if (ordersResponse.data.orders) {
-        console.log("Parsed Orders:", ordersResponse.data.orders);
-        // Sort orders by date (latest first)
         const sortedOrders = ordersResponse.data.orders.sort((a, b) => 
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
         setOrders(sortedOrders);
       }
       
-      // The products response is already an array
       if (Array.isArray(productsResponse.data)) {
-        console.log("Setting Products:", productsResponse.data);
         setProducts(productsResponse.data);
       }
       
@@ -192,7 +216,6 @@ const OrdersPage = () => {
   }, [showAlert]);
 
   useEffect(() => {
-    console.log("Component mounted, user signed in:", user.isSignedIn);
     if (!user.isSignedIn) {
       showAlert("Please sign in to access your orders", "warning");
       router.push("/sign-in");
@@ -201,12 +224,6 @@ const OrdersPage = () => {
 
     fetchOrders();
   }, [user.isSignedIn, showAlert, router, fetchOrders]);
-
-  // Debug effect to log state changes
-  useEffect(() => {
-    console.log("Orders state updated:", orders);
-    console.log("Products state updated:", products);
-  }, [orders, products]);
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
@@ -222,83 +239,135 @@ const OrdersPage = () => {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 py-12">
+      <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl font-bold mb-8">My Orders</h1>
+          <div className="mb-8">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>My Orders</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+
+          <h1 className="text-2xl font-bold mb-8 text-gray-800">My Orders</h1>
           
           {!isLoaded ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#DB4444]"></div>
             </div>
           ) : orders.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {orders.map((order) => (
-                <div key={order.orderId} className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <div>
-                      <h2 className="text-lg font-semibold">Order #{order.orderId}</h2>
-                      <p className="text-sm text-gray-500">
-                        {new Date(order.timestamp).toLocaleDateString()}
-                      </p>
+                <div key={order.orderId} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <div className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-800">Order #{order.orderId}</h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {new Date(order.timestamp).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className={`px-3 py-1 rounded-full text-sm ${
+                          order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {order.status}
+                        </span>
+                        <button
+                          onClick={() => toggleOrder(order.orderId)}
+                          className="text-gray-500 hover:text-[#DB4444] transition-colors"
+                        >
+                          <ChevronDown className={`w-5 h-5 transform transition-transform ${
+                            expandedOrders.has(order.orderId) ? 'rotate-180' : ''
+                          }`} />
+                        </button>
+                      </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {order.status}
-                    </span>
-                  </div>
 
-                  <div className="space-y-4">
-                    {order.itemDetails.map((item, index) => {
-                      const product = products.find(p => p._id === item.productId);
-                      if (!product) return null;
-                      
-                      return (
-                        <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                          <div className="w-20 h-20 relative">
-                            <img
-                              src={product.productImages[0]}
-                              alt={product.productName}
-                              className="w-full h-full object-cover rounded-md"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-medium text-gray-800">{product.productName}</h3>
-                            <div className="mt-2">
-                              <p className="text-sm text-gray-600">Size: {item.size || 'Not selected'}</p>
-                              <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                              <p className="text-[#DB4444] font-semibold mt-1">
-                                Rs. {product.productPrice * item.quantity}
-                              </p>
+                    <AnimatePresence>
+                      {expandedOrders.has(order.orderId) && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <div className="space-y-4">
+                              {order.itemDetails.map((item, index) => {
+                                const product = products.find(p => p._id === item.productId);
+                                if (!product) return null;
+                                
+                                return (
+                                  <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                                    <div className="w-20 h-20 relative shrink-0">
+                                      <img
+                                        src={product.productImages[0]}
+                                        alt={product.productName}
+                                        className="w-full h-full object-cover rounded-md"
+                                      />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="font-medium text-gray-800 truncate">{product.productName}</h3>
+                                      <div className="mt-2 space-y-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm text-gray-600">Size:</span>
+                                          <span className="text-sm font-medium text-gray-800">{item.size || 'Not selected'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm text-gray-600">Quantity:</span>
+                                          <span className="text-sm font-medium text-gray-800">{item.quantity}</span>
+                                        </div>
+                                        <p className="text-[#DB4444] font-semibold mt-1">
+                                          Rs. {product.productPrice * item.quantity}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                              <div>
+                                <p className="text-sm text-gray-600">Total Amount: <span className="font-semibold text-[#DB4444]">Rs. {order.amount}</span></p>
+                              </div>
+                              <button
+                                onClick={() => setSelectedOrder(order)}
+                                className="text-[#DB4444] hover:text-black transition-colors flex items-center gap-2 bg-[#DB4444]/5 px-4 py-2 rounded-md"
+                              >
+                                View Full Details
+                                <ChevronRight className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-gray-600">Total Amount: Rs. {order.amount}</p>
-                      </div>
-                      <button
-                        onClick={() => setSelectedOrder(order)}
-                        className="text-[#DB4444] hover:text-black transition-colors flex items-center gap-2"
-                      >
-                        View Details
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No orders found</p>
+            <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+              <div className="w-20 h-20 mx-auto mb-4 text-gray-400">
+                <Package className="w-full h-full" />
+              </div>
+              <p className="text-gray-500 text-lg">No orders found</p>
+              <button
+                onClick={() => router.push('/')}
+                className="mt-4 text-[#DB4444] hover:text-black transition-colors"
+              >
+                Continue Shopping
+              </button>
             </div>
           )}
         </div>
