@@ -58,6 +58,29 @@ const SignUpForm = React.memo(({ onSubmit, isLoading }: { onSubmit: (e: React.Fo
     <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.25 }}
+    >
+      <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-1">
+        Mobile Number
+      </label>
+      <motion.input
+        whileFocus={{ scale: 1.01 }}
+        id="mobileNumber"
+        name="mobileNumber"
+        type="tel"
+        required
+        pattern="[0-9]{10}"
+        maxLength={10}
+        minLength={10}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
+        placeholder="Enter your 10-digit mobile number"
+      />
+      <p className="text-xs text-gray-500 mt-1">Please enter a valid 10-digit mobile number</p>
+    </motion.div>
+
+    <motion.div
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.3 }}
     >
       <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
@@ -142,6 +165,14 @@ const SignUpPage = () => {
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
     const fullName = formData.get("name") as string;
+    const mobileNumber = formData.get("mobileNumber") as string;
+
+    // Validate mobile number
+    if (!/^[0-9]{10}$/.test(mobileNumber)) {
+      showAlert("Please enter a valid 10-digit mobile number", "error");
+      setIsLoading(false);
+      return;
+    }
 
     // Split full name into first and last name
     const nameParts = fullName.trim().split(/\s+/);
@@ -171,12 +202,12 @@ const SignUpPage = () => {
 
       try {
         // Create client record with proper name fields and email
-        await axios.post("/api/populate/", {
+        const response = await axios.post("/api/populate/", {
           firstName,
           lastName,
           password,
           email,
-          mobileNumber: "Not provided", // Set default mobile number
+          mobileNumber,
           cart: [],
           wishlist: [],
           cartQuantities: new Map(),
@@ -184,10 +215,25 @@ const SignUpPage = () => {
           orders: []
         });
 
+        if (response.status !== 200) {
+          throw new Error("Failed to save profile data");
+        }
+
+        // Wait a moment for the database to update
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         // Verify the data was saved by fetching it
         const profileResponse = await axios.get<ProfileResponse>("/api/propagation_client");
-        if (!profileResponse.data.firstName || !profileResponse.data.lastName || !profileResponse.data.email) {
+        if (!profileResponse.data.firstName || !profileResponse.data.lastName || !profileResponse.data.email || !profileResponse.data.mobileNumber) {
           throw new Error("Profile data not properly saved");
+        }
+
+        // Double check the data matches what we sent
+        if (profileResponse.data.firstName !== firstName || 
+            profileResponse.data.lastName !== lastName || 
+            profileResponse.data.email !== email || 
+            profileResponse.data.mobileNumber !== mobileNumber) {
+          throw new Error("Profile data mismatch");
         }
 
         showAlert("Account created successfully!", "success");

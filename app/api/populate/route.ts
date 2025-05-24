@@ -38,11 +38,15 @@ export async function POST(request: any) {
       }
 
       // Use findOneAndUpdate to ensure atomic update
-      await clientModel.findOneAndUpdate(
+      const updatedModel = await clientModel.findOneAndUpdate(
         { email: global_user_email },
         { $set: updates },
         { new: true }
       );
+
+      if (!updatedModel) {
+        throw new Error("Failed to update profile");
+      }
     } else {
       // Create new client
       const hashedPassword = await hash(body.password || "default", 12);
@@ -60,8 +64,23 @@ export async function POST(request: any) {
         cartSizes: body.cartSizes || new Map(),
         orders: body.orders || []
       });
-      await new_client.save();
+
+      const savedClient = await new_client.save();
+      
+      if (!savedClient) {
+        throw new Error("Failed to create profile");
+      }
+
+      // Verify the saved data
+      const verifiedClient = await clientModel.findOne({ email: global_user_email });
+      if (!verifiedClient || 
+          verifiedClient.firstName !== body.firstName || 
+          verifiedClient.lastName !== body.lastName || 
+          verifiedClient.mobileNumber !== body.mobileNumber) {
+        throw new Error("Profile data verification failed");
+      }
     }
+
     return NextResponse.json({ message: "Success" }, { status: 200 });
   } catch (error) {
     console.error("Error in API route:", error);
