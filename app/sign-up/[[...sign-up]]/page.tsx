@@ -220,13 +220,14 @@ const SignUpPage = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       try {
-        // Create user document in MongoDB
+        // Create basic user document in MongoDB with essential fields
         const response = await axios.post("/api/populate/", {
           firstName,
           lastName,
-          password,
           email,
           mobileNumber,
+          password: "clerk-auth", // Since we're using Clerk for auth
+          username: firstName || email.split('@')[0],
           cart: [],
           wishlist: [],
           cartQuantities: {},
@@ -238,21 +239,11 @@ const SignUpPage = () => {
           throw new Error("Failed to create user profile");
         }
 
-        // Wait a bit for the database to update
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Verify the user was created
-        const verifyResponse = await axios.get<ProfileResponse>("/api/propagation_client");
-        if (!verifyResponse.data || !verifyResponse.data.firstName || !verifyResponse.data.lastName) {
-          throw new Error("User profile verification failed");
-        }
-
         showAlert("Account created successfully!", "success");
         router.push("/");
       } catch (error: any) {
         console.error("Error creating user profile:", error);
         showAlert("Failed to create user profile. Please try again.", "error");
-        // Redirect to sign-in page if profile creation fails
         router.push("/sign-in");
       }
     } catch (error: any) {

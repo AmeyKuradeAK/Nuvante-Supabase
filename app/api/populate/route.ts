@@ -1,67 +1,56 @@
-import clientModel from "@/models/Clients";
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { hash } from "bcryptjs";
+import clientModel from "@/models/Clients";
+import bcrypt from "bcryptjs";
 
-export async function POST(request: any) {
-  const user = await currentUser();
-  const global_user_email: any | null | undefined =
-    user?.emailAddresses[0]?.emailAddress;
-
-  if (!user || !global_user_email) {
-    console.error("Unauthorized: No user or email found", { user, email: global_user_email });
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
-    console.log("Received request body:", body);
+    const user = await currentUser();
+    if (!user || !user.emailAddresses[0]?.emailAddress) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // First check if user exists
-    const existingModel = await clientModel.findOne({ email: global_user_email });
-    console.log("Existing model:", existingModel ? "Found" : "Not found");
+    const global_user_email = user.emailAddresses[0].emailAddress;
+    const body = await req.json();
 
-    if (existingModel) {
-      // Update only the fields that are provided in the request
-      const updates: any = {};
-      
-      // Only update fields that are explicitly provided
-      if (body.firstName !== undefined) updates.firstName = body.firstName;
-      if (body.lastName !== undefined) updates.lastName = body.lastName;
-      if (body.mobileNumber !== undefined) updates.mobileNumber = body.mobileNumber;
-      if (body.cart !== undefined) updates.cart = body.cart;
-      if (body.wishlist !== undefined) updates.wishlist = body.wishlist;
-      if (body.cartQuantities !== undefined) updates.cartQuantities = body.cartQuantities;
-      if (body.cartSizes !== undefined) updates.cartSizes = body.cartSizes;
-      if (body.orders !== undefined) updates.orders = body.orders;
+    // Check if user already exists
+    const existingUser = await clientModel.findOne({ email: global_user_email });
+    
+    if (existingUser) {
+      // Update only the fields that are provided
+      const updateData: any = {};
+      if (body.firstName) updateData.firstName = body.firstName;
+      if (body.lastName) updateData.lastName = body.lastName;
+      if (body.mobileNumber) updateData.mobileNumber = body.mobileNumber;
+      if (body.email) updateData.email = body.email;
+      if (body.username) updateData.username = body.username;
+      if (body.cart) updateData.cart = body.cart;
+      if (body.wishlist) updateData.wishlist = body.wishlist;
+      if (body.cartQuantities) updateData.cartQuantities = body.cartQuantities;
+      if (body.cartSizes) updateData.cartSizes = body.cartSizes;
+      if (body.orders) updateData.orders = body.orders;
 
-      // Only update password if explicitly provided and not "existing"
-      if (body.password && body.password !== "existing") {
-        updates.password = await hash(body.password, 12);
+      // Only hash password if it's provided and not "clerk-auth"
+      if (body.password && body.password !== "clerk-auth") {
+        updateData.password = await bcrypt.hash(body.password, 10);
       }
 
-      // Use findOneAndUpdate to ensure atomic update
-      const updatedModel = await clientModel.findOneAndUpdate(
+      const updatedUser = await clientModel.findOneAndUpdate(
         { email: global_user_email },
-        { $set: updates },
+        { $set: updateData },
         { new: true }
       );
 
-      if (!updatedModel) {
-        throw new Error("Failed to update profile");
-      }
-      return NextResponse.json({ message: "Success", client: updatedModel }, { status: 200 });
+      return NextResponse.json(updatedUser);
     } else {
-      // Create new client with all required fields
-      const hashedPassword = await hash(body.password || "default", 12);
-      
-      const new_client = new clientModel({
-        username: body.firstName || global_user_email.split('@')[0],
-        email: global_user_email,
+      // Create new user with essential fields
+      const newClient = new clientModel({
         firstName: body.firstName || "",
         lastName: body.lastName || "",
-        password: hashedPassword,
+        email: global_user_email,
         mobileNumber: body.mobileNumber || "",
+        password: "clerk-auth", // Since we're using Clerk for auth
+        username: body.username || body.firstName || global_user_email.split('@')[0],
         cart: body.cart || [],
         wishlist: body.wishlist || [],
         cartQuantities: body.cartQuantities || {},
@@ -69,32 +58,13 @@ export async function POST(request: any) {
         orders: body.orders || []
       });
 
-      try {
-        // Save the client
-        const savedClient = await new_client.save();
-        console.log("Client saved successfully:", savedClient);
-
-        // Verify the saved data immediately
-        const verifiedClient = await clientModel.findOne({ email: global_user_email });
-        if (!verifiedClient) {
-          throw new Error("Client not found after save");
-        }
-
-        // Verify all required fields are present
-        if (!verifiedClient.firstName || !verifiedClient.lastName || !verifiedClient.email) {
-          throw new Error("Required fields missing after save");
-        }
-
-        return NextResponse.json({ message: "Success", client: verifiedClient }, { status: 200 });
-      } catch (saveError: any) {
-        console.error("Error saving client:", saveError);
-        throw new Error(`Failed to save client: ${saveError.message}`);
-      }
+      const savedClient = await newClient.save();
+      return NextResponse.json(savedClient);
     }
   } catch (error: any) {
-    console.error("Error in API route:", error);
+    console.error("Error in populate route:", error);
     return NextResponse.json(
-      { message: "Error processing request", error: error.message },
+      { error: error.message || "Internal server error" },
       { status: 500 }
     );
   }
