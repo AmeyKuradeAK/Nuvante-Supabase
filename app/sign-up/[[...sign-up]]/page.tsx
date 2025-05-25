@@ -180,9 +180,12 @@ const SignUpPage = () => {
     const lastName = nameParts.slice(1).join(" ") || "";
 
     try {
+      // First create the user in Clerk
       const signUpAttempt = await signUp.create({
         emailAddress: email,
         password,
+        firstName,
+        lastName,
       });
 
       if (signUpAttempt.status === "missing_requirements") {
@@ -192,21 +195,14 @@ const SignUpPage = () => {
         return;
       }
 
-      // Update Clerk user profile with full name
-      await signUpAttempt.update({
-        firstName,
-        lastName,
-      });
-
-      // Set active session first
+      // Set active session
       await setActive({ session: signUpAttempt.createdSessionId });
 
       // Wait for session to be fully established
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       try {
-        console.log("Attempting to create user in database...");
-        // Create client record with proper name fields and email
+        // Create user document in MongoDB
         const response = await axios.post("/api/populate/", {
           firstName,
           lastName,
@@ -215,34 +211,32 @@ const SignUpPage = () => {
           mobileNumber,
           cart: [],
           wishlist: [],
-          cartQuantities: new Map(),
-          cartSizes: new Map(),
+          cartQuantities: {},
+          cartSizes: {},
           orders: []
         });
 
-        console.log("Database response:", response.data);
-
         if (response.status !== 200) {
-          throw new Error("Failed to save profile data");
+          throw new Error("Failed to create user profile");
         }
 
-        // Wait for database to update
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Verify the data was saved by fetching it
-        const profileResponse = await axios.get<ProfileResponse>("/api/propagation_client");
-        console.log("Profile verification response:", profileResponse.data);
-
-        if (!profileResponse.data.firstName || !profileResponse.data.lastName || !profileResponse.data.email || !profileResponse.data.mobileNumber) {
-          throw new Error("Profile data not properly saved");
+        // Verify the user was created
+        const verifyResponse = await axios.get("/api/propagation_client");
+        if (!verifyResponse.data || !verifyResponse.data.firstName || !verifyResponse.data.lastName) {
+          throw new Error("User profile verification failed");
         }
 
         showAlert("Account created successfully!", "success");
         router.push("/");
       } catch (error: any) {
-        console.error("Error populating database:", error);
-        showAlert("Account created but database population failed. Please try updating your profile.", "warning");
-        router.push("/profile");
+        console.error("Error creating user profile:", error);
+        showAlert("Failed to create user profile. Please try again.", "error");
+        // Attempt to delete the Clerk user if MongoDB creation failed
+        try {
+          await signUpAttempt.delete();
+        } catch (deleteError) {
+          console.error("Error deleting Clerk user:", deleteError);
+        }
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);

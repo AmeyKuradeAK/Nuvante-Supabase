@@ -15,8 +15,7 @@ export async function POST(request: any) {
 
   try {
     const body = await request.json();
-    console.log("Received request body:", body); // Debug log
-    console.log("User email:", global_user_email); // Debug log
+    console.log("Received request body:", body);
 
     // First check if user exists
     const existingModel = await clientModel.findOne({ email: global_user_email });
@@ -51,10 +50,9 @@ export async function POST(request: any) {
       if (!updatedModel) {
         throw new Error("Failed to update profile");
       }
-      console.log("Updated model:", updatedModel); // Debug log
       return NextResponse.json({ message: "Success", client: updatedModel }, { status: 200 });
     } else {
-      // Create new client with only the provided data
+      // Create new client with all required fields
       const hashedPassword = await hash(body.password || "default", 12);
       
       const new_client = new clientModel({
@@ -66,12 +64,10 @@ export async function POST(request: any) {
         mobileNumber: body.mobileNumber || "",
         cart: body.cart || [],
         wishlist: body.wishlist || [],
-        cartQuantities: body.cartQuantities || new Map(),
-        cartSizes: body.cartSizes || new Map(),
+        cartQuantities: body.cartQuantities || {},
+        cartSizes: body.cartSizes || {},
         orders: body.orders || []
       });
-
-      console.log("Creating new client:", new_client); // Debug log
 
       try {
         // Save the client
@@ -80,13 +76,15 @@ export async function POST(request: any) {
 
         // Verify the saved data immediately
         const verifiedClient = await clientModel.findOne({ email: global_user_email });
-        console.log("Verification query result:", verifiedClient);
-
         if (!verifiedClient) {
           throw new Error("Client not found after save");
         }
 
-        console.log("Client created and verified successfully");
+        // Verify all required fields are present
+        if (!verifiedClient.firstName || !verifiedClient.lastName || !verifiedClient.email) {
+          throw new Error("Required fields missing after save");
+        }
+
         return NextResponse.json({ message: "Success", client: verifiedClient }, { status: 200 });
       } catch (saveError: any) {
         console.error("Error saving client:", saveError);
