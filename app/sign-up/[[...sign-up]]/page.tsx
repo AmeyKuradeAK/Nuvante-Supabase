@@ -220,6 +220,14 @@ const SignUpPage = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       try {
+        console.log("Creating user document with data:", {
+          firstName,
+          lastName,
+          email,
+          mobileNumber,
+          username: firstName || email.split('@')[0]
+        });
+
         // Create basic user document in MongoDB with essential fields
         const response = await axios.post("/api/populate/", {
           firstName,
@@ -235,6 +243,8 @@ const SignUpPage = () => {
           orders: []
         });
 
+        console.log("Populate response:", response.data);
+
         if (response.status !== 200) {
           throw new Error("Failed to create user profile");
         }
@@ -243,7 +253,7 @@ const SignUpPage = () => {
         router.push("/");
       } catch (error: any) {
         console.error("Error creating user profile:", error);
-        showAlert("Failed to create user profile. Please try again.", "error");
+        showAlert(error.response?.data?.error || "Failed to create user profile. Please try again.", "error");
         router.push("/sign-in");
       }
     } catch (error: any) {

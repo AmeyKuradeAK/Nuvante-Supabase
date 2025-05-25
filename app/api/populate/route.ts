@@ -5,18 +5,28 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
+    console.log("Starting populate route...");
+    
     const user = await currentUser();
+    console.log("Clerk user:", user ? "Found" : "Not found");
+    
     if (!user || !user.emailAddresses[0]?.emailAddress) {
+      console.error("No user or email found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const global_user_email = user.emailAddresses[0].emailAddress;
+    console.log("User email:", global_user_email);
+    
     const body = await req.json();
+    console.log("Request body:", body);
 
     // Check if user already exists
     const existingUser = await clientModel.findOne({ email: global_user_email });
+    console.log("Existing user:", existingUser ? "Found" : "Not found");
     
     if (existingUser) {
+      console.log("Updating existing user...");
       // Update only the fields that are provided
       const updateData: any = {};
       if (body.firstName) updateData.firstName = body.firstName;
@@ -30,10 +40,7 @@ export async function POST(req: Request) {
       if (body.cartSizes) updateData.cartSizes = body.cartSizes;
       if (body.orders) updateData.orders = body.orders;
 
-      // Only hash password if it's provided and not "clerk-auth"
-      if (body.password && body.password !== "clerk-auth") {
-        updateData.password = await bcrypt.hash(body.password, 10);
-      }
+      console.log("Update data:", updateData);
 
       const updatedUser = await clientModel.findOneAndUpdate(
         { email: global_user_email },
@@ -41,8 +48,10 @@ export async function POST(req: Request) {
         { new: true }
       );
 
+      console.log("User updated:", updatedUser ? "Success" : "Failed");
       return NextResponse.json(updatedUser);
     } else {
+      console.log("Creating new user...");
       // Create new user with essential fields
       const newClient = new clientModel({
         firstName: body.firstName || "",
@@ -58,8 +67,16 @@ export async function POST(req: Request) {
         orders: body.orders || []
       });
 
-      const savedClient = await newClient.save();
-      return NextResponse.json(savedClient);
+      console.log("New client object:", newClient);
+
+      try {
+        const savedClient = await newClient.save();
+        console.log("Client saved successfully:", savedClient);
+        return NextResponse.json(savedClient);
+      } catch (saveError: any) {
+        console.error("Error saving client:", saveError);
+        throw new Error(`Failed to save client: ${saveError.message}`);
+      }
     }
   } catch (error: any) {
     console.error("Error in populate route:", error);
