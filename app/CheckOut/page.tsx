@@ -43,6 +43,8 @@ interface OrderData {
   timestamp: string;
   estimatedDeliveryDate: string;
   items: string[];
+  trackingId: string;
+  itemStatus: string;
   itemDetails: {
     productId: string;
     size: string;
@@ -266,6 +268,8 @@ const CheckoutContent = () => {
         timestamp: new Date().toISOString(),
         estimatedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
         items: products.map(p => p._id),
+        trackingId: `TRK${Date.now()}`, // Generate a unique tracking ID
+        itemStatus: 'processing', // Initial status for the order
         itemDetails: products.map((product) => ({
           productId: product._id,
           size: sizes[product._id] || '',
