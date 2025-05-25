@@ -6,6 +6,7 @@ import connect from "@/db";
 
 export async function POST(req: Request) {
   try {
+    console.log("=== POPULATE API CALLED ===");
     console.log("Starting populate route...");
     
     // Ensure database connection
@@ -18,7 +19,10 @@ export async function POST(req: Request) {
     }
     
     const user = await currentUser();
+    console.log("=== CLERK USER DEBUG ===");
     console.log("Clerk user:", user ? "Found" : "Not found");
+    console.log("User ID:", user?.id);
+    console.log("Email addresses:", user?.emailAddresses?.map(e => e.emailAddress));
     
     if (!user || !user.emailAddresses[0]?.emailAddress) {
       console.error("No user or email found");
@@ -29,13 +33,16 @@ export async function POST(req: Request) {
     console.log("User email:", global_user_email);
     
     const body = await req.json();
+    console.log("=== REQUEST BODY ===");
     console.log("Request body received:", JSON.stringify(body, null, 2));
 
     // Check if user already exists
     const existingUser = await clientModel.findOne({ email: global_user_email });
+    console.log("=== DATABASE CHECK ===");
     console.log("Existing user:", existingUser ? "Found" : "Not found");
     
     if (existingUser) {
+      console.log("=== UPDATING EXISTING USER ===");
       console.log("Updating existing user...");
       // Update only the fields that are provided
       const updateData: any = {};
@@ -62,13 +69,22 @@ export async function POST(req: Request) {
         throw new Error("Failed to update user");
       }
 
-      console.log("User updated:", updatedUser);
+      console.log("=== USER UPDATED SUCCESSFULLY ===");
+      console.log("Updated user:", {
+        id: updatedUser._id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        mobileNumber: updatedUser.mobileNumber
+      });
       return NextResponse.json(updatedUser);
     } else {
+      console.log("=== CREATING NEW USER ===");
       console.log("Creating new user...");
       
       // Validate required fields
       if (!body.firstName || !body.mobileNumber) {
+        console.error("=== VALIDATION ERROR ===");
         console.error("Missing required fields:", { 
           firstName: body.firstName, 
           lastName: body.lastName, 
@@ -98,10 +114,18 @@ export async function POST(req: Request) {
         orders: body.orders || []
       });
 
-      console.log("New client object:", newClient);
+      console.log("=== NEW CLIENT OBJECT ===");
+      console.log("New client object:", {
+        firstName: newClient.firstName,
+        lastName: newClient.lastName,
+        email: newClient.email,
+        mobileNumber: newClient.mobileNumber,
+        username: newClient.username
+      });
 
       try {
         const savedClient = await newClient.save();
+        console.log("=== CLIENT SAVED SUCCESSFULLY ===");
         console.log("Client saved successfully:", {
           id: savedClient._id,
           email: savedClient.email,
@@ -116,6 +140,7 @@ export async function POST(req: Request) {
           throw new Error("Failed to verify saved client");
         }
 
+        console.log("=== CLIENT VERIFICATION SUCCESSFUL ===");
         console.log("Client verification successful:", {
           id: verifiedClient._id,
           email: verifiedClient.email,
@@ -126,6 +151,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json(verifiedClient);
       } catch (saveError: any) {
+        console.error("=== SAVE ERROR ===");
         console.error("Error saving client:", saveError);
         console.error("Save error details:", {
           name: saveError.name,
@@ -137,6 +163,7 @@ export async function POST(req: Request) {
       }
     }
   } catch (error: any) {
+    console.error("=== POPULATE API ERROR ===");
     console.error("Error in populate route:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },

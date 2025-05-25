@@ -51,6 +51,12 @@ export async function GET() {
   const user = await currentUser();
   const global_user_email = user?.emailAddresses[0]?.emailAddress;
 
+  console.log("=== PROPAGATION_CLIENT DEBUG ===");
+  console.log("Clerk user object:", user ? "Present" : "Missing");
+  console.log("User email:", global_user_email);
+  console.log("User ID:", user?.id);
+  console.log("Email addresses:", user?.emailAddresses?.map(e => e.emailAddress));
+
   if (!user || !global_user_email) {
     console.error("Unauthorized: No user or email found", { user, email: global_user_email });
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -59,13 +65,41 @@ export async function GET() {
   try {
     // Ensure database connection
     await connect();
+    console.log("Database connected successfully");
+    
     // Find the specific user by their email
     const database_obj = await clientModel.findOne({ email: global_user_email });
+    console.log("Database query result:", database_obj ? "User found" : "User not found");
     
     if (!database_obj) {
-      console.log("No user found for email:", global_user_email);
+      console.log("=== USER NOT FOUND DEBUG ===");
+      console.log("Searching for email:", global_user_email);
+      
+      // Let's check if there are any users in the database at all
+      const totalUsers = await clientModel.countDocuments();
+      console.log("Total users in database:", totalUsers);
+      
+      // Let's check if there's a user with a similar email (case sensitivity issue?)
+      const similarUsers = await clientModel.find({ 
+        email: { $regex: global_user_email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } 
+      });
+      console.log("Similar email users found:", similarUsers.length);
+      
+      if (similarUsers.length > 0) {
+        console.log("Similar users:", similarUsers.map(u => ({ email: u.email, firstName: u.firstName })));
+      }
+      
+      // Check if there are any users with this email but different casing
+      const allUsers = await clientModel.find({}, { email: 1, firstName: 1 }).limit(10);
+      console.log("Sample users in database:", allUsers);
+      
       return NextResponse.json({ 
-        error: "User profile not found. Please complete your signup process." 
+        error: "User profile not found. Please complete your signup process.",
+        debug: {
+          searchedEmail: global_user_email,
+          totalUsers,
+          similarUsersCount: similarUsers.length
+        }
       }, { status: 404 });
     }
 
@@ -91,7 +125,14 @@ export async function GET() {
       orders: orders || []
     };
 
-    console.log("Returning profile for user:", global_user_email);
+    console.log("=== RETURNING PROFILE ===");
+    console.log("Profile data:", {
+      email: safeProfile.email,
+      firstName: safeProfile.firstName,
+      lastName: safeProfile.lastName,
+      mobileNumber: safeProfile.mobileNumber
+    });
+    
     return NextResponse.json(safeProfile);
   } catch (error: any) {
     console.error("Error in propagation_client route:", error);
