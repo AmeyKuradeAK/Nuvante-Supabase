@@ -104,8 +104,8 @@ const CheckoutContent = () => {
       [name]: value
     }));
 
-    // If email or phone is changed, update profile
-    if (name === 'email' || name === 'phone') {
+    // Update profile when any of these fields change
+    if (name === 'email' || name === 'phone' || name === 'firstName' || name === 'lastName') {
       updateProfileField(name, value);
     }
   };
@@ -114,7 +114,9 @@ const CheckoutContent = () => {
     try {
       const fieldMap = {
         'email': 'email',
-        'phone': 'mobileNumber'
+        'phone': 'mobileNumber',
+        'firstName': 'firstName',
+        'lastName': 'lastName'
       };
 
       await axios.post("/api/populate", {
