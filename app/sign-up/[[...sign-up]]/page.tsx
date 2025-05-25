@@ -226,22 +226,14 @@ const SignUpPage = () => {
           throw new Error("No valid session found");
         }
 
-        console.log("Creating user document with data:", {
+        // First create the user document with basic info
+        const createResponse = await axios.post("/api/populate/", {
           firstName,
           lastName,
           email,
           mobileNumber,
-          username: firstName || email.split('@')[0]
-        });
-
-        // Create basic user document in MongoDB with essential fields
-        const response = await axios.post("/api/populate/", {
-          firstName,
-          lastName,
-          email,
-          mobileNumber,
-          password: "clerk-auth", // Since we're using Clerk for auth
-          username: firstName || email.split('@')[0],
+          password: "clerk-auth",
+          username: firstName,
           cart: [],
           wishlist: [],
           cartQuantities: {},
@@ -249,20 +241,31 @@ const SignUpPage = () => {
           orders: []
         });
 
-        console.log("Populate response:", response.data);
-
-        if (response.status !== 200) {
+        if (createResponse.status !== 200) {
           throw new Error("Failed to create user profile");
         }
 
         // Wait a bit for the database to update
         await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // Verify the user was created
+        // Now update the user with all the information
+        const updateResponse = await axios.post("/api/populate/", {
+          firstName,
+          lastName,
+          email,
+          mobileNumber,
+          username: firstName
+        });
+
+        if (updateResponse.status !== 200) {
+          throw new Error("Failed to update user profile");
+        }
+
+        // Verify the user was created and updated
         const verifyResponse = await axios.get<ProfileResponse>("/api/propagation_client");
         const userData = verifyResponse.data;
         
-        if (!userData || !userData.firstName || !userData.email) {
+        if (!userData || !userData.firstName || !userData.email || !userData.mobileNumber) {
           console.error("Verification failed:", userData);
           throw new Error("User profile verification failed - missing required fields");
         }
