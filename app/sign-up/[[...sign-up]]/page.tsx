@@ -226,7 +226,7 @@ const SignUpPage = () => {
           throw new Error("No valid session found");
         }
 
-        // First create the user document with basic info
+        // Create the user document with all information at once
         const createResponse = await axios.post("/api/populate/", {
           firstName,
           lastName,
@@ -245,23 +245,7 @@ const SignUpPage = () => {
           throw new Error("Failed to create user profile");
         }
 
-        // Wait a bit for the database to update
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Now update the user with all the information
-        const updateResponse = await axios.post("/api/populate/", {
-          firstName,
-          lastName,
-          email,
-          mobileNumber,
-          username: firstName
-        });
-
-        if (updateResponse.status !== 200) {
-          throw new Error("Failed to update user profile");
-        }
-
-        // Verify the user was created and updated
+        // Verify the user was created
         const verifyResponse = await axios.get<ProfileResponse>("/api/propagation_client");
         const userData = verifyResponse.data;
         

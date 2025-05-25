@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useState, useEffect, useCallback } from "react";
-import React from "react";
+import type { ReactNode } from "react";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
@@ -73,7 +73,7 @@ const debounce = (func: Function, wait: number) => {
 export const GlobalContextProvider = ({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) => {
   const [GlobalWishlist, setGlobalWishlist] = useState<string[]>([]);
   const [GlobalCart, setGlobalCart] = useState<string[]>([]);
@@ -85,7 +85,6 @@ export const GlobalContextProvider = ({
 
   const { isSignedIn, user, isLoaded } = useUser();
 
-  // Fetch data from API
   const fetchData = useCallback(async () => {
     if (!isSignedIn || !user) {
       setIsLoading(false);
@@ -172,6 +171,11 @@ export const GlobalContextProvider = ({
     } else {
       // Add item to cart
       setGlobalCart([...GlobalCart, element]);
+      // Initialize quantity to 1
+      setGlobalCartQuantities(prev => ({
+        ...prev,
+        [element]: 1
+      }));
     }
     debouncedFetchData();
   };
