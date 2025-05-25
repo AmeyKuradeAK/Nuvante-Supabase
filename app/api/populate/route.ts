@@ -56,7 +56,7 @@ export async function POST(request: any) {
       const hashedPassword = await hash(body.password || "default", 12);
       
       const new_client = new clientModel({
-        username: body.firstName || "",
+        username: body.firstName || global_user_email.split('@')[0],
         email: global_user_email,
         firstName: body.firstName || "",
         lastName: body.lastName || "",

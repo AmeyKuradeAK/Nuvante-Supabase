@@ -238,6 +238,9 @@ const SignUpPage = () => {
           throw new Error("Failed to create user profile");
         }
 
+        // Wait a bit for the database to update
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         // Verify the user was created
         const verifyResponse = await axios.get<ProfileResponse>("/api/propagation_client");
         if (!verifyResponse.data || !verifyResponse.data.firstName || !verifyResponse.data.lastName) {
@@ -249,6 +252,12 @@ const SignUpPage = () => {
       } catch (error: any) {
         console.error("Error creating user profile:", error);
         showAlert("Failed to create user profile. Please try again.", "error");
+        // If MongoDB creation fails, delete the Clerk user
+        try {
+          await signUpAttempt.delete();
+        } catch (deleteError) {
+          console.error("Error deleting Clerk user:", deleteError);
+        }
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
