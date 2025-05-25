@@ -113,7 +113,7 @@ const VerifyPage = () => {
         await setActive({ session: result.createdSessionId });
         showAlert("Email verified successfully!", "success");
         setTimeout(() => {
-          window.location.href = "/";
+          router.push("/Profile");
         }, 1000);
       } else {
         console.error(JSON.stringify(result, null, 2));
@@ -125,7 +125,7 @@ const VerifyPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoaded, signUp, setActive, code, showAlert]);
+  }, [isLoaded, signUp, setActive, code, showAlert, router]);
 
   const handleResendCode = React.useCallback(async () => {
     if (!isLoaded) return;

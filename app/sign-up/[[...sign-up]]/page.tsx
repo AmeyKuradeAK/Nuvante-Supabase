@@ -223,84 +223,19 @@ const SignUpPage = () => {
       // Set active session
       await setActive({ session: signUpAttempt.createdSessionId });
 
-      // Wait for session to be fully established with longer timeout
-      console.log("Waiting for session to establish...");
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Increased to 5 seconds
-
-      try {
-        // Verify we have a valid session
-        const session = signUpAttempt.createdSessionId;
-        if (!session) {
-          throw new Error("No valid session found");
-        }
-
-        console.log("Creating user profile...");
-        
-        // Create the user document with all information at once
-        const createResponse = await axios.post("/api/populate/", {
-          firstName,
-          lastName: finalLastName,
-          email,
-          mobileNumber,
-          password: "clerk-auth",
-          username: firstName,
-          cart: [],
-          wishlist: [],
-          cartQuantities: {},
-          cartSizes: {},
-          orders: []
-        });
-
-        if (createResponse.status !== 200) {
-          console.error("Create response error:", createResponse);
-          throw new Error(`Failed to create user profile: ${createResponse.status}`);
-        }
-        
-        console.log("User profile created successfully:", createResponse.data);
-
-        // Wait a bit before verification
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Verify the user was created with retry logic
-        let verificationAttempts = 0;
-        let userData = null;
-        
-        while (verificationAttempts < 3) {
-          try {
-            console.log(`Verification attempt ${verificationAttempts + 1}...`);
-            const verifyResponse = await axios.get<ProfileResponse>("/api/propagation_client");
-            userData = verifyResponse.data;
-            
-            if (userData && userData.firstName && userData.email) {
-              console.log("Verification successful:", userData);
-              break;
-            } else {
-              throw new Error("Incomplete user data");
-            }
-          } catch (verifyError) {
-            console.log(`Verification attempt ${verificationAttempts + 1} failed:`, verifyError);
-            verificationAttempts++;
-            if (verificationAttempts < 3) {
-              await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
-            }
-          }
-        }
-
-        if (!userData || !userData.firstName || !userData.email) {
-          console.warn("Verification failed, but user might be created. Proceeding...");
-          // Don't throw error here, the auto-create in propagation_client will handle it
-        }
-
-        showAlert("Account created successfully!", "success");
-        router.push("/");
-      } catch (error: any) {
-        console.error("Error creating user profile:", error);
-        
-        // Don't show error to user since auto-create will handle missing profiles
-        console.log("Profile creation failed, but auto-create will handle it on first login");
-        showAlert("Account created successfully! Please complete your profile.", "success");
-        router.push("/Profile");
-      }
+      // Show success message and redirect to profile completion
+      showAlert("Account created successfully! Please complete your profile.", "success");
+      
+      // Store the signup data in sessionStorage for the profile page
+      sessionStorage.setItem('signupData', JSON.stringify({
+        firstName,
+        lastName: finalLastName,
+        mobileNumber,
+        email
+      }));
+      
+      // Redirect to profile page for completion
+      router.push("/Profile");
     } catch (error: any) {
       console.error("Error during sign up:", error);
       showAlert(error.message || "Something went wrong", "error");

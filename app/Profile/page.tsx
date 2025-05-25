@@ -221,6 +221,50 @@ const ProfilePage = () => {
       if (response.data) {
         const data = response.data;
         
+        // Check if this is a new signup by looking for sessionStorage data
+        const signupData = sessionStorage.getItem('signupData');
+        let isNewSignup = false;
+        
+        if (signupData) {
+          try {
+            const parsedSignupData = JSON.parse(signupData);
+            isNewSignup = true;
+            
+            // Pre-populate with signup data if profile is incomplete
+            const isIncomplete = data.mobileNumber === "Not provided" || 
+                                !data.firstName || 
+                                data.firstName === "User" ||
+                                !data.lastName ||
+                                data.lastName === "User";
+            
+            if (isIncomplete) {
+              setProfileData({
+                firstName: parsedSignupData.firstName || data.firstName || "",
+                lastName: parsedSignupData.lastName || data.lastName || "",
+                email: data.email || "",
+                mobileNumber: parsedSignupData.mobileNumber || "",
+                cart: data.cart || [],
+                wishlist: data.wishlist || [],
+                cartQuantities: data.cartQuantities || new Map(),
+                cartSizes: data.cartSizes || new Map(),
+                orders: data.orders || []
+              });
+              
+              showAlert("Welcome! Please complete your profile information below.", "info");
+              // Clear the signup data after using it
+              sessionStorage.removeItem('signupData');
+              setIsLoaded(true);
+              return;
+            }
+            
+            // Clear signup data if profile is already complete
+            sessionStorage.removeItem('signupData');
+          } catch (e) {
+            console.error("Error parsing signup data:", e);
+            sessionStorage.removeItem('signupData');
+          }
+        }
+        
         // Check if profile is incomplete (auto-created)
         const isIncomplete = data.mobileNumber === "Not provided" || 
                             !data.firstName || 
@@ -228,7 +272,7 @@ const ProfilePage = () => {
                             !data.lastName ||
                             data.lastName === "User";
         
-        if (isIncomplete) {
+        if (isIncomplete && !isNewSignup) {
           showAlert("Please complete your profile information", "warning");
         }
         
@@ -365,8 +409,37 @@ const ProfilePage = () => {
                 </Breadcrumb>
               </motion.div>
 
+              {/* Welcome Banner for New Users */}
+              {(!profileData.firstName || profileData.firstName === "User" || 
+                !profileData.mobileNumber || profileData.mobileNumber === "Not provided") && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-gradient-to-r from-[#DB4444] to-[#c13a3a] text-white p-6 rounded-xl mb-8 shadow-lg"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="bg-white/20 p-3 rounded-full">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold">Welcome to Nuvante! 🎉</h2>
+                      <p className="text-white/90">Complete your profile below to start shopping and enjoy personalized recommendations.</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               <div className="flex justify-between items-start mb-8">
-                <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
+                  {/* Check if this looks like a new signup */}
+                  {(!profileData.firstName || profileData.firstName === "User" || 
+                    !profileData.mobileNumber || profileData.mobileNumber === "Not provided") && (
+                    <p className="text-gray-600 mt-2">Complete your profile to get started with Nuvante</p>
+                  )}
+                </div>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
