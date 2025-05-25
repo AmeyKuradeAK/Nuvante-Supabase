@@ -183,16 +183,21 @@ const SignUpPage = () => {
 
     // Split full name into first and last name
     const nameParts = fullName.trim().split(/\s+/);
-    const firstName = nameParts[0];
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "User";
+    const firstName = nameParts[0].trim();
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ").trim() : "User";
+
+    // Validate first name
+    if (!firstName || firstName.length < 2) {
+      showAlert("First name must be at least 2 characters long", "error");
+      setIsLoading(false);
+      return;
+    }
 
     try {
-      // First create the user in Clerk
+      // First create the user in Clerk with just email and password
       const signUpAttempt = await signUp.create({
         emailAddress: email,
         password,
-        firstName,
-        lastName,
       });
 
       if (signUpAttempt.status === "missing_requirements") {
@@ -201,6 +206,12 @@ const SignUpPage = () => {
         router.push("/verify");
         return;
       }
+
+      // Update the user's profile with name
+      await signUpAttempt.update({
+        firstName,
+        lastName,
+      });
 
       // Set active session
       await setActive({ session: signUpAttempt.createdSessionId });
