@@ -221,7 +221,7 @@ const SignUpPage = () => {
         }
 
         // Verify the user was created
-        const verifyResponse = await axios.get("/api/propagation_client");
+        const verifyResponse = await axios.get<ProfileResponse>("/api/propagation_client");
         if (!verifyResponse.data || !verifyResponse.data.firstName || !verifyResponse.data.lastName) {
           throw new Error("User profile verification failed");
         }
@@ -231,12 +231,8 @@ const SignUpPage = () => {
       } catch (error: any) {
         console.error("Error creating user profile:", error);
         showAlert("Failed to create user profile. Please try again.", "error");
-        // Attempt to delete the Clerk user if MongoDB creation failed
-        try {
-          await signUpAttempt.delete();
-        } catch (deleteError) {
-          console.error("Error deleting Clerk user:", deleteError);
-        }
+        // If MongoDB creation fails, we'll just show an error
+        // Clerk doesn't provide a way to delete users programmatically
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
