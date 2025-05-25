@@ -219,30 +219,46 @@ const ProfilePage = () => {
       const response = await axios.get<ProfileData>("/api/propagation_client");
       
       if (response.data) {
+        const data = response.data;
+        
+        // Check if profile is incomplete (auto-created)
+        const isIncomplete = data.mobileNumber === "Not provided" || 
+                            !data.firstName || 
+                            data.firstName === "User" ||
+                            !data.lastName ||
+                            data.lastName === "User";
+        
+        if (isIncomplete) {
+          showAlert("Please complete your profile information", "warning");
+        }
+        
         setProfileData({
-          firstName: response.data.firstName || "",
-          lastName: response.data.lastName || "",
-          email: response.data.email || "",
-          mobileNumber: response.data.mobileNumber || "",
-          cart: response.data.cart || [],
-          wishlist: response.data.wishlist || [],
-          cartQuantities: response.data.cartQuantities || new Map(),
-          cartSizes: response.data.cartSizes || new Map(),
-          orders: response.data.orders || []
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email: data.email || "",
+          mobileNumber: data.mobileNumber === "Not provided" ? "" : data.mobileNumber || "",
+          cart: data.cart || [],
+          wishlist: data.wishlist || [],
+          cartQuantities: data.cartQuantities || new Map(),
+          cartSizes: data.cartSizes || new Map(),
+          orders: data.orders || []
         });
       }
       setIsLoaded(true);
     } catch (error: any) {
       console.error("Error fetching user data:", error);
       if (error.response?.status === 404) {
-        showAlert("User profile not found. Please complete your signup process.", "error");
-        router.push("/sign-up");
+        showAlert("Creating your profile...", "info");
+        // The auto-create in propagation_client should handle this
+        setTimeout(() => {
+          fetchUserData(); // Retry after auto-create
+        }, 2000);
       } else {
         showAlert("Error loading profile data. Please try refreshing.", "error");
       }
       setIsLoaded(false);
     }
-  }, [showAlert, router]);
+  }, [showAlert]);
 
   const updateProfile = useCallback(async () => {
     // Validate input
@@ -256,6 +272,13 @@ const ProfilePage = () => {
     }
     if (!profileData.mobileNumber.trim()) {
       showAlert("Mobile number is required", "error");
+      return;
+    }
+
+    // Validate mobile number format
+    const mobileRegex = /^[0-9]{10}$/;
+    if (!mobileRegex.test(profileData.mobileNumber.trim())) {
+      showAlert("Please enter a valid 10-digit mobile number", "error");
       return;
     }
 
@@ -281,9 +304,10 @@ const ProfilePage = () => {
       } else {
         throw new Error("Failed to update profile");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating profile:", error);
-      showAlert("Error updating profile. Please try again.", "error");
+      const errorMessage = error.response?.data?.error || "Error updating profile. Please try again.";
+      showAlert(errorMessage, "error");
     } finally {
       setIsLoading(false);
     }

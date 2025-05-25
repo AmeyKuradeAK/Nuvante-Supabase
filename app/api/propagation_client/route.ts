@@ -68,39 +68,50 @@ export async function GET() {
     console.log("Database connected successfully");
     
     // Find the specific user by their email
-    const database_obj = await clientModel.findOne({ email: global_user_email });
+    let database_obj = await clientModel.findOne({ email: global_user_email });
     console.log("Database query result:", database_obj ? "User found" : "User not found");
     
     if (!database_obj) {
-      console.log("=== USER NOT FOUND DEBUG ===");
-      console.log("Searching for email:", global_user_email);
+      console.log("=== AUTO-CREATING MISSING PROFILE ===");
+      console.log("User not found, creating profile automatically...");
       
-      // Let's check if there are any users in the database at all
-      const totalUsers = await clientModel.countDocuments();
-      console.log("Total users in database:", totalUsers);
+      // Auto-create the missing profile
+      const firstName = user.firstName || "User";
+      const lastName = user.lastName || "User";
       
-      // Let's check if there's a user with a similar email (case sensitivity issue?)
-      const similarUsers = await clientModel.find({ 
-        email: { $regex: global_user_email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' } 
+      console.log("Creating profile with:", { firstName, lastName, email: global_user_email });
+      
+      const newClient = new clientModel({
+        firstName: firstName,
+        lastName: lastName,
+        email: global_user_email,
+        mobileNumber: "Not provided", // User can update this later
+        password: "clerk-auth",
+        username: firstName || global_user_email.split('@')[0],
+        cart: [],
+        wishlist: [],
+        cartQuantities: {},
+        cartSizes: {},
+        orders: []
       });
-      console.log("Similar email users found:", similarUsers.length);
       
-      if (similarUsers.length > 0) {
-        console.log("Similar users:", similarUsers.map(u => ({ email: u.email, firstName: u.firstName })));
+      try {
+        database_obj = await newClient.save();
+        console.log("=== PROFILE AUTO-CREATED SUCCESSFULLY ===");
+        console.log("New profile:", {
+          id: database_obj._id,
+          email: database_obj.email,
+          firstName: database_obj.firstName,
+          lastName: database_obj.lastName
+        });
+      } catch (saveError: any) {
+        console.error("=== AUTO-CREATE FAILED ===");
+        console.error("Error auto-creating profile:", saveError);
+        return NextResponse.json({ 
+          error: "Failed to create user profile automatically",
+          details: saveError.message
+        }, { status: 500 });
       }
-      
-      // Check if there are any users with this email but different casing
-      const allUsers = await clientModel.find({}, { email: 1, firstName: 1 }).limit(10);
-      console.log("Sample users in database:", allUsers);
-      
-      return NextResponse.json({ 
-        error: "User profile not found. Please complete your signup process.",
-        debug: {
-          searchedEmail: global_user_email,
-          totalUsers,
-          similarUsersCount: similarUsers.length
-        }
-      }, { status: 404 });
     }
 
     // Ensure orders are properly populated and sorted by timestamp
