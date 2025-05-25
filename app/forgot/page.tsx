@@ -67,13 +67,8 @@ const ForgotPasswordPage: NextPage = () => {
         showAlert("2FA is required", "warning");
       } else if (result?.status === "complete") {
         try {
-          await axios.post("/api/populate/", {
-            firstName: "existing",
-            lastName: "existing",
-            password: password,
-            address: "existing",
-            email: email,
-          });
+          // Don't create/update user profile during password reset
+          // The user profile should already exist from signup
           
           if (setActive && result.createdSessionId) {
             await setActive({ session: result.createdSessionId });

@@ -46,33 +46,12 @@ export async function POST(request: any) {
     let existingModel = await clientModel.findOne({ email: global_user_email });
     console.log("Existing model:", existingModel ? "Found" : "Not found");
 
-    // Create a new client record if it doesn't exist
+    // Check if client record exists
     if (!existingModel) {
-      console.log("Creating new client record for:", global_user_email);
-      try {
-        // Get user's full name from Clerk
-        const fullName = user.fullName || "";
-        const [firstName = "", lastName = ""] = fullName.split(" ");
-
-        // Create new client with all required fields
-        existingModel = await clientModel.create({
-          username: user.username || global_user_email.split('@')[0], // Use email username if no username
-          password: "clerk-auth", // Since we're using Clerk for auth
-          firstName: firstName || "User", // Default value if empty
-          lastName: lastName || "User", // Default value if empty
-          email: global_user_email,
-          address: "Address not provided", // Default value for required field
-          cart: [], // Initialize empty cart array
-          wishlist: [], // Initialize empty wishlist array
-        });
-        console.log("New client record created successfully");
-      } catch (createError) {
-        console.error("Error creating client record:", createError);
-        return NextResponse.json(
-          { error: "Failed to create client record", details: createError instanceof Error ? createError.message : "Unknown error" },
-          { status: 500 }
-        );
-      }
+      console.error("No client record found for authenticated user:", global_user_email);
+      return NextResponse.json({ 
+        error: "User profile not found. Please complete your signup process." 
+      }, { status: 404 });
     }
 
     // Validate product ID before adding to wishlist
@@ -97,7 +76,7 @@ export async function POST(request: any) {
       await existingModel.save();
       console.log("Changes saved successfully");
       return NextResponse.json({ success: true }, { status: 200 });
-    } catch (saveError) {
+    } catch (saveError: any) {
       console.error("Error saving changes:", saveError);
       return NextResponse.json(
         { error: "Failed to save changes", details: saveError instanceof Error ? saveError.message : "Unknown error" },

@@ -63,13 +63,26 @@ const page = (props: Props) => {
           
           // Only create new client if one doesn't exist
           if (!clientResponse.data || !clientResponse.data.firstName) {
-          await axios.post("/api/populate/", {
-            firstName: userData?.firstName || "User",
-            lastName: userData?.lastName || "User",
-            password: "clerk-auth", // Since we're using Clerk for auth
-            email: email,
-            address: "Address not provided",
-          });
+            // Get the user data from Clerk
+            const clerkFirstName = userData?.firstName || "";
+            const clerkLastName = userData?.lastName || "";
+            
+            // Only create if we have valid name data from Clerk
+            if (clerkFirstName && clerkLastName) {
+              await axios.post("/api/populate/", {
+                firstName: clerkFirstName,
+                lastName: clerkLastName,
+                password: "clerk-auth", // Since we're using Clerk for auth
+                email: email,
+                mobileNumber: "Not provided", // Will need to be updated later
+                username: clerkFirstName,
+                cart: [],
+                wishlist: [],
+                cartQuantities: {},
+                cartSizes: {},
+                orders: []
+              });
+            }
           }
         } catch (error) {
           console.error("Error handling client record:", error);

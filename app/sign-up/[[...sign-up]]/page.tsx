@@ -184,7 +184,9 @@ const SignUpPage = () => {
     // Split full name into first and last name
     const nameParts = fullName.trim().split(/\s+/);
     const firstName = nameParts[0].trim();
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ").trim() : "User";
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ").trim() : "";
+
+    console.log("Name processing:", { fullName, nameParts, firstName, lastName });
 
     // Validate first name
     if (!firstName || firstName.length < 2) {
@@ -192,6 +194,11 @@ const SignUpPage = () => {
       setIsLoading(false);
       return;
     }
+
+    // If no last name provided, use first name as last name to satisfy schema requirements
+    const finalLastName = lastName || firstName;
+    
+    console.log("Final names:", { firstName, finalLastName, mobileNumber, email });
 
     try {
       // First create the user in Clerk with just email and password
@@ -210,7 +217,7 @@ const SignUpPage = () => {
       // Update the user's profile with name
       await signUpAttempt.update({
         firstName,
-        lastName,
+        lastName: finalLastName,
       });
 
       // Set active session
@@ -229,7 +236,7 @@ const SignUpPage = () => {
         // Create the user document with all information at once
         const createResponse = await axios.post("/api/populate/", {
           firstName,
-          lastName,
+          lastName: finalLastName,
           email,
           mobileNumber,
           password: "clerk-auth",
@@ -242,8 +249,11 @@ const SignUpPage = () => {
         });
 
         if (createResponse.status !== 200) {
-          throw new Error("Failed to create user profile");
+          console.error("Create response error:", createResponse);
+          throw new Error(`Failed to create user profile: ${createResponse.status}`);
         }
+        
+        console.log("User profile created successfully:", createResponse.data);
 
         // Verify the user was created
         const verifyResponse = await axios.get<ProfileResponse>("/api/propagation_client");

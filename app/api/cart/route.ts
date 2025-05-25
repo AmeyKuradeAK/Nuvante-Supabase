@@ -15,18 +15,34 @@ function popElement(array: any[], victim: any) {
 export async function POST(request: any) {
   const user = await currentUser();
   const global_user_email = user?.emailAddresses[0].emailAddress;
-  if (user) {
-    try {
-      const body = await request.json();
-      const existingModel = await clientModel
-        .findOne({
-          email: global_user_email,
-        })
-        .then((data) => {
-          return data;
-        });
+  
+  if (!user || !global_user_email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-      if (body.append) {
+  try {
+    const body = await request.json();
+    
+    // Validate product ID
+    if (!body.identifier || typeof body.identifier !== 'string') {
+      return NextResponse.json(
+        { error: "Invalid product identifier" },
+        { status: 400 }
+      );
+    }
+
+    const existingModel = await clientModel.findOne({
+      email: global_user_email,
+    });
+
+    if (!existingModel) {
+      console.error("No client record found for authenticated user:", global_user_email);
+      return NextResponse.json({ 
+        error: "User profile not found. Please complete your signup process." 
+      }, { status: 404 });
+    }
+
+    if (body.append) {
         if (!existingModel.cart.includes(body.identifier)) {
           existingModel.cart.push(body.identifier);
           // Set default quantity to 1 when adding to cart
@@ -50,12 +66,12 @@ export async function POST(request: any) {
       }
 
       await existingModel.save();
-      return new NextResponse("200");
+      return NextResponse.json({ success: true }, { status: 200 });
     } catch (error) {
-      console.log(error);
-      return new NextResponse("400");
+      console.error("Error updating cart:", error);
+      return NextResponse.json({ 
+        error: "Failed to update cart", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      }, { status: 500 });
     }
-  } else {
-    return new NextResponse("400");
-  }
 }

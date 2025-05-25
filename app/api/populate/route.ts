@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     console.log("User email:", global_user_email);
     
     const body = await req.json();
-    console.log("Request body:", body);
+    console.log("Request body received:", JSON.stringify(body, null, 2));
 
     // Check if user already exists
     const existingUser = await clientModel.findOne({ email: global_user_email });
@@ -29,16 +29,16 @@ export async function POST(req: Request) {
       console.log("Updating existing user...");
       // Update only the fields that are provided
       const updateData: any = {};
-      if (body.firstName) updateData.firstName = body.firstName;
-      if (body.lastName) updateData.lastName = body.lastName;
-      if (body.mobileNumber) updateData.mobileNumber = body.mobileNumber;
-      if (body.email) updateData.email = body.email;
-      if (body.username) updateData.username = body.username;
-      if (body.cart) updateData.cart = body.cart;
-      if (body.wishlist) updateData.wishlist = body.wishlist;
-      if (body.cartQuantities) updateData.cartQuantities = body.cartQuantities;
-      if (body.cartSizes) updateData.cartSizes = body.cartSizes;
-      if (body.orders) updateData.orders = body.orders;
+      if (body.firstName) updateData.firstName = body.firstName.trim();
+      if (body.lastName) updateData.lastName = body.lastName.trim();
+      if (body.mobileNumber) updateData.mobileNumber = body.mobileNumber.trim();
+      if (body.email) updateData.email = body.email.trim();
+      if (body.username) updateData.username = body.username.trim();
+      if (body.cart !== undefined) updateData.cart = body.cart;
+      if (body.wishlist !== undefined) updateData.wishlist = body.wishlist;
+      if (body.cartQuantities !== undefined) updateData.cartQuantities = body.cartQuantities;
+      if (body.cartSizes !== undefined) updateData.cartSizes = body.cartSizes;
+      if (body.orders !== undefined) updateData.orders = body.orders;
 
       console.log("Update data:", updateData);
 
@@ -57,12 +57,22 @@ export async function POST(req: Request) {
     } else {
       console.log("Creating new user...");
       
+      // Validate required fields
+      if (!body.firstName || !body.lastName || !body.mobileNumber) {
+        console.error("Missing required fields:", { 
+          firstName: body.firstName, 
+          lastName: body.lastName, 
+          mobileNumber: body.mobileNumber 
+        });
+        throw new Error("Missing required fields: firstName, lastName, or mobileNumber");
+      }
+      
       // Create new user with essential fields
       const newClient = new clientModel({
-        firstName: body.firstName,
-        lastName: body.lastName,
+        firstName: body.firstName.trim(),
+        lastName: body.lastName.trim(),
         email: global_user_email,
-        mobileNumber: body.mobileNumber,
+        mobileNumber: body.mobileNumber.trim(),
         password: "clerk-auth", // Since we're using Clerk for auth
         username: body.username || body.firstName || global_user_email.split('@')[0],
         cart: body.cart || [],
