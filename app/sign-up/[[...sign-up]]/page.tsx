@@ -252,12 +252,8 @@ const SignUpPage = () => {
       } catch (error: any) {
         console.error("Error creating user profile:", error);
         showAlert("Failed to create user profile. Please try again.", "error");
-        // If MongoDB creation fails, delete the Clerk user
-        try {
-          await signUpAttempt.delete();
-        } catch (deleteError) {
-          console.error("Error deleting Clerk user:", deleteError);
-        }
+        // Redirect to sign-in page if profile creation fails
+        router.push("/sign-in");
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
