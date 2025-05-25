@@ -174,10 +174,17 @@ const SignUpPage = () => {
       return;
     }
 
+    // Validate full name
+    if (!fullName || fullName.trim().length === 0) {
+      showAlert("Please enter your full name", "error");
+      setIsLoading(false);
+      return;
+    }
+
     // Split full name into first and last name
     const nameParts = fullName.trim().split(/\s+/);
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ") || "";
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "User";
 
     try {
       // First create the user in Clerk
@@ -231,8 +238,6 @@ const SignUpPage = () => {
       } catch (error: any) {
         console.error("Error creating user profile:", error);
         showAlert("Failed to create user profile. Please try again.", "error");
-        // If MongoDB creation fails, we'll just show an error
-        // Clerk doesn't provide a way to delete users programmatically
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
