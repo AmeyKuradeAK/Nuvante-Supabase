@@ -232,12 +232,17 @@ const ProfilePage = () => {
         });
       }
       setIsLoaded(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching user data:", error);
-      showAlert("Error loading profile data. Please try refreshing.", "error");
+      if (error.response?.status === 404) {
+        showAlert("User profile not found. Please complete your signup process.", "error");
+        router.push("/sign-up");
+      } else {
+        showAlert("Error loading profile data. Please try refreshing.", "error");
+      }
       setIsLoaded(false);
     }
-  }, [showAlert]);
+  }, [showAlert, router]);
 
   const updateProfile = useCallback(async () => {
     // Validate input

@@ -1,6 +1,7 @@
 import clientModel from "@/models/Clients";
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
+import connect from "@/db";
 
 /**
  * Client propagation api, used to propagate a specific client's data to a client side code.
@@ -56,22 +57,16 @@ export async function GET() {
   }
 
   try {
+    // Ensure database connection
+    await connect();
     // Find the specific user by their email
     const database_obj = await clientModel.findOne({ email: global_user_email });
     
     if (!database_obj) {
       console.log("No user found for email:", global_user_email);
       return NextResponse.json({ 
-        firstName: "",
-        lastName: "",
-        email: global_user_email,
-        mobileNumber: "",
-        cart: [],
-        cartQuantities: {},
-        cartSizes: {},
-        wishlist: [], 
-        orders: [] 
-      }, { status: 200 });
+        error: "User profile not found. Please complete your signup process." 
+      }, { status: 404 });
     }
 
     // Ensure orders are properly populated and sorted by timestamp
@@ -114,6 +109,8 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Ensure database connection
+    await connect();
     const body = await request.json();
     const { wishlist, cart, cartQuantities, cartSizes, orders } = body;
 
