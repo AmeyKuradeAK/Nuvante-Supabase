@@ -18,26 +18,25 @@ export async function POST(request: any) {
     console.log("Received request body:", body); // Debug log
     console.log("User email:", global_user_email); // Debug log
 
+    // First check if user exists
     const existingModel = await clientModel.findOne({ email: global_user_email });
     console.log("Existing model:", existingModel ? "Found" : "Not found"); // Debug log
 
     if (existingModel) {
-      // Update all provided fields
+      // Update only the fields that are provided in the request
       const updates: any = {};
       
-      // Update profile fields
-      if (body.firstName) updates.firstName = body.firstName;
-      if (body.lastName) updates.lastName = body.lastName;
-      if (body.mobileNumber) updates.mobileNumber = body.mobileNumber;
-      
-      // Update cart and wishlist if provided
-      if (body.cart) updates.cart = body.cart;
-      if (body.wishlist) updates.wishlist = body.wishlist;
-      if (body.cartQuantities) updates.cartQuantities = body.cartQuantities;
-      if (body.cartSizes) updates.cartSizes = body.cartSizes;
-      if (body.orders) updates.orders = body.orders;
+      // Only update fields that are explicitly provided
+      if (body.firstName !== undefined) updates.firstName = body.firstName;
+      if (body.lastName !== undefined) updates.lastName = body.lastName;
+      if (body.mobileNumber !== undefined) updates.mobileNumber = body.mobileNumber;
+      if (body.cart !== undefined) updates.cart = body.cart;
+      if (body.wishlist !== undefined) updates.wishlist = body.wishlist;
+      if (body.cartQuantities !== undefined) updates.cartQuantities = body.cartQuantities;
+      if (body.cartSizes !== undefined) updates.cartSizes = body.cartSizes;
+      if (body.orders !== undefined) updates.orders = body.orders;
 
-      // Only update password if explicitly provided
+      // Only update password if explicitly provided and not "existing"
       if (body.password && body.password !== "existing") {
         updates.password = await hash(body.password, 12);
       }
@@ -53,17 +52,18 @@ export async function POST(request: any) {
         throw new Error("Failed to update profile");
       }
       console.log("Updated model:", updatedModel); // Debug log
+      return NextResponse.json({ message: "Success", client: updatedModel }, { status: 200 });
     } else {
-      // Create new client
+      // Create new client with only the provided data
       const hashedPassword = await hash(body.password || "default", 12);
       
       const new_client = new clientModel({
-        username: body.firstName,
+        username: body.firstName || "",
         email: global_user_email,
-        firstName: body.firstName,
-        lastName: body.lastName,
+        firstName: body.firstName || "",
+        lastName: body.lastName || "",
         password: hashedPassword,
-        mobileNumber: body.mobileNumber || "Not provided",
+        mobileNumber: body.mobileNumber || "",
         cart: body.cart || [],
         wishlist: body.wishlist || [],
         cartQuantities: body.cartQuantities || new Map(),
@@ -88,10 +88,10 @@ export async function POST(request: any) {
 
         // Verify all required fields
         const requiredFields = {
-          firstName: body.firstName,
-          lastName: body.lastName,
+          firstName: body.firstName || "",
+          lastName: body.lastName || "",
           email: global_user_email,
-          mobileNumber: body.mobileNumber
+          mobileNumber: body.mobileNumber || ""
         };
 
         const missingFields = Object.entries(requiredFields)
@@ -110,8 +110,6 @@ export async function POST(request: any) {
         throw new Error(`Failed to save client: ${saveError.message}`);
       }
     }
-
-    return NextResponse.json({ message: "Success" }, { status: 200 });
   } catch (error: any) {
     console.error("Error in API route:", error);
     return NextResponse.json(

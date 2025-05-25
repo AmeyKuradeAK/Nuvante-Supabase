@@ -10,11 +10,12 @@ interface OrderItem {
   paymentId: string;
   amount: number;
   currency: string;
+  status: string;
   timestamp: string;
   estimatedDeliveryDate: string;
   items: string[];
-  trackingId?: string;
-  itemStatus?: string;
+  trackingId: string;
+  itemStatus: string;
   itemDetails: {
     productId: string;
     size: string;
@@ -34,9 +35,13 @@ interface OrderItem {
 interface GlobalContextType {
   GlobalWishlist: string[];
   GlobalCart: string[];
+  GlobalCartQuantities: Record<string, number>;
+  GlobalCartSizes: Record<string, string>;
   GlobalOrders: OrderItem[];
   changeGlobalWishlist: (updatedWishlist: string[]) => void;
   changeGlobalCart: (element: string) => void;
+  changeGlobalCartQuantity: (productId: string, quantity: number) => void;
+  changeGlobalCartSize: (productId: string, size: string) => void;
   changeGlobalOrders: (order: OrderItem) => void;
   clearGlobalCart: () => void;
   isLoading: boolean;
@@ -51,6 +56,8 @@ export const GlobalContext = createContext<GlobalContextType | undefined>(
 interface ApiResponse {
   wishlist: string[];
   cart: string[];
+  cartQuantities: Record<string, number>;
+  cartSizes: Record<string, string>;
   orders: OrderItem[];
 }
 
@@ -70,6 +77,8 @@ export const GlobalContextProvider = ({
 }) => {
   const [GlobalWishlist, setGlobalWishlist] = useState<string[]>([]);
   const [GlobalCart, setGlobalCart] = useState<string[]>([]);
+  const [GlobalCartQuantities, setGlobalCartQuantities] = useState<Record<string, number>>({});
+  const [GlobalCartSizes, setGlobalCartSizes] = useState<Record<string, string>>({});
   const [GlobalOrders, setGlobalOrders] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -86,9 +95,17 @@ export const GlobalContextProvider = ({
     try {
       setIsLoading(true);
       const response = await axios.get<ApiResponse>(`/api/propagation_client`);
-      const { wishlist = [], cart = [], orders = [] } = response.data;
+      const { 
+        wishlist = [], 
+        cart = [], 
+        cartQuantities = {}, 
+        cartSizes = {}, 
+        orders = [] 
+      } = response.data;
       setGlobalWishlist(wishlist);
       setGlobalCart(cart);
+      setGlobalCartQuantities(cartQuantities);
+      setGlobalCartSizes(cartSizes);
       setGlobalOrders(orders);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -122,6 +139,8 @@ export const GlobalContextProvider = ({
       // Reset state when user is not signed in
       setGlobalWishlist([]);
       setGlobalCart([]);
+      setGlobalCartQuantities({});
+      setGlobalCartSizes({});
       setGlobalOrders([]);
       setIsLoading(false);
     }
@@ -145,10 +164,39 @@ export const GlobalContextProvider = ({
       // Remove item from cart
       const updatedCart = GlobalCart.filter(item => item !== element);
       setGlobalCart(updatedCart);
+      // Also remove quantities and sizes
+      const { [element]: removedQuantity, ...remainingQuantities } = GlobalCartQuantities;
+      const { [element]: removedSize, ...remainingSizes } = GlobalCartSizes;
+      setGlobalCartQuantities(remainingQuantities);
+      setGlobalCartSizes(remainingSizes);
     } else {
       // Add item to cart
       setGlobalCart([...GlobalCart, element]);
     }
+    debouncedFetchData();
+  };
+
+  const changeGlobalCartQuantity = (productId: string, quantity: number) => {
+    if (!isSignedIn || !user) {
+      router.push('/sign-in');
+      return;
+    }
+    setGlobalCartQuantities(prev => ({
+      ...prev,
+      [productId]: quantity
+    }));
+    debouncedFetchData();
+  };
+
+  const changeGlobalCartSize = (productId: string, size: string) => {
+    if (!isSignedIn || !user) {
+      router.push('/sign-in');
+      return;
+    }
+    setGlobalCartSizes(prev => ({
+      ...prev,
+      [productId]: size
+    }));
     debouncedFetchData();
   };
 
@@ -167,6 +215,8 @@ export const GlobalContextProvider = ({
       return;
     }
     setGlobalCart([]);
+    setGlobalCartQuantities({});
+    setGlobalCartSizes({});
     debouncedFetchData();
   };
 
@@ -175,9 +225,13 @@ export const GlobalContextProvider = ({
       value={{
         GlobalWishlist,
         GlobalCart,
+        GlobalCartQuantities,
+        GlobalCartSizes,
         GlobalOrders,
         changeGlobalWishlist,
         changeGlobalCart,
+        changeGlobalCartQuantity,
+        changeGlobalCartSize,
         changeGlobalOrders,
         clearGlobalCart,
         isLoading
