@@ -56,12 +56,13 @@ export async function POST(req: Request) {
       return NextResponse.json(updatedUser);
     } else {
       console.log("Creating new user...");
+      
       // Create new user with essential fields
       const newClient = new clientModel({
-        firstName: body.firstName || "",
-        lastName: body.lastName || "",
+        firstName: body.firstName,
+        lastName: body.lastName,
         email: global_user_email,
-        mobileNumber: body.mobileNumber || "",
+        mobileNumber: body.mobileNumber,
         password: "clerk-auth", // Since we're using Clerk for auth
         username: body.username || body.firstName || global_user_email.split('@')[0],
         cart: body.cart || [],
