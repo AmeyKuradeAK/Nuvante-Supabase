@@ -202,7 +202,7 @@ const SignUpPage = () => {
       await setActive({ session: signUpAttempt.createdSessionId });
 
       // Wait for session to be fully established
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       try {
         console.log("Attempting to create user in database...");
@@ -227,7 +227,7 @@ const SignUpPage = () => {
         }
 
         // Wait for database to update
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Verify the data was saved by fetching it
         const profileResponse = await axios.get<ProfileResponse>("/api/propagation_client");
@@ -235,14 +235,6 @@ const SignUpPage = () => {
 
         if (!profileResponse.data.firstName || !profileResponse.data.lastName || !profileResponse.data.email || !profileResponse.data.mobileNumber) {
           throw new Error("Profile data not properly saved");
-        }
-
-        // Double check the data matches what we sent
-        if (profileResponse.data.firstName !== firstName || 
-            profileResponse.data.lastName !== lastName || 
-            profileResponse.data.email !== email || 
-            profileResponse.data.mobileNumber !== mobileNumber) {
-          throw new Error("Profile data mismatch");
         }
 
         showAlert("Account created successfully!", "success");

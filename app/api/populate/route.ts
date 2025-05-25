@@ -20,7 +20,7 @@ export async function POST(request: any) {
 
     // First check if user exists
     const existingModel = await clientModel.findOne({ email: global_user_email });
-    console.log("Existing model:", existingModel ? "Found" : "Not found"); // Debug log
+    console.log("Existing model:", existingModel ? "Found" : "Not found");
 
     if (existingModel) {
       // Update only the fields that are provided in the request
@@ -84,23 +84,6 @@ export async function POST(request: any) {
 
         if (!verifiedClient) {
           throw new Error("Client not found after save");
-        }
-
-        // Verify all required fields
-        const requiredFields = {
-          firstName: body.firstName || "",
-          lastName: body.lastName || "",
-          email: global_user_email,
-          mobileNumber: body.mobileNumber || ""
-        };
-
-        const missingFields = Object.entries(requiredFields)
-          .filter(([key, value]) => !verifiedClient[key as keyof typeof verifiedClient] || verifiedClient[key as keyof typeof verifiedClient] !== value)
-          .map(([key]) => key);
-
-        if (missingFields.length > 0) {
-          console.error("Missing or incorrect fields:", missingFields);
-          throw new Error(`Profile data verification failed: Missing or incorrect fields: ${missingFields.join(', ')}`);
         }
 
         console.log("Client created and verified successfully");
