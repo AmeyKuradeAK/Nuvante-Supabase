@@ -217,9 +217,15 @@ const SignUpPage = () => {
       await setActive({ session: signUpAttempt.createdSessionId });
 
       // Wait for session to be fully established
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       try {
+        // Verify we have a valid session
+        const session = await signUpAttempt.createdSessionId;
+        if (!session) {
+          throw new Error("No valid session found");
+        }
+
         console.log("Creating user document with data:", {
           firstName,
           lastName,
@@ -249,11 +255,24 @@ const SignUpPage = () => {
           throw new Error("Failed to create user profile");
         }
 
+        // Wait a bit for the database to update
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Verify the user was created
+        const verifyResponse = await axios.get<ProfileResponse>("/api/propagation_client");
+        const userData = verifyResponse.data;
+        
+        if (!userData || !userData.firstName || !userData.email) {
+          console.error("Verification failed:", userData);
+          throw new Error("User profile verification failed - missing required fields");
+        }
+
         showAlert("Account created successfully!", "success");
         router.push("/");
       } catch (error: any) {
         console.error("Error creating user profile:", error);
-        showAlert(error.response?.data?.error || "Failed to create user profile. Please try again.", "error");
+        const errorMessage = error.response?.data?.error || error.message || "Failed to create user profile. Please try again.";
+        showAlert(errorMessage, "error");
         router.push("/sign-in");
       }
     } catch (error: any) {

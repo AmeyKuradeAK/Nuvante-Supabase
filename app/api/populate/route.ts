@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     
     if (!user || !user.emailAddresses[0]?.emailAddress) {
       console.error("No user or email found");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized - No valid session" }, { status: 401 });
     }
 
     const global_user_email = user.emailAddresses[0].emailAddress;
@@ -48,7 +48,11 @@ export async function POST(req: Request) {
         { new: true }
       );
 
-      console.log("User updated:", updatedUser ? "Success" : "Failed");
+      if (!updatedUser) {
+        throw new Error("Failed to update user");
+      }
+
+      console.log("User updated:", updatedUser);
       return NextResponse.json(updatedUser);
     } else {
       console.log("Creating new user...");
@@ -72,7 +76,14 @@ export async function POST(req: Request) {
       try {
         const savedClient = await newClient.save();
         console.log("Client saved successfully:", savedClient);
-        return NextResponse.json(savedClient);
+
+        // Verify the saved data
+        const verifiedClient = await clientModel.findOne({ email: global_user_email });
+        if (!verifiedClient) {
+          throw new Error("Failed to verify saved client");
+        }
+
+        return NextResponse.json(verifiedClient);
       } catch (saveError: any) {
         console.error("Error saving client:", saveError);
         throw new Error(`Failed to save client: ${saveError.message}`);
