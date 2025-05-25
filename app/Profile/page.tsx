@@ -64,6 +64,7 @@ const ProfileForm = React.memo(({
   lastName, 
   mobileNumber,
   email,
+  isNewUser,
   onFirstNameChange,
   onLastNameChange,
   onMobileNumberChange,
@@ -73,6 +74,7 @@ const ProfileForm = React.memo(({
   lastName: string;
   mobileNumber: string;
   email: string;
+  isNewUser: boolean;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
   onMobileNumberChange: (value: string) => void;
@@ -176,7 +178,7 @@ const ProfileForm = React.memo(({
         className="bg-[#DB4444] w-[250px] lg:w-[250px] h-[56px] font-medium rounded-lg text-white mr-4 lg:mr-[80px] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md"
         onClick={onSave}
       >
-        Save Changes
+        {isNewUser ? "Complete Profile & Start Shopping" : "Save Changes"}
       </motion.button>
     </motion.div>
   </motion.div>
@@ -198,6 +200,7 @@ const ProfilePage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const { showAlert } = useAlert();
   const router = useRouter();
   const user = useUser();
@@ -229,6 +232,7 @@ const ProfilePage = () => {
           try {
             const parsedSignupData = JSON.parse(signupData);
             isNewSignup = true;
+            setIsNewUser(true); // Mark as new user
             
             // Pre-populate with signup data if profile is incomplete
             const isIncomplete = data.mobileNumber === "Not provided" || 
@@ -265,15 +269,18 @@ const ProfilePage = () => {
           }
         }
         
-        // Check if profile is incomplete (auto-created)
+        // Check if profile is incomplete (auto-created) - also indicates new user
         const isIncomplete = data.mobileNumber === "Not provided" || 
                             !data.firstName || 
                             data.firstName === "User" ||
                             !data.lastName ||
                             data.lastName === "User";
         
-        if (isIncomplete && !isNewSignup) {
-          showAlert("Please complete your profile information", "warning");
+        if (isIncomplete) {
+          setIsNewUser(true); // Mark as new user if profile is incomplete
+          if (!isNewSignup) {
+            showAlert("Please complete your profile information", "warning");
+          }
         }
         
         setProfileData({
@@ -342,9 +349,18 @@ const ProfilePage = () => {
       });
 
       if (response.status === 200) {
-        showAlert("Profile updated successfully!", "success");
-        // Refresh the data after successful update
-        await fetchUserData();
+        if (isNewUser) {
+          // For new users, redirect to home page after successful profile completion
+          showAlert("Profile completed successfully! Welcome to Nuvante!", "success");
+          setTimeout(() => {
+            router.push("/");
+          }, 1500);
+        } else {
+          // For existing users, just show success message and refresh data
+          showAlert("Profile updated successfully!", "success");
+          // Refresh the data after successful update
+          await fetchUserData();
+        }
       } else {
         throw new Error("Failed to update profile");
       }
@@ -355,7 +371,7 @@ const ProfilePage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [profileData, showAlert, fetchUserData]);
+  }, [profileData, showAlert, fetchUserData, isNewUser, router]);
 
   const handleFieldChange = useCallback((field: keyof ProfileData, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
@@ -426,6 +442,7 @@ const ProfilePage = () => {
                     <div>
                       <h2 className="text-xl font-semibold">Welcome to Nuvante! 🎉</h2>
                       <p className="text-white/90">Complete your profile below to start shopping and enjoy personalized recommendations.</p>
+                      <p className="text-white/80 text-sm mt-1">After saving, you'll be redirected to our homepage to start exploring!</p>
                     </div>
                   </div>
                 </motion.div>
@@ -456,6 +473,7 @@ const ProfilePage = () => {
                 lastName={profileData.lastName}
                 mobileNumber={profileData.mobileNumber}
                 email={profileData.email}
+                isNewUser={isNewUser}
                 onFirstNameChange={(value) => setProfileData(prev => ({ ...prev, firstName: value }))}
                 onLastNameChange={(value) => setProfileData(prev => ({ ...prev, lastName: value }))}
                 onMobileNumberChange={(value) => setProfileData(prev => ({ ...prev, mobileNumber: value }))}
