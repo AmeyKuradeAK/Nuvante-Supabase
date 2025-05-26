@@ -64,7 +64,6 @@ const ProfileForm = React.memo(({
   lastName, 
   mobileNumber,
   email,
-  isNewUser,
   onFirstNameChange,
   onLastNameChange,
   onMobileNumberChange,
@@ -74,7 +73,6 @@ const ProfileForm = React.memo(({
   lastName: string;
   mobileNumber: string;
   email: string;
-  isNewUser: boolean;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
   onMobileNumberChange: (value: string) => void;
@@ -178,7 +176,7 @@ const ProfileForm = React.memo(({
         className="bg-[#DB4444] w-[250px] lg:w-[250px] h-[56px] font-medium rounded-lg text-white mr-4 lg:mr-[80px] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md"
         onClick={onSave}
       >
-        {isNewUser ? "Complete Profile & Start Shopping" : "Save Changes"}
+        Save Changes
       </motion.button>
     </motion.div>
   </motion.div>
@@ -200,7 +198,7 @@ const ProfilePage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
+
   const { showAlert } = useAlert();
   const router = useRouter();
   const user = useUser();
@@ -224,19 +222,7 @@ const ProfilePage = () => {
       if (response.data) {
         const data = response.data;
         
-        // Check if profile is incomplete (indicates new user or incomplete profile)
-        
-        // Check if profile is incomplete (auto-created) - also indicates new user
-        const isIncomplete = data.mobileNumber === "Not provided" || 
-                            !data.firstName || 
-                            data.firstName === "User" ||
-                            !data.lastName ||
-                            data.lastName === "User";
-        
-        if (isIncomplete) {
-          setIsNewUser(true); // Mark as new user if profile is incomplete
-          showAlert("Please complete your profile information", "warning");
-        }
+
         
         setProfileData({
           firstName: data.firstName || "",
@@ -304,18 +290,9 @@ const ProfilePage = () => {
       });
 
       if (response.status === 200) {
-        if (isNewUser) {
-          // For new users, redirect to home page after successful profile completion
-          showAlert("Profile completed successfully! Welcome to Nuvante!", "success");
-          setTimeout(() => {
-            router.push("/");
-          }, 1500);
-        } else {
-          // For existing users, just show success message and refresh data
-          showAlert("Profile updated successfully!", "success");
-          // Refresh the data after successful update
-          await fetchUserData();
-        }
+        showAlert("Profile updated successfully!", "success");
+        // Refresh the data after successful update
+        await fetchUserData();
       } else {
         throw new Error("Failed to update profile");
       }
@@ -326,7 +303,7 @@ const ProfilePage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [profileData, showAlert, fetchUserData, isNewUser, router]);
+  }, [profileData, showAlert, fetchUserData, router]);
 
   const handleFieldChange = useCallback((field: keyof ProfileData, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
@@ -380,37 +357,10 @@ const ProfilePage = () => {
                 </Breadcrumb>
               </motion.div>
 
-              {/* Welcome Banner for New Users */}
-              {(!profileData.firstName || profileData.firstName === "User" || 
-                !profileData.mobileNumber || profileData.mobileNumber === "Not provided") && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-gradient-to-r from-[#DB4444] to-[#c13a3a] text-white p-6 rounded-xl mb-8 shadow-lg"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="bg-white/20 p-3 rounded-full">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-semibold">Welcome to Nuvante! 🎉</h2>
-                      <p className="text-white/90">Complete your profile below to start shopping and enjoy personalized recommendations.</p>
-                      <p className="text-white/80 text-sm mt-1">After saving, you'll be redirected to our homepage to start exploring!</p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
               <div className="flex justify-between items-start mb-8">
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">My Profile</h1>
-                  {/* Check if this looks like a new signup */}
-                  {(!profileData.firstName || profileData.firstName === "User" || 
-                    !profileData.mobileNumber || profileData.mobileNumber === "Not provided") && (
-                    <p className="text-gray-600 mt-2">Complete your profile to get started with Nuvante</p>
-                  )}
+                  <p className="text-gray-600 mt-2">Manage your account information</p>
                 </div>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -428,7 +378,6 @@ const ProfilePage = () => {
                 lastName={profileData.lastName}
                 mobileNumber={profileData.mobileNumber}
                 email={profileData.email}
-                isNewUser={isNewUser}
                 onFirstNameChange={(value) => setProfileData(prev => ({ ...prev, firstName: value }))}
                 onLastNameChange={(value) => setProfileData(prev => ({ ...prev, lastName: value }))}
                 onMobileNumberChange={(value) => setProfileData(prev => ({ ...prev, mobileNumber: value }))}

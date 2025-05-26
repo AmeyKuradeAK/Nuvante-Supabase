@@ -49,45 +49,49 @@ interface SafeProfile {
 
 export async function GET() {
   const user = await currentUser();
+  const clerkId = user?.id;
   const global_user_email = user?.emailAddresses[0]?.emailAddress;
 
-  console.log("=== PROPAGATION_CLIENT DEBUG ===");
-  console.log("Clerk user object:", user ? "Present" : "Missing");
-  console.log("User email:", global_user_email);
-  console.log("User ID:", user?.id);
-  console.log("Email addresses:", user?.emailAddresses?.map(e => e.emailAddress));
-
-  if (!user || !global_user_email) {
-    console.error("Unauthorized: No user or email found", { user, email: global_user_email });
+  if (!user || !clerkId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     // Ensure database connection
     await connect();
-    console.log("Database connected successfully");
     
-    // Find the specific user by their email
-    let database_obj = await clientModel.findOne({ email: global_user_email });
-    console.log("Database query result:", database_obj ? "User found" : "User not found");
+    // Find the specific user by their clerkId first, then fallback to email
+    let database_obj = await clientModel.findOne({ clerkId: clerkId });
+    
+    // If not found by clerkId, try email (for backward compatibility)
+    if (!database_obj && global_user_email) {
+      database_obj = await clientModel.findOne({ email: global_user_email });
+      
+      // If found by email but missing clerkId, update it
+      if (database_obj && !database_obj.clerkId) {
+        database_obj.clerkId = clerkId;
+        await database_obj.save();
+      }
+    }
     
     if (!database_obj) {
-      console.log("=== AUTO-CREATING MISSING PROFILE ===");
-      console.log("User not found, creating profile automatically...");
-      
       // Auto-create the missing profile
       const firstName = user.firstName || "User";
       const lastName = user.lastName || "User";
+      const email = global_user_email || user.emailAddresses[0]?.emailAddress || "";
       
-      console.log("Creating profile with:", { firstName, lastName, email: global_user_email });
+      if (!email) {
+        return NextResponse.json({ error: "No email found for user" }, { status: 400 });
+      }
       
       const newClient = new clientModel({
+        clerkId: clerkId,
         firstName: firstName,
         lastName: lastName,
-        email: global_user_email,
-        mobileNumber: "Not provided", // User can update this later
+        email: email,
+        mobileNumber: "Not provided",
         password: "clerk-auth",
-        username: firstName || global_user_email.split('@')[0],
+        username: firstName || email.split('@')[0],
         cart: [],
         wishlist: [],
         cartQuantities: {},
@@ -97,16 +101,7 @@ export async function GET() {
       
       try {
         database_obj = await newClient.save();
-        console.log("=== PROFILE AUTO-CREATED SUCCESSFULLY ===");
-        console.log("New profile:", {
-          id: database_obj._id,
-          email: database_obj.email,
-          firstName: database_obj.firstName,
-          lastName: database_obj.lastName
-        });
       } catch (saveError: any) {
-        console.error("=== AUTO-CREATE FAILED ===");
-        console.error("Error auto-creating profile:", saveError);
         return NextResponse.json({ 
           error: "Failed to create user profile automatically",
           details: saveError.message
@@ -136,27 +131,17 @@ export async function GET() {
       orders: orders || []
     };
 
-    console.log("=== RETURNING PROFILE ===");
-    console.log("Profile data:", {
-      email: safeProfile.email,
-      firstName: safeProfile.firstName,
-      lastName: safeProfile.lastName,
-      mobileNumber: safeProfile.mobileNumber
-    });
-    
     return NextResponse.json(safeProfile);
   } catch (error: any) {
-    console.error("Error in propagation_client route:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   const user = await currentUser();
-  const global_user_email = user?.emailAddresses[0]?.emailAddress;
+  const clerkId = user?.id;
 
-  if (!user || !global_user_email) {
-    console.error("Unauthorized: No user or email found", { user, email: global_user_email });
+  if (!user || !clerkId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -166,11 +151,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { wishlist, cart, cartQuantities, cartSizes, orders } = body;
 
-    // Find and update the user document
-    const database_obj = await clientModel.findOne({ email: global_user_email });
+    // Find and update the user document by clerkId
+    const database_obj = await clientModel.findOne({ clerkId: clerkId });
     
     if (!database_obj) {
-      console.error("No user found for email:", global_user_email);
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
@@ -193,11 +177,9 @@ export async function POST(request: Request) {
     }
 
     await database_obj.save();
-    console.log("Updated profile for user:", global_user_email);
     
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Error in propagation_client POST route:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

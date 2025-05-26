@@ -111,10 +111,10 @@ const VerifyPage = () => {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-        showAlert("Email verified successfully!", "success");
+        showAlert("Email verified successfully! Welcome to Nuvante!", "success");
         setTimeout(() => {
-          router.push("/Profile");
-        }, 1000);
+          router.push("/");
+        }, 1500);
       } else {
         console.error(JSON.stringify(result, null, 2));
         showAlert("Verification process incomplete", "error");
