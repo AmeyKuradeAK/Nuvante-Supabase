@@ -27,6 +27,12 @@ interface OrderItem {
 }
 
 let clientSchema = new mongoose.Schema({
+  clerkId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow null values but ensure uniqueness when present
+    index: true
+  },
   username: {
     type: String,
     required: true,

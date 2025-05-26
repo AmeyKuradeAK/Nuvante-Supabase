@@ -224,50 +224,7 @@ const ProfilePage = () => {
       if (response.data) {
         const data = response.data;
         
-        // Check if this is a new signup by looking for sessionStorage data
-        const signupData = sessionStorage.getItem('signupData');
-        let isNewSignup = false;
-        
-        if (signupData) {
-          try {
-            const parsedSignupData = JSON.parse(signupData);
-            isNewSignup = true;
-            setIsNewUser(true); // Mark as new user
-            
-            // Pre-populate with signup data if profile is incomplete
-            const isIncomplete = data.mobileNumber === "Not provided" || 
-                                !data.firstName || 
-                                data.firstName === "User" ||
-                                !data.lastName ||
-                                data.lastName === "User";
-            
-            if (isIncomplete) {
-              setProfileData({
-                firstName: parsedSignupData.firstName || data.firstName || "",
-                lastName: parsedSignupData.lastName || data.lastName || "",
-                email: data.email || "",
-                mobileNumber: parsedSignupData.mobileNumber || "",
-                cart: data.cart || [],
-                wishlist: data.wishlist || [],
-                cartQuantities: data.cartQuantities || new Map(),
-                cartSizes: data.cartSizes || new Map(),
-                orders: data.orders || []
-              });
-              
-              showAlert("Welcome! Please complete your profile information below.", "info");
-              // Clear the signup data after using it
-              sessionStorage.removeItem('signupData');
-              setIsLoaded(true);
-              return;
-            }
-            
-            // Clear signup data if profile is already complete
-            sessionStorage.removeItem('signupData');
-          } catch (e) {
-            console.error("Error parsing signup data:", e);
-            sessionStorage.removeItem('signupData');
-          }
-        }
+        // Check if profile is incomplete (indicates new user or incomplete profile)
         
         // Check if profile is incomplete (auto-created) - also indicates new user
         const isIncomplete = data.mobileNumber === "Not provided" || 
@@ -278,9 +235,7 @@ const ProfilePage = () => {
         
         if (isIncomplete) {
           setIsNewUser(true); // Mark as new user if profile is incomplete
-          if (!isNewSignup) {
-            showAlert("Please complete your profile information", "warning");
-          }
+          showAlert("Please complete your profile information", "warning");
         }
         
         setProfileData({

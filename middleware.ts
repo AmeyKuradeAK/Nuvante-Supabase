@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/propagation(.*)", // Allow product propagation without auth
   "/api/create-payment(.*)", // Allow payment creation without auth
   "/api/verify-payment(.*)", // Allow payment verification without auth
+  "/api/webhooks/clerk(.*)", // Allow Clerk webhooks without auth
   "/", // Allow home page without auth
   "/products(.*)", // Allow product pages without auth
   "/category(.*)", // Allow category pages without auth

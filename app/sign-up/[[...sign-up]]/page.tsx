@@ -214,28 +214,21 @@ const SignUpPage = () => {
         return;
       }
 
-      // Update the user's profile with name
+      // Update the user's profile with name and phone
       await signUpAttempt.update({
         firstName,
         lastName: finalLastName,
+        ...(mobileNumber && { phoneNumbers: [{ phoneNumber: mobileNumber }] })
       });
 
       // Set active session
       await setActive({ session: signUpAttempt.createdSessionId });
 
-      // Show success message and redirect to profile completion
-      showAlert("Account created successfully! Please complete your profile.", "success");
+      // Show success message and redirect to home page
+      showAlert("Account created successfully! Welcome to Nuvante!", "success");
       
-      // Store the signup data in sessionStorage for the profile page
-      sessionStorage.setItem('signupData', JSON.stringify({
-        firstName,
-        lastName: finalLastName,
-        mobileNumber,
-        email
-      }));
-      
-      // Redirect to profile page for completion
-      router.push("/Profile");
+      // Redirect to home page - the webhook will handle profile creation
+      router.push("/");
     } catch (error: any) {
       console.error("Error during sign up:", error);
       showAlert(error.message || "Something went wrong", "error");
