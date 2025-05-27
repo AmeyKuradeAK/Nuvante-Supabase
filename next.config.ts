@@ -2,7 +2,19 @@ import { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['cdn.jsdelivr.net'],
+    domains: ['cdn.jsdelivr.net', 'res.cloudinary.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.cloudinary.com',
+        pathname: '/**',
+      },
+    ],
   },
   async headers() {
     return [

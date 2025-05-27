@@ -130,10 +130,12 @@ export default function Card({
       className="w-full overflow-hidden relative flex flex-col gap-4 cursor-pointer group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
     >
       <div className="card-body flex justify-center relative aspect-[3/4] w-full rounded-t-lg overflow-hidden">
-        <img
+        <Image
           src={src}
           alt={productName}
-          className="w-full h-full object-cover relative bg-[#F5F5F5] group-hover:scale-105 transition-transform duration-300"
+          fill
+          className="object-cover relative bg-[#F5F5F5] group-hover:scale-105 transition-transform duration-300"
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
         />
         {status === "new" && (
           <div className="absolute top-3 left-3">
