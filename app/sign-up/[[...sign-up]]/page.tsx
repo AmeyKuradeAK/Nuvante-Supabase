@@ -189,7 +189,7 @@ const SignUpPage = () => {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+        redirectUrlComplete: "/welcome",
       });
     } catch (err: any) {
       console.error(err);
@@ -265,11 +265,11 @@ const SignUpPage = () => {
       // Set active session
       await setActive({ session: signUpAttempt.createdSessionId });
 
-      // Show success message and redirect to home page
+      // Show success message and redirect to welcome page
       showAlert("Account created successfully! Welcome to Nuvante!", "success");
       
-      // Redirect to home page - the webhook will handle profile creation
-      router.push("/");
+      // Redirect to welcome page for onboarding
+      router.push("/welcome");
     } catch (error: any) {
       console.error("Error during sign up:", error);
       showAlert(error.message || "Something went wrong", "error");
