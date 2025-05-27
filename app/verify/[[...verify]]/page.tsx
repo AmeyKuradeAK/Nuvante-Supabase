@@ -113,7 +113,7 @@ const VerifyPage = () => {
         await setActive({ session: result.createdSessionId });
         showAlert("Email verified successfully! Welcome to Nuvante!", "success");
         setTimeout(() => {
-          router.push("/");
+          router.push("/welcome");
         }, 1500);
       } else {
         console.error(JSON.stringify(result, null, 2));
