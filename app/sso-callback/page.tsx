@@ -12,9 +12,9 @@ export default function SSOCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    // Set a timeout to redirect to home if callback takes too long
+    // Set a timeout to redirect to welcome page if callback takes too long
     const timeout = setTimeout(() => {
-      router.push("/");
+      router.push("/welcome");
     }, 10000); // 10 seconds
 
     return () => clearTimeout(timeout);
@@ -71,7 +71,10 @@ export default function SSOCallback() {
       </motion.div>
 
       {/* Clerk's callback handler */}
-      <AuthenticateWithRedirectCallback />
+      <AuthenticateWithRedirectCallback 
+        afterSignInUrl="/welcome"
+        afterSignUpUrl="/welcome"
+      />
     </div>
   );
 } 

@@ -20,7 +20,7 @@ export default function WelcomePage() {
           clearInterval(progressInterval);
           // After animation, redirect to profile completion
           setTimeout(() => {
-            router.push("/profile?welcome=true");
+            router.push("/Profile?welcome=true");
           }, 500);
           return 100;
         }

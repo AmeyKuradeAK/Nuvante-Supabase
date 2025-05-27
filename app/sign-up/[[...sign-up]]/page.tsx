@@ -186,6 +186,7 @@ const SignUpPage = () => {
     if (!isLoaded) return;
 
     try {
+      setIsLoading(true);
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
@@ -194,6 +195,7 @@ const SignUpPage = () => {
     } catch (err: any) {
       console.error(err);
       showAlert("Error signing up with Google", "error");
+      setIsLoading(false);
     }
   };
 
