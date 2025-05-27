@@ -1,14 +1,11 @@
 import { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'export',
-  trailingSlash: true,
   experimental: {
     useCache: true,
   },
   images: {
     domains: ['cdn.jsdelivr.net'],
-    unoptimized: true,
   },
   async headers() {
     return [
