@@ -25,25 +25,6 @@ const SignUpForm = React.memo(({ onSubmit, onGoogleSignUp, isLoading }: {
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.1 }}
     >
-      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-        Full Name
-      </label>
-      <motion.input
-        whileFocus={{ scale: 1.01 }}
-        id="name"
-        name="name"
-        type="text"
-        required
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
-        placeholder="Enter your full name"
-      />
-    </motion.div>
-
-    <motion.div
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.2 }}
-    >
       <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
         Email
       </label>
@@ -61,30 +42,7 @@ const SignUpForm = React.memo(({ onSubmit, onGoogleSignUp, isLoading }: {
     <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.25 }}
-    >
-      <label htmlFor="mobileNumber" className="block text-sm font-medium text-gray-700 mb-1">
-        Mobile Number
-      </label>
-      <motion.input
-        whileFocus={{ scale: 1.01 }}
-        id="mobileNumber"
-        name="mobileNumber"
-        type="tel"
-        required
-        pattern="[0-9]{10}"
-        maxLength={10}
-        minLength={10}
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#DB4444] focus:border-[#DB4444] transition-all"
-        placeholder="Enter your 10-digit mobile number"
-      />
-      <p className="text-xs text-gray-500 mt-1">Please enter a valid 10-digit mobile number</p>
-    </motion.div>
-
-    <motion.div
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.3 }}
+      transition={{ delay: 0.2 }}
     >
       <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
         Password
@@ -207,44 +165,9 @@ const SignUpPage = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
-    const fullName = formData.get("name") as string;
-    const mobileNumber = formData.get("mobileNumber") as string;
-
-    // Validate mobile number
-    if (!/^[0-9]{10}$/.test(mobileNumber)) {
-      showAlert("Please enter a valid 10-digit mobile number", "error");
-      setIsLoading(false);
-      return;
-    }
-
-    // Validate full name
-    if (!fullName || fullName.trim().length === 0) {
-      showAlert("Please enter your full name", "error");
-      setIsLoading(false);
-      return;
-    }
-
-    // Split full name into first and last name
-    const nameParts = fullName.trim().split(/\s+/);
-    const firstName = nameParts[0].trim();
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ").trim() : "";
-
-    console.log("Name processing:", { fullName, nameParts, firstName, lastName });
-
-    // Validate first name
-    if (!firstName || firstName.length < 2) {
-      showAlert("First name must be at least 2 characters long", "error");
-      setIsLoading(false);
-      return;
-    }
-
-    // If no last name provided, use first name as last name to satisfy schema requirements
-    const finalLastName = lastName || firstName;
-    
-    console.log("Final names:", { firstName, finalLastName, mobileNumber, email });
 
     try {
-      // First create the user in Clerk with just email and password
+      // Create the user in Clerk with just email and password
       const signUpAttempt = await signUp.create({
         emailAddress: email,
         password,
@@ -256,13 +179,6 @@ const SignUpPage = () => {
         router.push("/verify");
         return;
       }
-
-      // Update the user's profile with name and phone
-      await signUpAttempt.update({
-        firstName,
-        lastName: finalLastName,
-        ...(mobileNumber && { phoneNumbers: [{ phoneNumber: mobileNumber }] })
-      });
 
       // Set active session
       await setActive({ session: signUpAttempt.createdSessionId });
@@ -349,7 +265,7 @@ const SignUpPage = () => {
                 className="text-center mb-8"
               >
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-                <p className="text-gray-600">Join Nuvante today</p>
+                <p className="text-gray-600">Join Nuvante today - we'll help you complete your profile after signup</p>
               </motion.div>
                               <SignUpForm onSubmit={handleSubmit} onGoogleSignUp={handleGoogleSignUp} isLoading={isLoading} />
             </motion.div>

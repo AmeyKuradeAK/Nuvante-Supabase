@@ -57,7 +57,7 @@ export default function WelcomePage() {
           </h1>
           <p className="text-gray-600">
             Hi {user.firstName || user.emailAddresses[0]?.emailAddress?.split('@')[0] || 'there'}! 
-            We're setting up your account...
+            We're setting up your account and will help you complete your profile...
           </p>
         </div>
 
@@ -70,10 +70,10 @@ export default function WelcomePage() {
             ></div>
           </div>
           <p className="text-sm text-gray-500">
-            {progress < 30 && "Creating your profile..."}
-            {progress >= 30 && progress < 60 && "Setting up your preferences..."}
-            {progress >= 60 && progress < 90 && "Preparing your dashboard..."}
-            {progress >= 90 && "Almost ready!"}
+            {progress < 30 && "Creating your account..."}
+            {progress >= 30 && progress < 60 && "Preparing profile setup..."}
+            {progress >= 60 && progress < 90 && "Getting ready for profile completion..."}
+            {progress >= 90 && "Redirecting to profile setup..."}
           </p>
         </div>
 
