@@ -20,7 +20,7 @@ export default function Suggestion() {
       });
       const data = response.data as any[];
       const filteredProducts = data.filter(
-        (product: any) => product.id !== url_param.slug
+        (product: any) => product._id !== url_param.slug
       );
       filteredProducts.sort(
         (a: any, b: any) => b.productStars - a.productStars

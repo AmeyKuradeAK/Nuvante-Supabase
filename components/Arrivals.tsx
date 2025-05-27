@@ -6,7 +6,7 @@ import Link from "next/link";
 
 type mainProp = {
   fragment: {
-    id: any;
+    _id: any;
     productName: string;
     productImages: string;
     productPrice: string;
@@ -34,7 +34,7 @@ export default function Arrivals({ fragment }: mainProp) {
           <div className="cards grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
             {fragment.map((product, index) => (
               <Card
-                id={product.id}
+                id={product._id}
                 key={index}
                 productName={product.productName}
                 productPrice={Number(product.productPrice)}
