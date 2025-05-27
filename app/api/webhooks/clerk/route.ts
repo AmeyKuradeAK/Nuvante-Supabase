@@ -52,15 +52,43 @@ export async function POST(req: NextRequest) {
     try {
       await connect();
       
-      const { id, email_addresses, first_name, last_name, phone_numbers } = evt.data;
+      // Log the full event data for debugging
+      console.log("🔍 Full webhook data:", JSON.stringify(evt.data, null, 2));
+      
+      const { id, email_addresses, first_name, last_name, phone_numbers, public_metadata, private_metadata, unsafe_metadata } = evt.data;
       
       // Get primary email
-      const primaryEmail = email_addresses.find((email: any) => email.id === evt.data.primary_email_address_id);
-      const emailAddress = primaryEmail?.email_address;
+      const primaryEmail = email_addresses?.find((email: any) => email.id === evt.data.primary_email_address_id);
+      const emailAddress = primaryEmail?.email_address || email_addresses?.[0]?.email_address;
       
       // Get primary phone number if available
-      const primaryPhone = phone_numbers.find((phone: any) => phone.id === evt.data.primary_phone_number_id);
-      const phoneNumber = primaryPhone?.phone_number;
+      const primaryPhone = phone_numbers?.find((phone: any) => phone.id === evt.data.primary_phone_number_id);
+      const phoneNumber = primaryPhone?.phone_number || phone_numbers?.[0]?.phone_number;
+      
+      // Extract names from different possible sources
+      let firstName = first_name;
+      let lastName = last_name;
+      
+      // Check if names are in metadata
+      if (!firstName && public_metadata?.firstName) firstName = public_metadata.firstName;
+      if (!lastName && public_metadata?.lastName) lastName = public_metadata.lastName;
+      if (!firstName && unsafe_metadata?.firstName) firstName = unsafe_metadata.firstName;
+      if (!lastName && unsafe_metadata?.lastName) lastName = unsafe_metadata.lastName;
+      
+      // Check if phone is in metadata
+      let mobileNumber = phoneNumber;
+      if (!mobileNumber && public_metadata?.phone) mobileNumber = public_metadata.phone;
+      if (!mobileNumber && unsafe_metadata?.phone) mobileNumber = unsafe_metadata.phone;
+      
+      console.log("📋 Extracted user data:", {
+        id,
+        firstName,
+        lastName,
+        emailAddress,
+        mobileNumber,
+        hasEmailAddresses: !!email_addresses?.length,
+        hasPhoneNumbers: !!phone_numbers?.length
+      });
       
       if (!emailAddress) {
         console.error("No email address found for user");
@@ -77,12 +105,12 @@ export async function POST(req: NextRequest) {
       // Create new user profile
       const newClient = new clientModel({
         clerkId: id, // Store Clerk ID for reference
-        firstName: first_name || "User",
-        lastName: last_name || "User", 
+        firstName: firstName || "User",
+        lastName: lastName || "User", 
         email: emailAddress,
-        mobileNumber: phoneNumber || "Not provided",
+        mobileNumber: mobileNumber || "Not provided",
         password: "clerk-auth", // Since we're using Clerk for auth
-        username: first_name || emailAddress.split('@')[0],
+        username: firstName || emailAddress.split('@')[0],
         cart: [],
         wishlist: [],
         cartQuantities: {},
@@ -120,15 +148,33 @@ export async function POST(req: NextRequest) {
     try {
       await connect();
       
-      const { id, email_addresses, first_name, last_name, phone_numbers } = evt.data;
+      // Log the full event data for debugging
+      console.log("🔍 Full webhook update data:", JSON.stringify(evt.data, null, 2));
+      
+      const { id, email_addresses, first_name, last_name, phone_numbers, public_metadata, private_metadata, unsafe_metadata } = evt.data;
       
       // Get primary email
-      const primaryEmail = email_addresses.find((email: any) => email.id === evt.data.primary_email_address_id);
-      const emailAddress = primaryEmail?.email_address;
+      const primaryEmail = email_addresses?.find((email: any) => email.id === evt.data.primary_email_address_id);
+      const emailAddress = primaryEmail?.email_address || email_addresses?.[0]?.email_address;
       
       // Get primary phone number if available
-      const primaryPhone = phone_numbers.find((phone: any) => phone.id === evt.data.primary_phone_number_id);
-      const phoneNumber = primaryPhone?.phone_number;
+      const primaryPhone = phone_numbers?.find((phone: any) => phone.id === evt.data.primary_phone_number_id);
+      const phoneNumber = primaryPhone?.phone_number || phone_numbers?.[0]?.phone_number;
+      
+      // Extract names from different possible sources
+      let firstName = first_name;
+      let lastName = last_name;
+      
+      // Check if names are in metadata
+      if (!firstName && public_metadata?.firstName) firstName = public_metadata.firstName;
+      if (!lastName && public_metadata?.lastName) lastName = public_metadata.lastName;
+      if (!firstName && unsafe_metadata?.firstName) firstName = unsafe_metadata.firstName;
+      if (!lastName && unsafe_metadata?.lastName) lastName = unsafe_metadata.lastName;
+      
+      // Check if phone is in metadata
+      let mobileNumber = phoneNumber;
+      if (!mobileNumber && public_metadata?.phone) mobileNumber = public_metadata.phone;
+      if (!mobileNumber && unsafe_metadata?.phone) mobileNumber = unsafe_metadata.phone;
       
       if (!emailAddress) {
         console.error("No email address found for user update");
@@ -141,10 +187,10 @@ export async function POST(req: NextRequest) {
         {
           $set: {
             clerkId: id, // Ensure clerkId is set
-            firstName: first_name || "User",
-            lastName: last_name || "User",
+            firstName: firstName || "User",
+            lastName: lastName || "User",
             email: emailAddress,
-            ...(phoneNumber && phoneNumber !== "Not provided" && { mobileNumber: phoneNumber })
+            ...(mobileNumber && mobileNumber !== "Not provided" && { mobileNumber: mobileNumber })
           }
         },
         { new: true, upsert: false }
@@ -161,12 +207,12 @@ export async function POST(req: NextRequest) {
         // If user doesn't exist, create them
         const newClient = new clientModel({
           clerkId: id,
-          firstName: first_name || "User",
-          lastName: last_name || "User",
+          firstName: firstName || "User",
+          lastName: lastName || "User",
           email: emailAddress,
-          mobileNumber: phoneNumber || "Not provided",
+          mobileNumber: mobileNumber || "Not provided",
           password: "clerk-auth",
-          username: first_name || emailAddress.split('@')[0],
+          username: firstName || emailAddress.split('@')[0],
           cart: [],
           wishlist: [],
           cartQuantities: {},

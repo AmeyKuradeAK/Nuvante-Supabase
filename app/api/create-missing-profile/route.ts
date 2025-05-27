@@ -1,91 +1,101 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import clientModel from "@/models/Clients";
 import connect from "@/db";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
-    console.log("=== CREATE MISSING PROFILE ===");
-    
-    // Get Clerk user
+    // Get current user from Clerk
     const user = await currentUser();
-    const global_user_email = user?.emailAddresses[0]?.emailAddress;
     
-    console.log("Clerk user:", user ? "Found" : "Not found");
-    console.log("User email:", global_user_email);
-    console.log("User ID:", user?.id);
-    console.log("User firstName:", user?.firstName);
-    console.log("User lastName:", user?.lastName);
-    
-    if (!user || !global_user_email) {
-      return NextResponse.json({
-        error: "No authenticated user found"
-      }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-    
-    // Connect to database
+
     await connect();
-    console.log("Database connected");
-    
+
+    const primaryEmail = user.emailAddresses[0]?.emailAddress;
+    const primaryPhone = user.phoneNumbers?.[0]?.phoneNumber;
+
+    if (!primaryEmail) {
+      return NextResponse.json({ error: "No email found" }, { status: 400 });
+    }
+
     // Check if user already exists
-    const existingUser = await clientModel.findOne({ email: global_user_email });
+    const existingUser = await clientModel.findOne({ 
+      $or: [
+        { clerkId: user.id },
+        { email: primaryEmail }
+      ]
+    });
+
     if (existingUser) {
+      // Update existing user with latest Clerk data
+      const updatedUser = await clientModel.findOneAndUpdate(
+        { _id: existingUser._id },
+        {
+          $set: {
+            clerkId: user.id,
+            firstName: user.firstName || existingUser.firstName || "User",
+            lastName: user.lastName || existingUser.lastName || "User",
+            email: primaryEmail,
+            mobileNumber: primaryPhone || existingUser.mobileNumber || "Not provided",
+            username: user.firstName || existingUser.username || primaryEmail.split('@')[0]
+          }
+        },
+        { new: true }
+      );
+
       return NextResponse.json({
-        message: "User profile already exists",
+        message: "User profile updated successfully",
+        action: "updated",
         user: {
-          email: existingUser.email,
-          firstName: existingUser.firstName,
-          lastName: existingUser.lastName,
-          mobileNumber: existingUser.mobileNumber
+          _id: updatedUser._id,
+          clerkId: updatedUser.clerkId,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          email: updatedUser.email,
+          mobileNumber: updatedUser.mobileNumber
         }
       });
     }
-    
-    // Get user data from Clerk
-    const firstName = user.firstName || "User";
-    const lastName = user.lastName || "User";
-    
-    console.log("Creating user with:", { firstName, lastName, email: global_user_email });
-    
+
     // Create new user profile
     const newClient = new clientModel({
-      firstName: firstName,
-      lastName: lastName,
-      email: global_user_email,
-      mobileNumber: "Not provided", // User can update this later
+      clerkId: user.id,
+      firstName: user.firstName || "User",
+      lastName: user.lastName || "User",
+      email: primaryEmail,
+      mobileNumber: primaryPhone || "Not provided",
       password: "clerk-auth",
-      username: firstName || global_user_email.split('@')[0],
+      username: user.firstName || primaryEmail.split('@')[0],
       cart: [],
       wishlist: [],
       cartQuantities: {},
       cartSizes: {},
       orders: []
     });
-    
+
     const savedClient = await newClient.save();
-    console.log("User profile created:", {
-      id: savedClient._id,
-      email: savedClient.email,
-      firstName: savedClient.firstName,
-      lastName: savedClient.lastName
-    });
-    
+
     return NextResponse.json({
       message: "User profile created successfully",
+      action: "created",
       user: {
-        id: savedClient._id,
-        email: savedClient.email,
+        _id: savedClient._id,
+        clerkId: savedClient.clerkId,
         firstName: savedClient.firstName,
         lastName: savedClient.lastName,
+        email: savedClient.email,
         mobileNumber: savedClient.mobileNumber
       }
     });
-    
+
   } catch (error: any) {
     console.error("Create missing profile error:", error);
-    return NextResponse.json({
-      error: error.message,
-      details: error.stack
+    return NextResponse.json({ 
+      error: "Failed to create user profile",
+      details: error.message 
     }, { status: 500 });
   }
 } 
