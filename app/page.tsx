@@ -1,31 +1,42 @@
+"use client";
 import Navbar from "@/components/Navbar";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import MajorLayout from "./major_layout";
 import Hero from "@/components/Hero";
 import Arrivals from "@/components/Arrivals";
 import Products from "@/components/Products";
 import Services from "@/components/Services";
 import Footer from "@/components/Footer";
-import productModel from "@/models/Product";
-import { motion } from "framer-motion";
+import axios from "axios";
 
-export default async function Page() {
-  const response: any = await productModel
-    .find({})
-    .then((data) => {
-      return data;
-    })
-    .catch((error) => {
-      console.log(error);
-      return [];
-    });
+export default function Page() {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.post("/api/propagation", {
+          every: true,
+        });
+        setProducts(Array.isArray(response.data) ? response.data : []);
+        setLoaded(true);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setProducts([]);
+        setLoaded(true);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Navbar />
       <Hero />
       <MajorLayout>
-        <Arrivals fragment={response === null ? [] : response} />
+        {loaded && <Arrivals fragment={products} />}
         {/* <Services /> */}
       </MajorLayout>
       <Footer />

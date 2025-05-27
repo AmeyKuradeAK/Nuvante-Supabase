@@ -1,9 +1,6 @@
 import { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  experimental: {
-    useCache: true,
-  },
   images: {
     domains: ['cdn.jsdelivr.net'],
   },

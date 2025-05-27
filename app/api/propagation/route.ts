@@ -36,7 +36,15 @@ export async function POST(request: any) {
         return data;
       });
 
-    return new NextResponse(JSON.stringify(full_query ? database : specific));
+    const response = new NextResponse(JSON.stringify(full_query ? database : specific));
+    
+    // Add cache-busting headers
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    response.headers.set('Pragma', 'no-cache');
+    response.headers.set('Expires', '0');
+    response.headers.set('Surrogate-Control', 'no-store');
+    
+    return response;
   } catch (error: any) {
     console.error("in api/propagation/route.ts: ", error);
     return new NextResponse("404");
