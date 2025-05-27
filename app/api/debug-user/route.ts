@@ -55,7 +55,6 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("Debug user error:", error);
     return NextResponse.json({ 
       error: "Failed to debug user",
       details: error.message 
@@ -110,7 +109,6 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("Sync user error:", error);
     return NextResponse.json({ 
       error: "Failed to sync user",
       details: error.message 

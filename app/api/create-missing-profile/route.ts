@@ -92,7 +92,6 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("Create missing profile error:", error);
     return NextResponse.json({ 
       error: "Failed to create user profile",
       details: error.message 

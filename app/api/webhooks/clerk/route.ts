@@ -52,10 +52,7 @@ export async function POST(req: NextRequest) {
     try {
       await connect();
       
-      // Log the full event data for debugging
-      console.log("🔍 Full webhook data:", JSON.stringify(evt.data, null, 2));
-      
-      const { id, email_addresses, first_name, last_name, phone_numbers, public_metadata, private_metadata, unsafe_metadata } = evt.data;
+      const { id, email_addresses, first_name, last_name, phone_numbers, public_metadata, unsafe_metadata } = evt.data;
       
       // Get primary email
       const primaryEmail = email_addresses?.find((email: any) => email.id === evt.data.primary_email_address_id);
@@ -66,29 +63,11 @@ export async function POST(req: NextRequest) {
       const phoneNumber = primaryPhone?.phone_number || phone_numbers?.[0]?.phone_number;
       
       // Extract names from different possible sources
-      let firstName = first_name;
-      let lastName = last_name;
-      
-      // Check if names are in metadata
-      if (!firstName && public_metadata?.firstName) firstName = public_metadata.firstName;
-      if (!lastName && public_metadata?.lastName) lastName = public_metadata.lastName;
-      if (!firstName && unsafe_metadata?.firstName) firstName = unsafe_metadata.firstName;
-      if (!lastName && unsafe_metadata?.lastName) lastName = unsafe_metadata.lastName;
+      let firstName = first_name || public_metadata?.firstName || unsafe_metadata?.firstName;
+      let lastName = last_name || public_metadata?.lastName || unsafe_metadata?.lastName;
       
       // Check if phone is in metadata
-      let mobileNumber = phoneNumber;
-      if (!mobileNumber && public_metadata?.phone) mobileNumber = public_metadata.phone;
-      if (!mobileNumber && unsafe_metadata?.phone) mobileNumber = unsafe_metadata.phone;
-      
-      console.log("📋 Extracted user data:", {
-        id,
-        firstName,
-        lastName,
-        emailAddress,
-        mobileNumber,
-        hasEmailAddresses: !!email_addresses?.length,
-        hasPhoneNumbers: !!phone_numbers?.length
-      });
+      let mobileNumber = phoneNumber || public_metadata?.phone || unsafe_metadata?.phone;
       
       if (!emailAddress) {
         console.error("No email address found for user");
@@ -98,18 +77,17 @@ export async function POST(req: NextRequest) {
       // Check if user already exists
       const existingUser = await clientModel.findOne({ email: emailAddress });
       if (existingUser) {
-        console.log(`User ${emailAddress} already exists in database`);
         return NextResponse.json({ message: "User already exists" }, { status: 200 });
       }
 
-      // Create new user profile
+      // Create new user profile with minimal data - user can update later
       const newClient = new clientModel({
-        clerkId: id, // Store Clerk ID for reference
-        firstName: firstName || "User",
+        clerkId: id,
+        firstName: firstName || emailAddress.split('@')[0] || "User",
         lastName: lastName || "User", 
         email: emailAddress,
         mobileNumber: mobileNumber || "Not provided",
-        password: "clerk-auth", // Since we're using Clerk for auth
+        password: "clerk-auth",
         username: firstName || emailAddress.split('@')[0],
         cart: [],
         wishlist: [],
@@ -119,15 +97,6 @@ export async function POST(req: NextRequest) {
       });
 
       const savedClient = await newClient.save();
-      
-      console.log(`✅ User profile created successfully for ${emailAddress}:`, {
-        id: savedClient._id,
-        clerkId: id,
-        firstName: savedClient.firstName,
-        lastName: savedClient.lastName,
-        email: savedClient.email,
-        mobileNumber: savedClient.mobileNumber
-      });
 
       return NextResponse.json({ 
         message: "User profile created successfully",
@@ -135,7 +104,6 @@ export async function POST(req: NextRequest) {
       }, { status: 200 });
 
     } catch (error: any) {
-      console.error("Error creating user profile:", error);
       return NextResponse.json({ 
         error: "Failed to create user profile",
         details: error.message 
@@ -148,10 +116,7 @@ export async function POST(req: NextRequest) {
     try {
       await connect();
       
-      // Log the full event data for debugging
-      console.log("🔍 Full webhook update data:", JSON.stringify(evt.data, null, 2));
-      
-      const { id, email_addresses, first_name, last_name, phone_numbers, public_metadata, private_metadata, unsafe_metadata } = evt.data;
+      const { id, email_addresses, first_name, last_name, phone_numbers, public_metadata, unsafe_metadata } = evt.data;
       
       // Get primary email
       const primaryEmail = email_addresses?.find((email: any) => email.id === evt.data.primary_email_address_id);
@@ -162,22 +127,13 @@ export async function POST(req: NextRequest) {
       const phoneNumber = primaryPhone?.phone_number || phone_numbers?.[0]?.phone_number;
       
       // Extract names from different possible sources
-      let firstName = first_name;
-      let lastName = last_name;
-      
-      // Check if names are in metadata
-      if (!firstName && public_metadata?.firstName) firstName = public_metadata.firstName;
-      if (!lastName && public_metadata?.lastName) lastName = public_metadata.lastName;
-      if (!firstName && unsafe_metadata?.firstName) firstName = unsafe_metadata.firstName;
-      if (!lastName && unsafe_metadata?.lastName) lastName = unsafe_metadata.lastName;
+      let firstName = first_name || public_metadata?.firstName || unsafe_metadata?.firstName;
+      let lastName = last_name || public_metadata?.lastName || unsafe_metadata?.lastName;
       
       // Check if phone is in metadata
-      let mobileNumber = phoneNumber;
-      if (!mobileNumber && public_metadata?.phone) mobileNumber = public_metadata.phone;
-      if (!mobileNumber && unsafe_metadata?.phone) mobileNumber = unsafe_metadata.phone;
+      let mobileNumber = phoneNumber || public_metadata?.phone || unsafe_metadata?.phone;
       
       if (!emailAddress) {
-        console.error("No email address found for user update");
         return NextResponse.json({ error: "No email address found" }, { status: 400 });
       }
 
@@ -197,13 +153,11 @@ export async function POST(req: NextRequest) {
       );
 
       if (updatedUser) {
-        console.log(`✅ User profile updated successfully for ${emailAddress}`);
         return NextResponse.json({ 
           message: "User profile updated successfully",
           userId: updatedUser._id 
         }, { status: 200 });
       } else {
-        console.log(`User ${emailAddress} not found for update, creating new profile`);
         // If user doesn't exist, create them
         const newClient = new clientModel({
           clerkId: id,
@@ -221,7 +175,6 @@ export async function POST(req: NextRequest) {
         });
 
         const savedClient = await newClient.save();
-        console.log(`✅ New user profile created during update for ${emailAddress}`);
         
         return NextResponse.json({ 
           message: "User profile created during update",
@@ -230,7 +183,6 @@ export async function POST(req: NextRequest) {
       }
 
     } catch (error: any) {
-      console.error("Error updating user profile:", error);
       return NextResponse.json({ 
         error: "Failed to update user profile",
         details: error.message 
@@ -249,19 +201,16 @@ export async function POST(req: NextRequest) {
       const deletedUser = await clientModel.findOneAndDelete({ clerkId: id });
       
       if (deletedUser) {
-        console.log(`✅ User profile deleted successfully for Clerk ID: ${id}`);
         return NextResponse.json({ 
           message: "User profile deleted successfully" 
         }, { status: 200 });
       } else {
-        console.log(`User with Clerk ID ${id} not found for deletion`);
         return NextResponse.json({ 
           message: "User not found" 
         }, { status: 404 });
       }
 
     } catch (error: any) {
-      console.error("Error deleting user profile:", error);
       return NextResponse.json({ 
         error: "Failed to delete user profile",
         details: error.message 
@@ -269,6 +218,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  console.log(`Unhandled webhook event: ${eventType}`);
   return NextResponse.json({ message: "Webhook received" }, { status: 200 });
 } 
