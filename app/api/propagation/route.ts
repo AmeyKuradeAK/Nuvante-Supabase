@@ -8,6 +8,9 @@ import { currentUser } from "@clerk/nextjs/server";
  * T̶O̶D̶O̶:̶ t̶r̶y̶ t̶o̶ c̶o̶n̶d̶i̶t̶i̶o̶n̶ u̶s̶i̶n̶g̶ "̶c̶o̶n̶d̶i̶t̶i̶o̶n̶s̶"̶
  */
 
+// Add caching for 5 minutes
+export const revalidate = 300;
+
 export async function POST(request: any) {
   // using currentUser from @clerkjs/server to fetch details about the currentUser (if needed)
   const user = await currentUser();
@@ -24,29 +27,27 @@ export async function POST(request: any) {
       return new NextResponse("404");
     }
 
-    const database = await productModel.find({}).then((data) => {
-      console.log("data from the server: \n", data);
-      return data;
-    });
-
-    const specific = await productModel
-      .findOne({ _id: body.id })
-      .then((data) => {
-        console.log("data from the server: \n", data);
-        return data;
-      });
-
-    const response = new NextResponse(JSON.stringify(full_query ? database : specific));
+    let data;
     
-    // Add cache-busting headers
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    response.headers.set('Pragma', 'no-cache');
-    response.headers.set('Expires', '0');
-    response.headers.set('Surrogate-Control', 'no-store');
+    if (full_query) {
+      // Optimize: Only fetch necessary fields for product listing
+      data = await productModel.find({}).select(
+        '_id productName productImages productPrice cancelledProductPrice latest'
+      ).lean(); // Use lean() for better performance
+    } else {
+      // Fetch specific product with all details
+      data = await productModel.findOne({ _id: body.id }).lean();
+    }
+
+    const response = new NextResponse(JSON.stringify(data));
+    
+    // Add optimized cache headers
+    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    response.headers.set('Content-Type', 'application/json');
     
     return response;
   } catch (error: any) {
     console.error("in api/propagation/route.ts: ", error);
-    return new NextResponse("404");
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

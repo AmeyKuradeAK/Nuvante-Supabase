@@ -105,19 +105,17 @@ export default function Navbar() {
               window.location.href = "/";
             }}
           >
-            <video
-              className="top-0 p-1 w-[85px] md:h-fit md:w-[95px]"
-              autoPlay
-              loop
-              playsInline
-              muted
-              preload="auto"
+            <Image
+              src="/logo.png"
+              alt="Nuvante Logo"
+              width={85}
+              height={85}
+              className="p-1 md:w-[95px] md:h-[95px]"
+              priority
               onClick={() => {
                 window.location.href = "/";
               }}
-            >
-              <source src={animated_logo} type="video/mp4"></source>
-            </video>
+            />
           </div>
           <div className="hidden md:flex md:items-center md:space-x-8">
             {navigation.map((item) => (
@@ -174,19 +172,17 @@ export default function Navbar() {
               window.location.href = "/";
             }}
           >
-            <video
-              className="top-0 p-1 w-[85px] md:h-fit md:w-[95px]"
-              autoPlay
-              loop
-              playsInline
-              muted
-              preload="auto"
+            <Image
+              src="/logo.png"
+              alt="Nuvante Logo"
+              width={85}
+              height={85}
+              className="p-1 md:w-[95px] md:h-[95px]"
+              priority
               onClick={() => {
                 window.location.href = "/";
               }}
-            >
-              <source src={animated_logo} type="video/mp4"></source>
-            </video>
+            />
           </div>
           <div className="flex items-center gap-4">
             <Link href="/Cart" className="text-gray-600 hover:text-[#DB4444]" onClick={handleCartClick}>

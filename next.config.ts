@@ -1,6 +1,11 @@
 import { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Performance optimizations
+  compress: true,
+  poweredByHeader: false,
+  
+  // Image optimization
   images: {
     domains: ['cdn.jsdelivr.net', 'res.cloudinary.com'],
     remotePatterns: [
@@ -15,7 +20,16 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
   },
+
+  // Experimental features for better performance
+  experimental: {
+    scrollRestoration: true,
+  },
+
+  // Headers for better caching
   async headers() {
     return [
       {
@@ -31,6 +45,23 @@ const nextConfig: NextConfig = {
             key: "Access-Control-Allow-Headers",
             value:
               "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version",
+          },
+        ],
+      },
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
           },
         ],
       },
