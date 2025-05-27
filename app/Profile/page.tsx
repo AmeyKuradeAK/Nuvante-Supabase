@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
+import dynamic from "next/dynamic";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,7 +13,6 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import axios from "axios";
-import { useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useAlert } from "@/context/AlertContext";
@@ -248,7 +248,7 @@ const ProfileForm = React.memo(({
 
 ProfileForm.displayName = 'ProfileForm';
 
-const ProfilePage = () => {
+const ProfilePageContent = () => {
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: "",
     lastName: "",
@@ -263,6 +263,7 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isIncomplete, setIsIncomplete] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const { showAlert } = useAlert();
   const router = useRouter();
@@ -270,7 +271,12 @@ const ProfilePage = () => {
   const { user, isSignedIn } = useUser();
   const { signOut } = useClerk();
 
-  const isWelcome = searchParams.get('welcome') === 'true';
+  const isWelcome = searchParams?.get('welcome') === 'true';
+
+  // Ensure component only renders on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const checkProfileCompletion = (data: ProfileData) => {
     const incomplete = !data.firstName || 
@@ -284,6 +290,9 @@ const ProfilePage = () => {
   };
 
   const handleLogout = async () => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     try {
       await signOut();
       showAlert("Logged out successfully", "success");
@@ -295,6 +304,9 @@ const ProfilePage = () => {
   };
 
   const fetchUserData = useCallback(async () => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     try {
       // Use the new profile API
       const response = await axios.get<{ user: any }>("/api/profile");
@@ -326,6 +338,9 @@ const ProfilePage = () => {
   }, [showAlert]);
 
   const updateProfile = useCallback(async () => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     // Validate input
     if (!profileData.firstName.trim() || profileData.firstName === 'User') {
       showAlert("Please enter your first name", "error");
@@ -382,6 +397,9 @@ const ProfilePage = () => {
   }, [profileData, showAlert, fetchUserData, router, isWelcome]);
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     if (!isSignedIn || !user) {
       showAlert("Please sign in to access your profile", "warning");
       router.push("/sign-in");
@@ -392,10 +410,31 @@ const ProfilePage = () => {
 
   // Show welcome alert on first load
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     if (isWelcome && isLoaded) {
       showAlert("Welcome to Nuvante! Please complete your profile to get started.", "info");
     }
   }, [isWelcome, isLoaded, showAlert]);
+
+  // Don't render anything until mounted on client
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-[#DB4444] border-t-transparent rounded-full animate-spin"></div>
+          <Image 
+            src={logo} 
+            alt="Loading..." 
+            width={40} 
+            height={40} 
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -481,6 +520,33 @@ const ProfilePage = () => {
       )}
     </div>
   );
+};
+
+// Loading component for Suspense fallback
+const ProfilePageLoading = () => (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="relative">
+      <div className="w-16 h-16 border-4 border-[#DB4444] border-t-transparent rounded-full animate-spin"></div>
+      <Image 
+        src="/logo.png" 
+        alt="Loading..." 
+        width={40} 
+        height={40} 
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse"
+      />
+    </div>
+  </div>
+);
+
+// Create a dynamic wrapper for the ProfilePageContent component
+const DynamicProfileContent = dynamic(() => Promise.resolve({ default: ProfilePageContent }), {
+  ssr: false,
+  loading: () => <ProfilePageLoading />
+});
+
+// Main Profile Page component
+const ProfilePage = () => {
+  return <DynamicProfileContent />;
 };
 
 export default ProfilePage;
