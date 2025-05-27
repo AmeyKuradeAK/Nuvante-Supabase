@@ -75,7 +75,7 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ images }) => {
       {/* Thumbnails - Horizontal on mobile, vertical on desktop */}
       <div className="flex lg:flex-col gap-2 lg:w-[120px] px-4 lg:px-0">
         {/* Mobile Thumbnails - Horizontally centered and scrollable */}
-        <div className="flex lg:hidden gap-2 overflow-x-auto w-full justify-center">
+        <div className="flex lg:hidden gap-2 overflow-x-auto w-full justify-center scrollbar-hide">
           {images.map((image, index) => (
             <motion.div
               key={index}

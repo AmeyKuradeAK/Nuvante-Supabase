@@ -74,7 +74,7 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+        className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl scrollbar-hide"
       >
         <div className="p-4 sm:p-6">
           <div className="flex justify-between items-center mb-6 border-b pb-4">
