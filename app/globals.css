@@ -272,28 +272,6 @@ video::-webkit-media-controls-start-playback-button {
   overflow: hidden !important;
 }
 
-/* Additional safety for mobile menu items */
-@media (max-width: 1023px) {
-  .navbar_responsive {
-    position: relative;
-    z-index: 50;
-  }
-  
-  /* Ensure no content bleeds outside the container */
-  .navbar_responsive > div:last-child {
-    position: relative;
-    overflow: hidden;
-  }
-  
-  /* Hide any overflowing content */
-  .navbar_responsive.h-\[90px\] > div:last-child {
-    max-height: 0;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-}
-
 .embla {
   overflow: hidden;
 }

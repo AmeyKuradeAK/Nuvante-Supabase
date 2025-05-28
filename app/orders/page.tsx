@@ -64,37 +64,21 @@ interface ApiResponse {
 
 const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps) => {
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-    >
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl scrollbar-hide"
-      >
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl scrollbar-hide">
         <div className="p-4 sm:p-6">
           <div className="flex justify-between items-center mb-6 border-b pb-4">
             <h2 className="text-2xl font-bold text-gray-800">Order Details</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-[#DB4444] transition-all duration-300 p-2 hover:bg-gray-100 rounded-full transform hover:scale-110"
+              className="text-gray-500 hover:text-[#DB4444] transition-colors duration-200 p-2 hover:bg-gray-100 rounded-full"
             >
               <XCircle className="w-6 h-6" />
             </button>
           </div>
 
           <div className="space-y-6">
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl"
-            >
+            <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl">
               <h3 className="font-semibold mb-4 text-gray-800 text-lg">Order Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
@@ -107,35 +91,24 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                     isHighlighted: true
                   },
                   { label: "Total Amount", value: `Rs. ${order.amount}`, isHighlighted: true },
-                  { label: "Tracking ID", value: order.trackingId || 'Tracking ID will be available soon', isHighlighted: true, fullWidth: true }
+                  { label: "Tracking ID", value: order.trackingId || "You'll receive tracking ID soon", isHighlighted: true, fullWidth: true }
                 ].map((item, index) => (
-                  <motion.div
+                  <div
                     key={index}
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.1 * (index + 1) }}
-                    className={`bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-[1.02] ${item.fullWidth ? 'sm:col-span-2' : ''}`}
+                    className={`bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 ${item.fullWidth ? 'sm:col-span-2' : ''}`}
                   >
                     <p className="text-gray-600 text-sm">{item.label}</p>
                     <p className={`font-medium mt-1 ${item.isHighlighted ? 'text-[#DB4444]' : 'text-gray-800'}`}>{item.value}</p>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl"
-            >
+            <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl">
               <h3 className="font-semibold mb-4 text-gray-800 text-lg">Shipping Address</h3>
-              <motion.div 
-                whileHover={{ scale: 1.02 }}
-                className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
-              >
+              <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex items-start gap-4">
-                  <div className="bg-[#DB4444]/10 p-3 rounded-full transform hover:scale-110 transition-transform duration-300">
+                  <div className="bg-[#DB4444]/10 p-3 rounded-full">
                     <MapPin className="w-6 h-6 text-[#DB4444]" />
                   </div>
                   <div>
@@ -144,25 +117,20 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                     {order.shippingAddress.apartment && <p className="text-gray-600">{order.shippingAddress.apartment}</p>}
                     <p className="text-gray-600">{order.shippingAddress.city}</p>
                     {order.shippingAddress.pin && <p className="text-gray-600">PIN: {order.shippingAddress.pin}</p>}
-                    <div className="flex items-center gap-3 mt-3 group">
-                      <Phone className="w-4 h-4 text-[#DB4444] transform group-hover:scale-110 transition-transform duration-300" />
+                    <div className="flex items-center gap-3 mt-3">
+                      <Phone className="w-4 h-4 text-[#DB4444]" />
                       <p className="text-gray-600">{order.shippingAddress.phone}</p>
                     </div>
-                    <div className="flex items-center gap-3 mt-2 group">
-                      <Mail className="w-4 h-4 text-[#DB4444] transform group-hover:scale-110 transition-transform duration-300" />
+                    <div className="flex items-center gap-3 mt-2">
+                      <Mail className="w-4 h-4 text-[#DB4444]" />
                       <p className="text-gray-600">{order.shippingAddress.email}</p>
                     </div>
                   </div>
                 </div>
-              </motion.div>
-            </motion.div>
+              </div>
+            </div>
 
-            <motion.div 
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl"
-            >
+            <div className="bg-gradient-to-r from-[#DB4444]/5 to-transparent p-6 rounded-xl">
               <h3 className="font-semibold mb-4 text-gray-800 text-lg">Items</h3>
               <div className="space-y-4">
                 {order.itemDetails.map((item, index) => {
@@ -170,48 +138,44 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                   if (!product) return null;
                   
                   return (
-                    <motion.div
+                    <div
                       key={index}
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.1 * (index + 1) }}
-                      whileHover={{ scale: 1.02 }}
-                      className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ease-in-out"
+                      className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
                     >
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                        <div className="w-24 h-24 relative shrink-0 group">
+                        <div className="w-24 h-24 relative shrink-0">
                           <img
                             src={product.productImages[0]}
                             alt={product.productName}
-                            className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-110"
+                            className="w-full h-full object-cover rounded-lg"
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-gray-800 text-lg truncate group-hover:text-[#DB4444] transition-colors duration-300">{product.productName}</h3>
+                          <h3 className="font-medium text-gray-800 text-lg truncate">{product.productName}</h3>
                           <div className="mt-3 space-y-2">
                             <div className="flex items-center gap-3">
                               <span className="text-sm text-gray-600">Size:</span>
-                              <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full transform hover:scale-105 transition-transform duration-300">{item.size || 'Not selected'}</span>
+                              <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full">{item.size || 'Not selected'}</span>
                             </div>
                             <div className="flex items-center gap-3">
                               <span className="text-sm text-gray-600">Quantity:</span>
-                              <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full transform hover:scale-105 transition-transform duration-300">{item.quantity}</span>
+                              <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full">{item.quantity}</span>
                             </div>
-                            <p className="text-[#DB4444] font-semibold text-lg mt-2 transform hover:scale-105 transition-transform duration-300">
+                            <p className="text-[#DB4444] font-semibold text-lg mt-2">
                               Rs. {product.productPrice * item.quantity}
                             </p>
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
@@ -446,15 +410,13 @@ const OrdersPage = () => {
       </div>
       <Footer />
 
-      <AnimatePresence>
-        {selectedOrder && (
-          <OrderDetailsModal
-            order={selectedOrder}
-            onClose={() => setSelectedOrder(null)}
-            products={products}
-          />
-        )}
-      </AnimatePresence>
+      {selectedOrder && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          products={products}
+        />
+      )}
     </div>
   );
 };
