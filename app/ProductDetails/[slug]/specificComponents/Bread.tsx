@@ -20,23 +20,22 @@ export default function Bread() {
   const [productName, setProductName] = useState<string>("Loading...");
   const [productType, setProductType] = useState<string>("Loading...");
 
-  console.log("breadcrumb is loaded!");
-
   useEffect(() => {
-    (async () => {
-      console.log("async function started in breadcrumb");
-      const response = await axios.post(`/api/propagation/`, {
-        id: url_param.slug,
-        every: false,
-      });
-      // Type assertion for response.data
-      const data = response.data as { productName: string; type: string };
-      console.log("the response for the breadcrumb: ", data);
-      setProductName(data.productName);
-      console.log(productName);
-      setProductType(data.type);
-    })();
-  });
+    const fetchBreadcrumb = async () => {
+      try {
+        const response = await axios.post(`/api/propagation/`, {
+          id: url_param.slug,
+          every: false,
+        });
+        const data = response.data as { productName: string; type: string };
+        setProductName(data.productName);
+        setProductType(data.type);
+      } catch (error) {
+        console.error("Error fetching breadcrumb data:", error);
+      }
+    };
+    fetchBreadcrumb();
+  }, [url_param.slug]);
 
   return (
     <>

@@ -105,15 +105,29 @@ export default function Navbar() {
               window.location.href = "/";
             }}
           >
-            <Image
-              src="/logo.png"
-              alt="Nuvante Logo"
+            <video
+              src={animated_logo}
+              autoPlay
+              loop
+              muted
+              playsInline
               width={85}
               height={85}
-              className="p-1 md:w-[95px] md:h-[95px]"
-              priority
+              className="p-1 md:w-[95px] md:h-[95px] object-contain"
               onClick={() => {
                 window.location.href = "/";
+              }}
+              onError={(e) => {
+                // Fallback to static logo if video fails to load
+                const target = e.target as HTMLVideoElement;
+                const img = document.createElement('img');
+                img.src = '/logo.png';
+                img.alt = 'Nuvante Logo';
+                img.width = 85;
+                img.height = 85;
+                img.className = 'p-1 md:w-[95px] md:h-[95px]';
+                img.onclick = () => { window.location.href = "/"; };
+                target.parentNode?.replaceChild(img, target);
               }}
             />
           </div>
@@ -172,15 +186,29 @@ export default function Navbar() {
               window.location.href = "/";
             }}
           >
-            <Image
-              src="/logo.png"
-              alt="Nuvante Logo"
+            <video
+              src={animated_logo}
+              autoPlay
+              loop
+              muted
+              playsInline
               width={85}
               height={85}
-              className="p-1 md:w-[95px] md:h-[95px]"
-              priority
+              className="p-1 md:w-[95px] md:h-[95px] object-contain"
               onClick={() => {
                 window.location.href = "/";
+              }}
+              onError={(e) => {
+                // Fallback to static logo if video fails to load
+                const target = e.target as HTMLVideoElement;
+                const img = document.createElement('img');
+                img.src = '/logo.png';
+                img.alt = 'Nuvante Logo';
+                img.width = 85;
+                img.height = 85;
+                img.className = 'p-1 md:w-[95px] md:h-[95px]';
+                img.onclick = () => { window.location.href = "/"; };
+                target.parentNode?.replaceChild(img, target);
               }}
             />
           </div>

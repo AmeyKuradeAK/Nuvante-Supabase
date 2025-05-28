@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
     ],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,
+    dangerouslyAllowSVG: false,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   // Experimental features for better performance
@@ -29,7 +31,7 @@ const nextConfig: NextConfig = {
     scrollRestoration: true,
   },
 
-  // Headers for better caching
+  // Headers for better caching and security
   async headers() {
     return [
       {
@@ -62,6 +64,18 @@ const nextConfig: NextConfig = {
           {
             key: "X-XSS-Protection",
             value: "1; mode=block",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=31536000; includeSubDomains; preload",
           },
         ],
       },

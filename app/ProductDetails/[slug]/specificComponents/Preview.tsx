@@ -91,8 +91,7 @@ const Preview: React.FC = () => {
 
     fetchImages();
     if (slug === undefined) {
-      console.log("the slug is undefined");
-      window.location.href = "https://google.com";
+      window.location.href = "/";
     } else {
       setHash(slug);
     }

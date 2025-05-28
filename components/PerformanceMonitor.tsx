@@ -18,10 +18,6 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       const endTime = performance.now();
       const loadTime = endTime - startTime;
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`${componentName} loaded in ${loadTime.toFixed(2)}ms`);
-      }
-      
       onLoadTime?.(loadTime);
       observer.disconnect();
     });
@@ -53,10 +49,7 @@ export const usePerformanceMetrics = (componentName: string) => {
     return () => {
       const endTime = performance.now();
       const renderTime = endTime - startTime;
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`${componentName} render time: ${renderTime.toFixed(2)}ms`);
-      }
+      // Performance metrics can be sent to analytics service here
     };
   }, [componentName]);
 };
@@ -73,18 +66,14 @@ export const measureApiCall = async <T,>(
     const endTime = performance.now();
     const duration = endTime - startTime;
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`API ${apiName} completed in ${duration.toFixed(2)}ms`);
-    }
+    // API performance metrics can be sent to analytics service here
     
     return result;
   } catch (error) {
     const endTime = performance.now();
     const duration = endTime - startTime;
     
-    if (process.env.NODE_ENV === 'development') {
-      console.error(`API ${apiName} failed after ${duration.toFixed(2)}ms:`, error);
-    }
+    // Error metrics can be sent to analytics service here
     
     throw error;
   }
