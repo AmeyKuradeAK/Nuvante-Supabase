@@ -30,7 +30,11 @@ interface ProductData {
   productImages: string[];
 }
 
-const Preview = () => {
+interface PreviewProps {
+  onImagesLoaded?: () => void;
+}
+
+const Preview: React.FC<PreviewProps> = ({ onImagesLoaded }) => {
   const [hash, setHash] = useState<string | string[]>("");
   const { slug } = useParams();
   const [current, setCurrent] = useState("");
@@ -82,9 +86,19 @@ const Preview = () => {
 
         setLoaded(true);
         productImages.reverse();
+        
+        // Call onImagesLoaded when content is ready to show
+        // This allows the page to show immediately while images load
+        if (onImagesLoaded) {
+          onImagesLoaded();
+        }
       } catch (error) {
         console.error("Error fetching product images:", error);
         showAlert("Error loading product images", "error");
+        // Still call onImagesLoaded even on error to show the page
+        if (onImagesLoaded) {
+          onImagesLoaded();
+        }
       }
     };
 
@@ -95,7 +109,7 @@ const Preview = () => {
     } else {
       setHash(slug);
     }
-  }, [hash, slug, showAlert]);
+  }, [hash, slug, showAlert, onImagesLoaded]);
 
   useEffect(() => {
     // Only check cart state if user is signed in
@@ -226,7 +240,7 @@ const Preview = () => {
         <div className="flex flex-col lg:flex-row gap-10 w-full max-w-full overflow-x-hidden -mx-4 lg:mx-0">
           {/* Product Images */}
           <div className="flex-1 lg:w-[60%]">
-            <ProductCarousel images={productImages} />
+            <ProductCarousel images={productImages} onImagesLoaded={onImagesLoaded} />
           </div>
 
           {/* Product Details */}
