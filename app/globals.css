@@ -220,8 +220,78 @@ video {
   pointer-events: none;
 }
 
+/* iOS-specific video styles for better autoplay support */
+video {
+  -webkit-playsinline: true;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Hide video controls on all devices */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-panel {
+  display: none !important;
+}
+
+video::-webkit-media-controls-play-button {
+  display: none !important;
+}
+
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+}
+
+/* Force hardware acceleration for smooth video playback */
+.navbar-brand video {
+  will-change: transform;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
 .navbar_wrapper {
   border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile navbar strict visibility controls */
+.navbar_responsive {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+}
+
+/* Ensure hamburger menu content is strictly hidden when closed */
+.navbar_responsive:not(.menu-open) .menu-content {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Additional safety for mobile menu items */
+@media (max-width: 1023px) {
+  .navbar_responsive {
+    position: relative;
+    z-index: 50;
+  }
+  
+  /* Ensure no content bleeds outside the container */
+  .navbar_responsive > div:last-child {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Hide any overflowing content */
+  .navbar_responsive.h-\[90px\] > div:last-child {
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
 
 .embla {

@@ -23,6 +23,7 @@ interface OrderItem {
     city: string;
     phone: string;
     email: string;
+    pin: string;
   };
 }
 
@@ -106,7 +107,8 @@ let clientSchema = new mongoose.Schema({
         apartment: String,
         city: String,
         phone: String,
-        email: String
+        email: String,
+        pin: String
       }
     }],
     required: true,

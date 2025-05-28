@@ -29,6 +29,7 @@ interface OrderItem {
     city: string;
     phone: string;
     email: string;
+    pin: string;
   };
 }
 

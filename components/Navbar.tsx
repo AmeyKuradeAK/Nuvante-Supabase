@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useUser, useClerk } from "@clerk/nextjs";
@@ -29,13 +29,80 @@ const navigation = [
 
 export default function Navbar() {
   const [open, setOpen] = useState<Boolean>(false);
-  const user = useUser();
+  const desktopVideoRef = useRef<HTMLVideoElement>(null);
+  const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const { showAlert } = useAlert();
-  const router = useRouter();
   const { signOut } = useClerk();
+  const router = useRouter();
+  const user = useUser();
+
+  // Force video play on component mount and handle iOS autoplay restrictions
+  useEffect(() => {
+    const playVideo = async (videoElement: HTMLVideoElement | null) => {
+      if (videoElement) {
+        try {
+          // Reset video to start
+          videoElement.currentTime = 0;
+          
+          // Set additional iOS-friendly attributes
+          videoElement.setAttribute('webkit-playsinline', 'true');
+          videoElement.setAttribute('playsinline', 'true');
+          videoElement.muted = true;
+          videoElement.loop = true;
+          
+          // Try to play the video
+          const playPromise = videoElement.play();
+          
+          if (playPromise !== undefined) {
+            await playPromise;
+          }
+        } catch (error) {
+          // If autoplay fails, we'll handle it in the click event
+          console.log("Autoplay prevented, will play on user interaction");
+          
+          // Try alternative approach for iOS
+          setTimeout(() => {
+            if (videoElement && videoElement.paused) {
+              videoElement.play().catch(() => {
+                // Final fallback - the video will play on user interaction
+              });
+            }
+          }, 100);
+        }
+      }
+    };
+
+    // Play both videos with a slight delay
+    setTimeout(() => {
+      playVideo(desktopVideoRef.current);
+      playVideo(mobileVideoRef.current);
+    }, 100);
+
+    // Add event listeners for user interaction to ensure video plays
+    const handleUserInteraction = () => {
+      playVideo(desktopVideoRef.current);
+      playVideo(mobileVideoRef.current);
+      
+      // Remove listeners after first interaction
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('scroll', handleUserInteraction);
+    };
+
+    // Listen for various user interactions
+    document.addEventListener('touchstart', handleUserInteraction, { passive: true });
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('scroll', handleUserInteraction, { passive: true });
+
+    return () => {
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('scroll', handleUserInteraction);
+    };
+  }, []);
 
   const handleNavbar = () => {
-    setOpen((prevOpen) => !prevOpen);
+    setOpen(!open);
   };
 
   const handleProfileClick = (e: React.MouseEvent) => {
@@ -88,6 +155,23 @@ export default function Navbar() {
     }
   };
 
+  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement>, isMobile: boolean = false) => {
+    // Fallback to static logo if video fails to load
+    const target = e.target as HTMLVideoElement;
+    const img = document.createElement('img');
+    img.src = '/logo.png';
+    img.alt = 'Nuvante Logo';
+    img.width = 85;
+    img.height = 85;
+    img.className = 'p-1 md:w-[95px] md:h-[95px] object-contain cursor-pointer';
+    img.onclick = () => { window.location.href = "/"; };
+    target.parentNode?.replaceChild(img, target);
+  };
+
+  const handleLogoClick = () => {
+    window.location.href = "/";
+  };
+
   return (
     <>
       <div
@@ -101,33 +185,33 @@ export default function Navbar() {
         <div className="flex font-bold uppercase lg:justify-between justify-start lg:flex-row flex-col lg:items-center mt-4 navbar w-[90%] mx-auto">
           <div
             className="navbar-brand flex items-center cursor-pointer w-fit"
-            onClick={() => {
-              window.location.href = "/";
-            }}
+            onClick={handleLogoClick}
           >
             <video
+              ref={desktopVideoRef}
               src={animated_logo}
               autoPlay
               loop
               muted
               playsInline
+              preload="auto"
+              disablePictureInPicture
+              controls={false}
               width={85}
               height={85}
-              className="p-1 md:w-[95px] md:h-[95px] object-contain"
-              onClick={() => {
-                window.location.href = "/";
-              }}
-              onError={(e) => {
-                // Fallback to static logo if video fails to load
-                const target = e.target as HTMLVideoElement;
-                const img = document.createElement('img');
-                img.src = '/logo.png';
-                img.alt = 'Nuvante Logo';
-                img.width = 85;
-                img.height = 85;
-                img.className = 'p-1 md:w-[95px] md:h-[95px]';
-                img.onclick = () => { window.location.href = "/"; };
-                target.parentNode?.replaceChild(img, target);
+              className="p-1 md:w-[95px] md:h-[95px] object-contain cursor-pointer"
+              style={{ 
+                pointerEvents: 'none',
+                WebkitBackfaceVisibility: 'hidden'
+              } as React.CSSProperties}
+              onError={handleVideoError}
+              onLoadedData={() => {
+                // Ensure video plays when loaded
+                if (desktopVideoRef.current) {
+                  desktopVideoRef.current.play().catch(() => {
+                    // Autoplay prevented, will play on user interaction
+                  });
+                }
               }}
             />
           </div>
@@ -167,9 +251,9 @@ export default function Navbar() {
         style={{
           transition: "all 0.3s ease-in-out",
         }}
-        className={`navbar_responsive lg:hidden flex flex-col py-3 overflow-y-hidden relative ${
-          open ? "h-[200px]" : "h-[90px]"
-        }`}
+        className={`navbar_responsive lg:hidden flex flex-col py-3 relative ${
+          open ? "h-[200px] menu-open" : "h-[90px]"
+        } overflow-hidden`}
       >
         <div className="flex justify-between items-center px-4">
           <div
@@ -182,33 +266,33 @@ export default function Navbar() {
           </div>
           <div
             className="navbar-brand flex items-center cursor-pointer w-fit"
-            onClick={() => {
-              window.location.href = "/";
-            }}
+            onClick={handleLogoClick}
           >
             <video
+              ref={mobileVideoRef}
               src={animated_logo}
               autoPlay
               loop
               muted
               playsInline
+              preload="auto"
+              disablePictureInPicture
+              controls={false}
               width={85}
               height={85}
-              className="p-1 md:w-[95px] md:h-[95px] object-contain"
-              onClick={() => {
-                window.location.href = "/";
-              }}
-              onError={(e) => {
-                // Fallback to static logo if video fails to load
-                const target = e.target as HTMLVideoElement;
-                const img = document.createElement('img');
-                img.src = '/logo.png';
-                img.alt = 'Nuvante Logo';
-                img.width = 85;
-                img.height = 85;
-                img.className = 'p-1 md:w-[95px] md:h-[95px]';
-                img.onclick = () => { window.location.href = "/"; };
-                target.parentNode?.replaceChild(img, target);
+              className="p-1 md:w-[95px] md:h-[95px] object-contain cursor-pointer"
+              style={{ 
+                pointerEvents: 'none',
+                WebkitBackfaceVisibility: 'hidden'
+              } as React.CSSProperties}
+              onError={(e) => handleVideoError(e, true)}
+              onLoadedData={() => {
+                // Ensure video plays when loaded
+                if (mobileVideoRef.current) {
+                  mobileVideoRef.current.play().catch(() => {
+                    // Autoplay prevented, will play on user interaction
+                  });
+                }
               }}
             />
           </div>
@@ -221,46 +305,68 @@ export default function Navbar() {
             </Link>
           </div>
         </div>
-        <div className="flex-1 px-4">
-          <div className="grid grid-cols-2 gap-4 mt-4 pb-6">
-            <div className="space-y-4">
-              {navigation.slice(0, 2).map((item) => (
+        
+        {/* Menu Items Container with strict visibility control */}
+        {open && (
+          <div 
+            className={`menu-content px-4 transition-all duration-300 ease-in-out ${
+              open 
+                ? 'opacity-100 translate-y-0 visible' 
+                : 'opacity-0 -translate-y-4 invisible'
+            }`}
+            style={{
+              maxHeight: open ? '200px' : '0px',
+              overflow: 'hidden'
+            }}
+          >
+            <div className="grid grid-cols-2 gap-4 mt-4 pb-6">
+              <div className="space-y-4">
+                {navigation.slice(0, 2).map((item) => (
+                  <Link 
+                    key={item.name}
+                    href={item.href} 
+                    className="block hover:text-[#DB4444] transition-colors"
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
                 <Link 
-                  key={item.name}
-                  href={item.href} 
+                  href="/Wishlist" 
                   className="block hover:text-[#DB4444] transition-colors"
+                  onClick={(e) => {
+                    handleWishlistClick(e);
+                    setOpen(false);
+                  }}
                 >
-                  {item.name}
+                  Wishlist
                 </Link>
-              ))}
-              <Link 
-                href="/Wishlist" 
-                className="block hover:text-[#DB4444] transition-colors"
-                onClick={handleWishlistClick}
-              >
-                Wishlist
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {navigation.slice(2).map((item) => (
+              </div>
+              <div className="space-y-4">
+                {navigation.slice(2).map((item) => (
+                  <Link 
+                    key={item.name}
+                    href={item.href} 
+                    className="block hover:text-[#DB4444] transition-colors"
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
                 <Link 
-                  key={item.name}
-                  href={item.href} 
+                  href="/orders" 
                   className="block hover:text-[#DB4444] transition-colors"
+                  onClick={(e) => {
+                    handleOrdersClick(e);
+                    setOpen(false);
+                  }}
                 >
-                  {item.name}
+                  Orders
                 </Link>
-              ))}
-              <Link 
-                href="/orders" 
-                className="block hover:text-[#DB4444] transition-colors"
-                onClick={handleOrdersClick}
-              >
-                Orders
-              </Link>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

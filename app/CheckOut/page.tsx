@@ -58,6 +58,7 @@ interface OrderData {
     city: string;
     phone: string;
     email: string;
+    pin: string;
   };
 }
 
@@ -94,7 +95,8 @@ const CheckoutContent = () => {
     apartment: '',
     city: '',
     phone: '',
-    email: ''
+    email: '',
+    pin: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,7 +137,8 @@ const CheckoutContent = () => {
       formData.address.trim() !== '' &&
       formData.city.trim() !== '' &&
       formData.phone.trim() !== '' &&
-      formData.email.trim() !== ''
+      formData.email.trim() !== '' &&
+      formData.pin.trim() !== ''
     );
   };
 
@@ -284,7 +287,8 @@ const CheckoutContent = () => {
           apartment: formData.apartment,
           city: formData.city,
           phone: formData.phone,
-          email: formData.email
+          email: formData.email,
+          pin: formData.pin
         }
       };
 
@@ -465,6 +469,19 @@ const CheckoutContent = () => {
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
                           placeholder="Enter your email"
+                        />
+                      </motion.div>
+                      <motion.div whileHover={{ scale: 1.02 }} className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">PIN Code</label>
+                        <input
+                          type="text"
+                          name="pin"
+                          value={formData.pin}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                          placeholder="Enter your PIN code"
+                          maxLength={6}
+                          pattern="[0-9]{6}"
                         />
                       </motion.div>
                     </div>

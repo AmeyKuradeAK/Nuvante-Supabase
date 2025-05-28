@@ -43,6 +43,7 @@ interface OrderItem {
     city: string;
     phone: string;
     email: string;
+    pin: string;
   };
   estimatedDeliveryDate: string;
 }
@@ -142,6 +143,7 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                     <p className="text-gray-600 mt-1">{order.shippingAddress.streetAddress}</p>
                     {order.shippingAddress.apartment && <p className="text-gray-600">{order.shippingAddress.apartment}</p>}
                     <p className="text-gray-600">{order.shippingAddress.city}</p>
+                    {order.shippingAddress.pin && <p className="text-gray-600">PIN: {order.shippingAddress.pin}</p>}
                     <div className="flex items-center gap-3 mt-3 group">
                       <Phone className="w-4 h-4 text-[#DB4444] transform group-hover:scale-110 transition-transform duration-300" />
                       <p className="text-gray-600">{order.shippingAddress.phone}</p>
