@@ -249,10 +249,10 @@ export default function Navbar() {
 
       <div
         style={{
-          transition: "all 0.3s ease-in-out",
+          transition: "all 0.15s ease-in-out",
         }}
         className={`navbar_responsive lg:hidden flex flex-col py-3 relative ${
-          open ? "h-[200px] menu-open" : "h-[90px]"
+          open ? "h-[280px] menu-open" : "h-[90px]"
         } overflow-hidden`}
       >
         <div className="flex justify-between items-center px-4">
@@ -260,9 +260,9 @@ export default function Navbar() {
             onClick={handleNavbar}
             className="hamburger_responsive lg:hidden flex-col gap-1 cursor-pointer flex p-2"
           >
-            <div className={`line w-5 h-[2px] bg-black transition-all duration-300 ${open ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-            <div className={`line w-5 h-[2px] bg-black transition-all duration-300 ${open ? 'opacity-0' : ''}`}></div>
-            <div className={`line w-5 h-[2px] bg-black transition-all duration-300 ${open ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+            <div className={`line w-5 h-[2px] bg-black transition-all duration-150 ${open ? 'rotate-45 translate-y-1.5' : ''}`}></div>
+            <div className={`line w-5 h-[2px] bg-black transition-all duration-150 ${open ? 'opacity-0' : ''}`}></div>
+            <div className={`line w-5 h-[2px] bg-black transition-all duration-150 ${open ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
           </div>
           <div
             className="navbar-brand flex items-center cursor-pointer w-fit"
@@ -309,13 +309,13 @@ export default function Navbar() {
         {/* Menu Items Container with strict visibility control */}
         {open && (
           <div 
-            className={`menu-content px-4 transition-all duration-300 ease-in-out ${
+            className={`menu-content px-4 transition-all duration-150 ease-in-out ${
               open 
                 ? 'opacity-100 translate-y-0 visible' 
                 : 'opacity-0 -translate-y-4 invisible'
             }`}
             style={{
-              maxHeight: open ? '200px' : '0px',
+              maxHeight: open ? '300px' : '0px',
               overflow: 'hidden'
             }}
           >
