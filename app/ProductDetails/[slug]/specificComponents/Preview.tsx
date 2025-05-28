@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import ProductCarousel from "@/components/ProductCarousel";
 import { useAlert } from "@/context/AlertContext";
 import { useRouter } from "next/navigation";
+import ProductDetailsSkeleton from "@/components/ProductDetailsSkeleton";
 
 const return_icon = "/icon-return.png";
 const delivery_icon = "/icon-delivery.png";
@@ -30,11 +31,7 @@ interface ProductData {
   productImages: string[];
 }
 
-interface PreviewProps {
-  onImagesLoaded?: () => void;
-}
-
-const Preview: React.FC<PreviewProps> = ({ onImagesLoaded }) => {
+const Preview: React.FC = () => {
   const [hash, setHash] = useState<string | string[]>("");
   const { slug } = useParams();
   const [current, setCurrent] = useState("");
@@ -86,19 +83,9 @@ const Preview: React.FC<PreviewProps> = ({ onImagesLoaded }) => {
 
         setLoaded(true);
         productImages.reverse();
-        
-        // Call onImagesLoaded when content is ready to show
-        // This allows the page to show immediately while images load
-        if (onImagesLoaded) {
-          onImagesLoaded();
-        }
       } catch (error) {
         console.error("Error fetching product images:", error);
         showAlert("Error loading product images", "error");
-        // Still call onImagesLoaded even on error to show the page
-        if (onImagesLoaded) {
-          onImagesLoaded();
-        }
       }
     };
 
@@ -109,7 +96,7 @@ const Preview: React.FC<PreviewProps> = ({ onImagesLoaded }) => {
     } else {
       setHash(slug);
     }
-  }, [hash, slug, showAlert, onImagesLoaded]);
+  }, [hash, slug, showAlert]);
 
   useEffect(() => {
     // Only check cart state if user is signed in
@@ -240,7 +227,7 @@ const Preview: React.FC<PreviewProps> = ({ onImagesLoaded }) => {
         <div className="flex flex-col lg:flex-row gap-10 w-full max-w-full overflow-x-hidden -mx-4 lg:mx-0">
           {/* Product Images */}
           <div className="flex-1 lg:w-[60%]">
-            <ProductCarousel images={productImages} onImagesLoaded={onImagesLoaded} />
+            <ProductCarousel images={productImages} />
           </div>
 
           {/* Product Details */}
@@ -453,19 +440,7 @@ const Preview: React.FC<PreviewProps> = ({ onImagesLoaded }) => {
         </div>
       )}
       {!loaded && (
-        <motion.div
-          className="w-fit mx-auto mt-20"
-          animate={{
-            rotate: 360,
-            transition: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "linear"
-            },
-          }}
-        >
-          <Image src={logo} alt="Loading..." width={60} height={60} priority />
-        </motion.div>
+        <ProductDetailsSkeleton />
       )}
     </>
   );

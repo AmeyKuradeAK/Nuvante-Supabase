@@ -5,35 +5,13 @@ import { motion } from 'framer-motion';
 
 interface ProductCarouselProps {
   images: string[];
-  onImagesLoaded?: () => void;
 }
 
-const ProductCarousel: React.FC<ProductCarouselProps> = ({ images, onImagesLoaded }) => {
+const ProductCarousel: React.FC<ProductCarouselProps> = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
-
-  // Track image loading
-  const handleImageLoad = useCallback((index: number) => {
-    setLoadedImages(prev => {
-      const newSet = new Set(prev);
-      newSet.add(index);
-      
-      // If all images are loaded, call the callback
-      if (newSet.size === images.length && onImagesLoaded) {
-        setTimeout(() => onImagesLoaded(), 100); // Small delay to ensure smooth transition
-      }
-      
-      return newSet;
-    });
-  }, [images.length, onImagesLoaded]);
-
-  // Reset loaded images when images prop changes
-  useEffect(() => {
-    setLoadedImages(new Set());
-  }, [images]);
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => 
@@ -115,7 +93,6 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ images, onImagesLoade
                 alt={`Thumbnail ${index + 1}`}
                 fill
                 className="object-contain animate-image-load"
-                onLoad={() => handleImageLoad(index)}
               />
             </motion.div>
           ))}
@@ -140,7 +117,6 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ images, onImagesLoade
                 alt={`Thumbnail ${index + 1}`}
                 fill
                 className="object-contain animate-image-load"
-                onLoad={() => handleImageLoad(index)}
               />
             </motion.div>
           ))}
@@ -162,7 +138,6 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({ images, onImagesLoade
             className="object-contain animate-image-load"
             priority={currentIndex === 0}
             sizes="100vw"
-            onLoad={() => handleImageLoad(currentIndex)}
           />
         </div>
 
