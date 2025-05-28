@@ -13,6 +13,48 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Loading animations */
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-in-out;
+  }
+  
+  .animate-fade-in-delay {
+    animation: fadeIn 0.8s ease-in-out 0.3s both;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Smooth progress bar animation */
+  .progress-bar {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Enhanced bounce animation for loading dots */
+  .animate-bounce-smooth {
+    animation: bounceSmooth 1.5s infinite;
+  }
+  
+  @keyframes bounceSmooth {
+    0%, 20%, 50%, 80%, 100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-8px);
+    }
+    60% {
+      transform: translateY(-4px);
+    }
+  }
 }
 
 /* Hide scrollbars globally while maintaining scroll functionality */
