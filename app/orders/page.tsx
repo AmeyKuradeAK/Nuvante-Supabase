@@ -21,6 +21,24 @@ import { Package, Clock, CheckCircle, XCircle, ChevronRight, ChevronDown, MapPin
 
 const logo = "/logo.png";
 
+interface Product {
+  _id: string;
+  productName: string;
+  thumbnail: string;
+  productImages: string[];
+  productPrice: string;
+  cancelledProductPrice: string;
+  latest: boolean;
+  description: string;
+  materials: string;
+  productInfo: string;
+  type: string;
+  soldOut: boolean;
+  soldOutSizes: string[];
+  packaging: string;
+  shipping: string;
+}
+
 interface OrderItem {
   orderId: string;
   paymentId: string;
@@ -51,7 +69,7 @@ interface OrderItem {
 interface OrderDetailsModalProps {
   order: OrderItem;
   onClose: () => void;
-  products: any[];
+  products: Product[];
 }
 
 interface GlobalContextType {
@@ -137,6 +155,11 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                   const product = products.find(p => p._id === item.productId);
                   if (!product) return null;
                   
+                  // Safe image URL with fallback chain
+                  const imageUrl = (product.productImages && product.productImages[0]) 
+                    ? product.productImages[0] 
+                    : product.thumbnail || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center";
+                  
                   return (
                     <div
                       key={index}
@@ -145,9 +168,13 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                         <div className="w-24 h-24 relative shrink-0">
                           <img
-                            src={product.productImages[0]}
+                            src={imageUrl}
                             alt={product.productName}
                             className="w-full h-full object-cover rounded-lg"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center";
+                            }}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -162,7 +189,7 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                               <span className="text-sm font-medium text-gray-800 bg-gray-100 px-3 py-1 rounded-full">{item.quantity}</span>
                             </div>
                             <p className="text-[#DB4444] font-semibold text-lg mt-2">
-                              Rs. {product.productPrice * item.quantity}
+                              Rs. {(Number(product.productPrice) || 0) * item.quantity}
                             </p>
                           </div>
                         </div>
@@ -181,7 +208,7 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState<OrderItem[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
@@ -215,7 +242,7 @@ const OrdersPage = () => {
 
         // Only fetch products if we have orders
         if (sortedOrders.length > 0) {
-          const productsResponse = await axios.post<{ data: any[] }>("/api/propagation", { every: true });
+          const productsResponse = await axios.post<Product[]>("/api/propagation", { every: true });
           if (Array.isArray(productsResponse.data)) {
             setProducts(productsResponse.data);
           }
