@@ -71,7 +71,7 @@ const Page = () => {
                   productName={product.productName}
                   productPrice={Number(product.productPrice)}
                   cancelledPrice={product.cancelledProductPrice}
-                  thumbnail={product.thumbnail || "https://fastly.picsum.photos/id/1050/536/354.jpg?hmac=fjxUSeQRIROZvo_be9xEf-vMhMutXf2F5yw-WaWyaWA"}
+                  thumbnail={product.thumbnail || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center"}
                   status={product.latest ? "new" : "old"}
                   soldOut={product.soldOut || false}
                 />

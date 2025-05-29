@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   
   // Image optimization
   images: {
-    domains: ['cdn.jsdelivr.net', 'res.cloudinary.com'],
+    domains: ['cdn.jsdelivr.net', 'res.cloudinary.com', 'fastly.picsum.photos', 'picsum.photos', 'images.unsplash.com'],
     remotePatterns: [
       {
         protocol: 'https',
@@ -17,6 +17,21 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: '*.cloudinary.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'fastly.picsum.photos',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
         pathname: '/**',
       },
     ],
@@ -71,7 +86,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            value: "camera=(), microphone=(), geolocation=(), payment=(self)",
           },
           {
             key: "Strict-Transport-Security",

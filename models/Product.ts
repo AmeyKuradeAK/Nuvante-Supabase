@@ -8,7 +8,7 @@ let productSchema = new mongoose.Schema({
   thumbnail: {
     type: String,
     required: true,
-    default: "https://fastly.picsum.photos/id/1050/536/354.jpg?hmac=fjxUSeQRIROZvo_be9xEf-vMhMutXf2F5yw-WaWyaWA",
+    default: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center",
   },
   productImages: {
     type: Array,

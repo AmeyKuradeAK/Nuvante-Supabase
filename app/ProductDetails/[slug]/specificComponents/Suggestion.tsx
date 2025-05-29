@@ -37,7 +37,7 @@ export default function Suggestion() {
           <Card
             key={index}
             id={product._id}
-            thumbnail={product.thumbnail || "https://fastly.picsum.photos/id/1050/536/354.jpg?hmac=fjxUSeQRIROZvo_be9xEf-vMhMutXf2F5yw-WaWyaWA"}
+            thumbnail={product.thumbnail || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center"}
             productName={product.productName}
             productPrice={product.productPrice}
             cancelledPrice={product.cancelledProductPrice}
