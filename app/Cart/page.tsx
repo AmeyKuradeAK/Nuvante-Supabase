@@ -54,12 +54,18 @@ const CartPage = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      if (!user.isSignedIn) {
-        showAlert("Please sign in to access your cart", "warning");
-        router.push("/sign-in");
-        return;
+      try {
+        if (!user.isSignedIn) {
+          showAlert("Please sign in to access your cart", "warning");
+          router.push("/sign-in");
+          return;
+        }
+        await asyncHandler();
+      } catch (error) {
+        console.error("Error in checkAuth:", error);
+        showAlert("Error loading cart. Please try again.", "error");
+        setLoading(false);
       }
-      await asyncHandler();
     };
     
     if (user.isLoaded) {  // Only check auth after user state is loaded
@@ -69,31 +75,31 @@ const CartPage = () => {
 
   const asyncHandler = async () => {
     try {
-      const response = await axios
-        .post<Product[]>(`/api/propagation`, {
-          every: true,
-        })
-        .then((res) => {
-          if (res.status === 404) {
-            showAlert("Error fetching cart products. Please try again.", "error");
-            setTimeout(() => {
-              window.location.href = "/";
-            }, 2000);
-          } else {
-            setProducts(res.data || []);
-          }
-        });
+      const response = await axios.post<Product[]>(`/api/propagation`, {
+        every: true,
+      });
+
+      if (response.status === 404) {
+        showAlert("Error fetching cart products. Please try again.", "error");
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 2000);
+        return;
+      } 
+      
+      const productData = response.data || [];
+      setProducts(productData);
 
       // Only fetch quantities and sizes if there are items in the cart
-      if (GlobalCart.length > 0) {
+      if (GlobalCart && GlobalCart.length > 0) {
         try {
           // Load quantities from database
           const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities');
-          if (quantitiesResponse.status === 200 && quantitiesResponse.data.quantities) {
+          if (quantitiesResponse.status === 200 && quantitiesResponse.data?.quantities) {
             const normalizedQuantities = Object.entries(quantitiesResponse.data.quantities).reduce(
               (acc, [key, value]) => ({
                 ...acc,
-                [key]: Math.max(1, value)
+                [key]: Math.max(1, Number(value) || 1)
               }),
               {}
             );
@@ -102,7 +108,7 @@ const CartPage = () => {
 
           // Load sizes from database
           const sizesResponse = await axios.get<SizesResponse>('/api/cart/size');
-          if (sizesResponse.status === 200 && sizesResponse.data.sizes) {
+          if (sizesResponse.status === 200 && sizesResponse.data?.sizes) {
             setSelectedSizes(sizesResponse.data.sizes);
           }
         } catch (error) {
@@ -122,20 +128,26 @@ const CartPage = () => {
   };
 
   const handleReturnToShop = () => {
-    window.location.href = "/";
+    router.push("/");
   };
 
   const calculateSubtotal = () => {
+    if (!products || !GlobalCart) return 0;
+    
     return products.reduce((total, item) => {
       if (!GlobalCart.includes(item._id)) return total;
-      return total + (quantities[item._id] || 1) * item.productPrice;
+      const quantity = quantities[item._id] || 1;
+      const price = Number(item.productPrice) || 0;
+      return total + (quantity * price);
     }, 0);
   };
 
-  const cartItems = products.filter(item => GlobalCart.includes(item._id));
+  const cartItems = products.filter(item => GlobalCart && GlobalCart.includes(item._id)) || [];
   const subtotal = calculateSubtotal();
 
   const handleSizeSelect = async (productId: string, size: string) => {
+    if (!productId || !size) return;
+    
     try {
       // Update local state first
       setSelectedSizes(prev => ({
@@ -157,12 +169,14 @@ const CartPage = () => {
       // Revert the size selection on error
       setSelectedSizes(prev => ({
         ...prev,
-        [productId]: prev[productId]
+        [productId]: prev[productId] || ""
       }));
     }
   };
 
   const handleQuantityChange = async (id: string, value: number) => {
+    if (!id) return;
+    
     // Check if size is selected before allowing quantity change
     if (!selectedSizes[id]) {
       showAlert("Please select a size first", "warning");
@@ -170,7 +184,7 @@ const CartPage = () => {
     }
 
     try {
-      const newValue = Math.max(1, value); // Ensure minimum quantity is 1
+      const newValue = Math.max(1, Number(value) || 1); // Ensure minimum quantity is 1
       const newQuantities = {
         ...quantities,
         [id]: newValue,
@@ -190,7 +204,7 @@ const CartPage = () => {
         // Revert to previous quantity on error
         setQuantities(prev => ({
           ...prev,
-          [id]: prev[id]
+          [id]: prev[id] || 1
         }));
       }
     } catch (error) {
@@ -199,12 +213,14 @@ const CartPage = () => {
       // Revert to previous quantity on error
       setQuantities(prev => ({
         ...prev,
-        [id]: prev[id]
+        [id]: prev[id] || 1
       }));
     }
   };
 
   const handleRemoveItem = async (id: string) => {
+    if (!id) return;
+    
     try {
       const response = await axios.post(`/api/cart`, {
         append: false,
@@ -219,6 +235,11 @@ const CartPage = () => {
         const newQuantities = { ...quantities };
         delete newQuantities[id];
         setQuantities(newQuantities);
+
+        // Remove size from state
+        const newSizes = { ...selectedSizes };
+        delete newSizes[id];
+        setSelectedSizes(newSizes);
         
         showAlert("Item removed from cart", "success");
       } else {
@@ -231,7 +252,7 @@ const CartPage = () => {
   };
 
   const handleCheckout = () => {
-    if (cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 0) {
       showAlert("Your cart is empty", "warning");
       return;
     }
@@ -254,10 +275,34 @@ const CartPage = () => {
 
     // Build URL with all cart items' sizes and quantities
     const queryParams = cartItems.map(item => 
-      `product=${item._id}&size=${selectedSizes[item._id]}&quantity=${quantities[item._id]}`
+      `product=${encodeURIComponent(item._id)}&size=${encodeURIComponent(selectedSizes[item._id])}&quantity=${encodeURIComponent(quantities[item._id])}`
     ).join('&');
 
     router.push(`/CheckOut?${queryParams}`);
+  };
+
+  // Safe render function for product images
+  const renderProductImage = (item: Product) => {
+    const imageUrl = item.productImages && item.productImages[0] 
+      ? item.productImages[0] 
+      : "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center";
+    
+    return (
+      <motion.div 
+        whileHover={{ scale: 1.05 }}
+        className="w-full md:w-24 h-32 relative"
+      >
+        <img
+          src={imageUrl}
+          alt={item.productName || "Product"}
+          className="w-full h-full object-contain rounded-lg"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center";
+          }}
+        />
+      </motion.div>
+    );
   };
 
   return (
@@ -349,16 +394,7 @@ const CartPage = () => {
                           >
                             <div className="flex flex-col md:flex-row gap-6 items-start">
                               {/* Product Image */}
-                              <motion.div 
-                                whileHover={{ scale: 1.05 }}
-                                className="w-full md:w-24 h-32 relative"
-                              >
-                                <img
-                                  src={item.productImages[0]}
-                                  alt={item.productName}
-                                  className="w-full h-full object-contain rounded-lg"
-                                />
-                              </motion.div>
+                              {renderProductImage(item)}
 
                               {/* Product Details */}
                               <div className="flex-1 min-w-0">
@@ -369,7 +405,7 @@ const CartPage = () => {
                                   </div>
                                   <div className="flex items-center gap-4">
                                     <div className="text-lg font-semibold text-[#DB4444]">
-                                      Rs. {item.productPrice}
+                                      Rs. {Number(item.productPrice) || 0}
                                     </div>
                                     <motion.button
                                       whileHover={{ scale: 1.1 }}
@@ -443,7 +479,7 @@ const CartPage = () => {
                                       </motion.button>
                                     </div>
                                     <div className="text-gray-600">
-                                      Subtotal: <span className="font-semibold text-[#DB4444]">Rs. {(quantities[item._id] || 1) * item.productPrice}</span>
+                                      Subtotal: <span className="font-semibold text-[#DB4444]">Rs. {(quantities[item._id] || 1) * (Number(item.productPrice) || 0)}</span>
                                     </div>
                                   </motion.div>
                                 )}
