@@ -24,8 +24,19 @@ const logo = "/logo.png";
 interface Product {
   _id: string;
   productName: string;
-  productPrice: number;
+  thumbnail: string;
   productImages: string[];
+  productPrice: string;
+  cancelledProductPrice: string;
+  latest: boolean;
+  description: string;
+  materials: string;
+  productInfo: string;
+  type: string;
+  soldOut: boolean;
+  soldOutSizes: string[];
+  packaging: string;
+  shipping: string;
 }
 
 interface QuantitiesResponse {
@@ -148,6 +159,18 @@ const CartPage = () => {
   const handleSizeSelect = async (productId: string, size: string) => {
     if (!productId || !size) return;
     
+    // Check if the product exists and get its sold out sizes
+    const product = products.find(p => p._id === productId);
+    if (product && product.soldOut) {
+      showAlert("This product is currently sold out", "warning");
+      return;
+    }
+    
+    if (product && product.soldOutSizes && product.soldOutSizes.includes(size)) {
+      showAlert(`Size ${size} is currently sold out. Please select another size.`, "warning");
+      return;
+    }
+    
     try {
       // Update local state first
       setSelectedSizes(prev => ({
@@ -257,11 +280,28 @@ const CartPage = () => {
       return;
     }
 
+    // Check if any items are sold out
+    const soldOutItems = cartItems.filter(item => item.soldOut);
+    if (soldOutItems.length > 0) {
+      showAlert("Some items in your cart are sold out. Please remove them before checkout.", "error");
+      return;
+    }
+
     // Check if all items have sizes selected
     const allItemsHaveSizes = cartItems.every(item => selectedSizes[item._id]);
     
     if (!allItemsHaveSizes) {
       showAlert("Please select sizes for all items before checkout", "error");
+      return;
+    }
+
+    // Check if any selected sizes are sold out
+    const invalidSizes = cartItems.filter(item => 
+      item.soldOutSizes && item.soldOutSizes.includes(selectedSizes[item._id])
+    );
+    
+    if (invalidSizes.length > 0) {
+      showAlert("Some selected sizes are sold out. Please update your size selections.", "error");
       return;
     }
 
@@ -283,9 +323,9 @@ const CartPage = () => {
 
   // Safe render function for product images
   const renderProductImage = (item: Product) => {
-    const imageUrl = item.productImages && item.productImages[0] 
+    const imageUrl = (item.productImages && item.productImages[0]) 
       ? item.productImages[0] 
-      : "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center";
+      : item.thumbnail || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center";
     
     return (
       <motion.div 
@@ -301,6 +341,11 @@ const CartPage = () => {
             target.src = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=536&h=354&fit=crop&crop=center";
           }}
         />
+        {item.soldOut && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+            <span className="text-white text-sm font-medium">SOLD OUT</span>
+          </div>
+        )}
       </motion.div>
     );
   };
@@ -424,30 +469,56 @@ const CartPage = () => {
                                 {/* Size Selection */}
                                 <div className="mt-4">
                                   <h2 className="text-sm font-medium mb-3">Select Size</h2>
-                                  <div className="grid grid-cols-4 gap-2 max-w-xs">
-                                    {["S", "M", "L", "XL"].map((size) => (
-                                      <motion.button
-                                        key={size}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className={`border-2 py-2 text-center transition-all duration-300 ease-in-out ${
-                                          selectedSizes[item._id] === size
-                                            ? "bg-[#DB4444] text-white border-[#DB4444]"
-                                            : "border-gray-200 hover:border-[#DB4444] hover:text-[#DB4444]"
-                                        }`}
-                                        onClick={() => handleSizeSelect(item._id, size)}
-                                      >
-                                        {size}
-                                      </motion.button>
-                                    ))}
-                                  </div>
-                                  <p className="text-xs text-gray-500 mt-2">
-                                    This product has a larger fit than usual. Model is wearing L.
-                                  </p>
+                                  {item.soldOut ? (
+                                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                      <p className="text-red-600 text-sm font-medium">⚠️ This product is currently sold out</p>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="grid grid-cols-4 gap-2 max-w-xs">
+                                        {["S", "M", "L", "XL"].map((size) => {
+                                          const isSizeSoldOut = item.soldOutSizes && item.soldOutSizes.includes(size);
+                                          const isDisabled = item.soldOut || isSizeSoldOut;
+                                          
+                                          return (
+                                            <motion.button
+                                              key={size}
+                                              whileHover={!isDisabled ? { scale: 1.05 } : {}}
+                                              whileTap={!isDisabled ? { scale: 0.95 } : {}}
+                                              disabled={isDisabled}
+                                              className={`border-2 py-2 text-center transition-all duration-300 ease-in-out relative ${
+                                                isDisabled
+                                                  ? "border-gray-200 text-gray-400 cursor-not-allowed bg-gray-100"
+                                                  : selectedSizes[item._id] === size
+                                                    ? "bg-[#DB4444] text-white border-[#DB4444]"
+                                                    : "border-gray-200 hover:border-[#DB4444] hover:text-[#DB4444]"
+                                              }`}
+                                              onClick={() => !isDisabled && handleSizeSelect(item._id, size)}
+                                            >
+                                              {size}
+                                              {isSizeSoldOut && !item.soldOut && (
+                                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
+                                                  ✕
+                                                </span>
+                                              )}
+                                            </motion.button>
+                                          );
+                                        })}
+                                      </div>
+                                      <p className="text-xs text-gray-500 mt-2">
+                                        This product has a larger fit than usual. Model is wearing L.
+                                      </p>
+                                      {item.soldOutSizes && item.soldOutSizes.length > 0 && !item.soldOut && (
+                                        <p className="text-xs text-red-500 mt-2">
+                                          Sizes {item.soldOutSizes.join(", ")} are currently sold out
+                                        </p>
+                                      )}
+                                    </>
+                                  )}
                                 </div>
 
                                 {/* Quantity Controls */}
-                                {selectedSizes[item._id] && (
+                                {selectedSizes[item._id] && !item.soldOut && (
                                   <motion.div 
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
