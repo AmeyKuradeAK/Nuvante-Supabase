@@ -13,6 +13,7 @@ type propType = {
   productPrice: number;
   cancelledPrice: number;
   status: string;
+  soldOut?: boolean;
   isWishlist?: boolean;
 };
 
@@ -27,6 +28,7 @@ export default function Card({
   productPrice,
   cancelledPrice,
   status,
+  soldOut = false,
   isWishlist = false,
 }: propType) {
   const context = useContext(GlobalContext);
@@ -53,6 +55,13 @@ export default function Card({
    */
   const handleWishlistPresence = async (event: React.MouseEvent) => {
     event.stopPropagation();
+    
+    // Prevent interaction if sold out
+    if (soldOut) {
+      showAlert("This product is sold out", "warning");
+      return;
+    }
+    
     if (!user.isSignedIn) {
       showAlert("Please sign in to access wishlist", "warning");
       setTimeout(() => {
@@ -91,6 +100,13 @@ export default function Card({
 
   const handleAddToCart = async (event: React.MouseEvent) => {
     event.stopPropagation();
+    
+    // Prevent interaction if sold out
+    if (soldOut) {
+      showAlert("This product is sold out", "warning");
+      return;
+    }
+    
     if (!user.isSignedIn) {
       showAlert("Please sign in to access cart", "warning");
       setTimeout(() => {
@@ -124,20 +140,35 @@ export default function Card({
     }
   };
 
+  const handleCardClick = () => {
+    // Allow navigation to product page even if sold out
+    window.location.href = `/ProductDetails/${id}`;
+  };
+
   return (
     <div
-      onClick={() => (window.location.href = `/ProductDetails/${id}`)}
-      className="w-full overflow-hidden relative flex flex-col gap-4 cursor-pointer group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300"
+      onClick={handleCardClick}
+      className={`w-full overflow-hidden relative flex flex-col gap-4 cursor-pointer group bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ${soldOut ? 'opacity-75' : ''}`}
     >
       <div className="card-body flex justify-center relative aspect-[3/4] w-full rounded-t-lg overflow-hidden">
         <Image
           src={src}
           alt={productName}
           fill
-          className="object-cover relative bg-[#F5F5F5] group-hover:scale-105 transition-transform duration-300"
+          className={`object-cover relative bg-[#F5F5F5] transition-transform duration-300 ${soldOut ? 'grayscale' : 'group-hover:scale-105'}`}
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
         />
-        {status === "new" && (
+        
+        {/* Sold Out Overlay */}
+        {soldOut && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+            <span className="bg-red-600 text-white px-4 py-2 text-sm font-bold tracking-wider rounded-md">
+              SOLD OUT
+            </span>
+          </div>
+        )}
+        
+        {status === "new" && !soldOut && (
           <div className="absolute top-3 left-3">
             <span className="bg-black text-white px-3 py-1 text-xs font-semibold tracking-wider rounded-full">
               NEW
@@ -145,12 +176,13 @@ export default function Card({
           </div>
         )}
 
+        {/* Wishlist Button - disabled for sold out */}
         {isWishlist && (
           <button
             onClick={handleWishlistPresence}
-            disabled={loadingWishlist}
+            disabled={loadingWishlist || soldOut}
             className={`absolute top-3 right-3 w-[35px] h-[35px] rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-all duration-200 ${
-              loadingWishlist ? "opacity-50" : "opacity-100"
+              loadingWishlist || soldOut ? "opacity-50" : "opacity-100"
             }`}
           >
             {loadingWishlist ? (
@@ -179,9 +211,9 @@ export default function Card({
         {!isWishlist && (
           <button
             onClick={handleWishlistPresence}
-            disabled={loadingWishlist}
+            disabled={loadingWishlist || soldOut}
             className={`absolute top-3 right-3 w-[35px] h-[35px] rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-all duration-200 ${
-              loadingWishlist ? "opacity-50" : "opacity-100"
+              loadingWishlist || soldOut ? "opacity-50" : "opacity-100"
             }`}
           >
             {loadingWishlist ? (
@@ -207,14 +239,21 @@ export default function Card({
           </button>
         )}
 
+        {/* Cart Button Overlays - disabled for sold out */}
         {isWishlist ? (
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:block">
             <button
               onClick={handleAddToCart}
-              disabled={loadingCart}
-              className="w-full bg-white text-black font-medium py-2.5 px-4 rounded-md hover:bg-[#DB4444] hover:text-white transition-colors duration-200 flex items-center justify-center gap-2"
+              disabled={loadingCart || soldOut}
+              className={`w-full font-medium py-2.5 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2 ${
+                soldOut 
+                  ? "bg-gray-400 text-gray-600 cursor-not-allowed" 
+                  : "bg-white text-black hover:bg-[#DB4444] hover:text-white"
+              }`}
             >
-              {loadingCart ? (
+              {soldOut ? (
+                "Sold Out"
+              ) : loadingCart ? (
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
@@ -230,10 +269,16 @@ export default function Card({
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 hidden md:block">
             <button
               onClick={handleAddToCart}
-              disabled={loadingCart}
-              className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200 flex items-center justify-center gap-2"
+              disabled={loadingCart || soldOut}
+              className={`w-full font-medium py-2.5 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2 ${
+                soldOut 
+                  ? "bg-gray-400 text-gray-600 cursor-not-allowed" 
+                  : "bg-[#DB4444] text-white hover:bg-black"
+              }`}
             >
-              {loadingCart ? (
+              {soldOut ? (
+                "Sold Out"
+              ) : loadingCart ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
@@ -250,9 +295,9 @@ export default function Card({
       <div className="card-details flex flex-col gap-2 p-4">
         <h1 className="font-semibold text-gray-900 line-clamp-2">{productName}</h1>
         <div className="flex items-center gap-2">
-          <span className="text-[#DB4444] font-bold">Rs. {productPrice}</span>
+          <span className={`font-bold ${soldOut ? 'text-gray-400' : 'text-[#DB4444]'}`}>Rs. {productPrice}</span>
           <span className="text-gray-400 line-through text-sm">Rs. {cancelledPrice}</span>
-          {cancelledPrice > productPrice && (
+          {cancelledPrice > productPrice && !soldOut && (
             <span className="text-xs font-medium text-green-600">
               {Math.round(((cancelledPrice - productPrice) / cancelledPrice) * 100)}% OFF
             </span>
@@ -261,10 +306,16 @@ export default function Card({
         {/* Mobile Cart Button */}
         <button
           onClick={handleAddToCart}
-          disabled={loadingCart}
-          className="hidden w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200 items-center justify-center gap-2 mt-2"
+          disabled={loadingCart || soldOut}
+          className={`hidden w-full font-medium py-2.5 px-4 rounded-md transition-colors duration-200 items-center justify-center gap-2 mt-2 ${
+            soldOut 
+              ? "bg-gray-400 text-gray-600 cursor-not-allowed" 
+              : "bg-[#DB4444] text-white hover:bg-black"
+          }`}
         >
-          {loadingCart ? (
+          {soldOut ? (
+            "Sold Out"
+          ) : loadingCart ? (
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
             <>

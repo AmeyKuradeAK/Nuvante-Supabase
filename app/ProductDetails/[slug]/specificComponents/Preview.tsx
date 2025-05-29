@@ -29,6 +29,7 @@ interface ProductData {
   packaging: string;
   shipping: string;
   productImages: string[];
+  soldOut?: boolean;
 }
 
 const Preview: React.FC = () => {
@@ -49,7 +50,8 @@ const Preview: React.FC = () => {
     materials: "",
     packaging: "",
     shipping: "",
-    productImages: []
+    productImages: [],
+    soldOut: false,
   });
   const [collapsible, setCollapsible] = useState<boolean[]>(
     Array(4).fill(false)
@@ -118,6 +120,12 @@ const Preview: React.FC = () => {
   const handleAddToCart = async (event: React.MouseEvent) => {
     event.stopPropagation();
 
+    // Prevent interaction if sold out
+    if (currentProduct.soldOut) {
+      showAlert("This product is sold out", "warning");
+      return;
+    }
+
     if (!user.isSignedIn) {
       showAlert("Please sign in to add items to cart", "warning");
       setTimeout(() => {
@@ -165,6 +173,13 @@ const Preview: React.FC = () => {
 
   const handleWishlistPresence = async (event: React.MouseEvent) => {
     event.stopPropagation();
+    
+    // Prevent interaction if sold out
+    if (currentProduct.soldOut) {
+      showAlert("This product is sold out", "warning");
+      return;
+    }
+    
     if (!user.isSignedIn) {
       showAlert("Please sign in to add items to wishlist", "warning");
       setTimeout(() => {
@@ -203,6 +218,12 @@ const Preview: React.FC = () => {
   };
 
   const handleBuyNow = async () => {
+    // Prevent interaction if sold out
+    if (currentProduct.soldOut) {
+      showAlert("This product is sold out", "warning");
+      return;
+    }
+    
     if (!user.isSignedIn) {
       showAlert("Please sign in to proceed with checkout", "warning");
       setTimeout(() => {
@@ -233,8 +254,13 @@ const Preview: React.FC = () => {
           <div className="flex flex-col gap-4 lg:w-[40%] px-4 lg:px-0">
             <div className="flex flex-col gap-2">
               <h1 className="text-2xl font-medium">{currentProduct.productName}</h1>
+              {currentProduct.soldOut && (
+                <div className="bg-red-100 border border-red-300 text-red-800 px-3 py-2 rounded-md text-sm font-medium">
+                  ⚠️ This product is currently sold out
+                </div>
+              )}
               <div className="flex gap-2 items-center">
-                <h1 className="text-xl font-medium text-[#DB4444]">
+                <h1 className={`text-xl font-medium ${currentProduct.soldOut ? 'text-gray-400' : 'text-[#DB4444]'}`}>
                   Rs. {currentProduct.productPrice}
                 </h1>
                 <h1 className="text-lg line-through text-gray-500">
@@ -251,12 +277,15 @@ const Preview: React.FC = () => {
                 {["S", "M", "L", "XL"].map((size) => (
                   <button
                     key={size}
+                    disabled={currentProduct.soldOut}
                     className={`border-2 py-2 text-center transition-colors ${
-                      size === current
-                        ? "bg-black text-white border-black"
-                        : "border-gray-200 hover:border-gray-300"
+                      currentProduct.soldOut 
+                        ? "border-gray-200 text-gray-400 cursor-not-allowed bg-gray-100"
+                        : size === current
+                          ? "bg-black text-white border-black"
+                          : "border-gray-200 hover:border-gray-300"
                     }`}
-                    onClick={() => handleSwitch(size)}
+                    onClick={() => !currentProduct.soldOut && handleSwitch(size)}
                   >
                     {size}
                   </button>
@@ -269,7 +298,22 @@ const Preview: React.FC = () => {
 
             {/* Add to Cart Buttons */}
             <div className="mt-6 space-y-4">
-              {isInCart ? (
+              {currentProduct.soldOut ? (
+                <div className="space-y-4">
+                  <button
+                    disabled
+                    className="w-full bg-gray-400 text-gray-600 font-medium py-2.5 px-4 rounded-md cursor-not-allowed"
+                  >
+                    Sold Out
+                  </button>
+                  <motion.button 
+                    disabled
+                    className="w-full py-3 bg-gray-400 text-gray-600 cursor-not-allowed font-medium rounded-md"
+                  >
+                    Sold Out
+                  </motion.button>
+                </div>
+              ) : isInCart ? (
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border rounded-md">
                     <button
@@ -300,21 +344,23 @@ const Preview: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <button
-                onClick={handleAddToCart}
-                  className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
-              >
-                  Add to Cart
-                </button>
+                <>
+                  <button
+                    onClick={handleAddToCart}
+                    className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
+                  >
+                    Add to Cart
+                  </button>
+                  <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3 bg-black text-white hover:bg-gray-800 transition-all duration-300 font-medium"
+                    onClick={handleBuyNow}
+                  >
+                    Buy Now
+                  </motion.button>
+                </>
               )}
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-3 bg-black text-white hover:bg-gray-800 transition-all duration-300 font-medium"
-                onClick={handleBuyNow}
-              >
-                Buy Now
-              </motion.button>
             </div>
 
             {/* Product Information */}

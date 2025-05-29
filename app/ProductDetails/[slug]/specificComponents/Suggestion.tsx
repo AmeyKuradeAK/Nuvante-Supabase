@@ -44,6 +44,7 @@ export default function Suggestion() {
             // reviews={product.productReviews.length}
             // stars={product.productStars}
             status={product.latest ? "new" : "old"}
+            soldOut={product.soldOut || false}
           />
         ))}
     </div>

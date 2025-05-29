@@ -76,6 +76,7 @@ const Page = () => {
                     "https://fastly.picsum.photos/id/1050/536/354.jpg?hmac=fjxUSeQRIROZvo_be9xEf-vMhMutXf2F5yw-WaWyaWA"
                   }
                   status={product.latest ? "new" : "old"}
+                  soldOut={product.soldOut || false}
                 />
               ))}
             </div>

@@ -12,6 +12,7 @@ type mainProp = {
     productPrice: string;
     cancelledProductPrice: string;
     latest: boolean;
+    soldOut?: boolean;
   }[];
 };
 
@@ -41,6 +42,7 @@ export default function Arrivals({ fragment }: mainProp) {
                 cancelledPrice={Number(product.cancelledProductPrice)}
                 src={product.productImages[0]}
                 status={product.latest ? "new" : "old"}
+                soldOut={product.soldOut || false}
               ></Card>
             ))}
           </div>

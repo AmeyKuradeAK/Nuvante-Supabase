@@ -39,6 +39,11 @@ let productSchema = new mongoose.Schema({
     required: true,
     default: "T-Shirt",
   },
+  soldOut: {
+    type: Boolean,
+    required: true,
+    default: false,
+  },
   packaging: {
     type: String,
     required: true,

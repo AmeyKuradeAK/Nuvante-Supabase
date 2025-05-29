@@ -38,6 +38,7 @@ interface Product {
   cancelledProductPrice: string;
   productImages: string[];
   latest: boolean;
+  soldOut?: boolean;
 }
 
 interface ApiResponse {
@@ -268,6 +269,7 @@ const Page = () => {
                               : product.productImages[0]
                           }
                           status={product.latest ? "new" : "old"}
+                          soldOut={product.soldOut || false}
                           isWishlist={true}
                         />
                       </motion.div>

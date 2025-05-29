@@ -52,6 +52,7 @@ const Page = () => {
                             cancelledPrice={product.cancelledProductPrice}
                             src={product.productImages?.[0] || ""}
                             status={product.latest ? "new" : "old"}
+                            soldOut={product.soldOut || false}
                           />
                         ) : (
                           ""
