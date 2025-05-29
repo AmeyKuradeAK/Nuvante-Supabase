@@ -9,45 +9,28 @@ interface SizeChartProps {
 
 const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"measurements" | "conversions">("measurements");
 
   const sizeData = [
     { 
       size: "S", 
-      chest: "36-38", 
-      waist: "30-32", 
-      length: "27", 
-      shoulder: "17",
       us: "XS-S",
       uk: "6-8",
       india: "S"
     },
     { 
       size: "M", 
-      chest: "38-40", 
-      waist: "32-34", 
-      length: "28", 
-      shoulder: "18",
       us: "S-M",
       uk: "8-10",
       india: "M"
     },
     { 
       size: "L", 
-      chest: "40-42", 
-      waist: "34-36", 
-      length: "29", 
-      shoulder: "19",
       us: "M-L",
       uk: "10-12",
       india: "L"
     },
     { 
       size: "XL", 
-      chest: "42-44", 
-      waist: "36-38", 
-      length: "30", 
-      shoulder: "20",
       us: "L-XL",
       uk: "12-14",
       india: "XL"
@@ -73,7 +56,7 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -101,30 +84,6 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                   </svg>
                 </motion.button>
               </div>
-
-              {/* Tab Navigation */}
-              <div className="flex mt-4 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setActiveTab("measurements")}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                    activeTab === "measurements"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  Body Measurements
-                </button>
-                <button
-                  onClick={() => setActiveTab("conversions")}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-200 ${
-                    activeTab === "conversions"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  International Sizes
-                </button>
-              </div>
             </div>
 
             {/* Content */}
@@ -141,14 +100,9 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div>
-                    <h3 className="font-semibold text-blue-900 mb-1">
-                      {activeTab === "measurements" ? "How to Measure" : "Size Conversion Guide"}
-                    </h3>
+                    <h3 className="font-semibold text-blue-900 mb-1">Size Conversion Guide</h3>
                     <p className="text-sm text-blue-800">
-                      {activeTab === "measurements" 
-                        ? "For the best fit, measure yourself with a cloth tape. Click on any size row to highlight it."
-                        : "Find your perfect fit with our international size conversion chart for US, UK, and India."
-                      }
+                      Find your perfect fit with our international size conversion chart for US, UK, and India. Click on any size row to highlight it.
                     </p>
                   </div>
                 </div>
@@ -164,21 +118,10 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Size</th>
-                      {activeTab === "measurements" ? (
-                        <>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Chest (in)</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Waist (in)</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Length (in)</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Shoulder (in)</th>
-                        </>
-                      ) : (
-                        <>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">US Size</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">UK Size</th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">India Size</th>
-                        </>
-                      )}
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Our Size</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">US Size</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">UK Size</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">India Size</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -195,9 +138,9 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                         }`}
                         onClick={() => handleRowClick(item.size)}
                       >
-                        <td className="px-4 py-3">
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <span className={`font-semibold ${selectedSize === item.size ? "text-[#DB4444]" : "text-gray-900"}`}>
+                            <span className={`font-bold text-lg ${selectedSize === item.size ? "text-[#DB4444]" : "text-gray-900"}`}>
                               {item.size}
                             </span>
                             {selectedSize === item.size && (
@@ -209,107 +152,62 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                             )}
                           </div>
                         </td>
-                        {activeTab === "measurements" ? (
-                          <>
-                            <td className="px-4 py-3 text-sm text-gray-700">{item.chest}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700">{item.waist}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700">{item.length}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700">{item.shoulder}</td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="px-4 py-3 text-sm text-gray-700 font-medium">{item.us}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700 font-medium">{item.uk}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700 font-medium">{item.india}</td>
-                          </>
-                        )}
+                        <td className="px-6 py-4 text-sm text-gray-700 font-medium">{item.us}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700 font-medium">{item.uk}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700 font-medium">{item.india}</td>
                       </motion.tr>
                     ))}
                   </tbody>
                 </table>
               </motion.div>
 
-              {/* Guide Content based on active tab */}
-              {activeTab === "measurements" ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4"
-                >
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-2">Chest Measurement</h4>
-                    <p className="text-sm text-gray-600">
-                      Measure around the fullest part of your chest, keeping the tape horizontal.
-                    </p>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-2">Waist Measurement</h4>
-                    <p className="text-sm text-gray-600">
-                      Measure around your natural waistline, where you normally wear your belt.
-                    </p>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-2">Length Measurement</h4>
-                    <p className="text-sm text-gray-600">
-                      Measure from the highest point of the shoulder down to the desired length.
-                    </p>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-2">Shoulder Measurement</h4>
-                    <p className="text-sm text-gray-600">
-                      Measure from one shoulder point across the back to the other shoulder point.
-                    </p>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                  className="mt-6 space-y-4"
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg">🇺🇸</span>
-                        <h4 className="font-semibold text-blue-900">US Sizes</h4>
-                      </div>
-                      <p className="text-sm text-blue-800">
-                        Standard US clothing sizes. Most common sizing system used globally.
-                      </p>
+              {/* Country Guide */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="mt-6 space-y-4"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🇺🇸</span>
+                      <h4 className="font-semibold text-blue-900">US Sizes</h4>
                     </div>
-                    <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg">🇬🇧</span>
-                        <h4 className="font-semibold text-green-900">UK Sizes</h4>
-                      </div>
-                      <p className="text-sm text-green-800">
-                        British sizing system, typically runs larger than US sizes.
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg">🇮🇳</span>
-                        <h4 className="font-semibold text-orange-900">India Sizes</h4>
-                      </div>
-                      <p className="text-sm text-orange-800">
-                        Indian sizing system, similar to international standards.
-                      </p>
-                    </div>
+                    <p className="text-sm text-blue-800">
+                      Standard US clothing sizes. Most common sizing system used globally.
+                    </p>
                   </div>
-                  
-                  <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <h4 className="font-semibold text-yellow-900 mb-2">💡 Sizing Tips</h4>
-                    <ul className="text-sm text-yellow-800 space-y-1">
-                      <li>• When in doubt, choose the larger size for a more comfortable fit</li>
-                      <li>• Different brands may have slight variations in sizing</li>
-                      <li>• Consider the fabric type - cotton may shrink slightly after washing</li>
-                      <li>• Check our body measurements tab for the most accurate fit</li>
-                    </ul>
+                  <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🇬🇧</span>
+                      <h4 className="font-semibold text-green-900">UK Sizes</h4>
+                    </div>
+                    <p className="text-sm text-green-800">
+                      British sizing system, typically runs larger than US sizes.
+                    </p>
                   </div>
-                </motion.div>
-              )}
+                  <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🇮🇳</span>
+                      <h4 className="font-semibold text-orange-900">India Sizes</h4>
+                    </div>
+                    <p className="text-sm text-orange-800">
+                      Indian sizing system, similar to international standards.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <h4 className="font-semibold text-yellow-900 mb-2">💡 Sizing Tips</h4>
+                  <ul className="text-sm text-yellow-800 space-y-1">
+                    <li>• When in doubt, choose the larger size for a more comfortable fit</li>
+                    <li>• Different brands may have slight variations in sizing</li>
+                    <li>• Consider the fabric type - cotton may shrink slightly after washing</li>
+                    <li>• Our sizes tend to run larger than usual - consider sizing down for a fitted look</li>
+                  </ul>
+                </div>
+              </motion.div>
 
               {/* Fit Note */}
               <motion.div
