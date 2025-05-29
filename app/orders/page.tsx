@@ -114,7 +114,7 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                     isHighlighted: true
                   },
                   { label: "Total Amount", value: `Rs. ${order.amount}`, isHighlighted: true },
-                  { label: "Tracking ID", value: (order.trackingId && order.trackingId.trim() && !order.trackingId.toLowerCase().includes('id')) ? order.trackingId : "Tracking ID will be available soon", isHighlighted: true, fullWidth: true }
+                  { label: "Tracking ID", value: (order.trackingId && !order.trackingId.match(/^TRK\d+$/)) ? order.trackingId : "Tracking ID will be available soon", isHighlighted: true, fullWidth: true }
                 ].map((item, index) => (
                   <div
                     key={index}
