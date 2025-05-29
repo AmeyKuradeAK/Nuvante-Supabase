@@ -29,6 +29,16 @@ let productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  productInfo: {
+    type: String,
+    required: true,
+    default: "Round neck t shirt with exquisite print on back.",
+  },
+  type: {
+    type: String,
+    required: true,
+    default: "T-Shirt",
+  },
   packaging: {
     type: String,
     required: true,
