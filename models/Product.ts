@@ -29,6 +29,16 @@ let productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  packaging: {
+    type: String,
+    required: true,
+    default: "Orders are packed within 24 to 48 hours of confirmation.",
+  },
+  shipping: {
+    type: String,
+    required: true,
+    default: "Dispatch time: 3 to 4 business days.\nFree delivery within Delhi.\nShipping charges apply for deliveries outside Delhi.\nEnjoy free delivery across India on orders above ₹2000.\nFor any queries, feel free to contact our support team.",
+  },
 });
 
 //* For a single --forced groping.
