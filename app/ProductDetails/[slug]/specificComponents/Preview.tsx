@@ -263,7 +263,7 @@ const Preview: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-10 w-full max-w-full overflow-x-hidden -mx-4 lg:mx-0">
           {/* Product Images */}
           <div className="flex-1 lg:w-[60%]">
-            <ProductCarousel images={productImages} />
+            <ProductCarousel images={[...productImages].reverse()} />
           </div>
 
           {/* Product Details */}
