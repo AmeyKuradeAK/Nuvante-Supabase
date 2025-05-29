@@ -21,6 +21,11 @@ import { Package, Clock, CheckCircle, XCircle, ChevronRight, ChevronDown, MapPin
 
 const logo = "/logo.png";
 
+const formatStatus = (status: string | undefined) => {
+  if (!status) return 'Order Accepted';
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+};
+
 interface Product {
   _id: string;
   productName: string;
@@ -102,14 +107,14 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                 {[
                   { label: "Order Number", value: order.orderId },
                   { label: "Date", value: new Date(order.timestamp).toLocaleDateString() },
-                  { label: "Order Status", value: order.itemStatus || 'Order Accepted', isHighlighted: true },
+                  { label: "Order Status", value: formatStatus(order.itemStatus), isHighlighted: true },
                   { label: "Estimated Delivery", value: order.estimatedDeliveryDate ? 
                     new Date(order.estimatedDeliveryDate).toLocaleDateString() : 
                     new Date(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString(),
                     isHighlighted: true
                   },
                   { label: "Total Amount", value: `Rs. ${order.amount}`, isHighlighted: true },
-                  { label: "Tracking ID", value: order.trackingId || "You'll receive tracking ID soon", isHighlighted: true, fullWidth: true }
+                  { label: "Tracking ID", value: order.trackingId || "Tracking ID to be available soon", isHighlighted: true, fullWidth: true }
                 ].map((item, index) => (
                   <div
                     key={index}
@@ -377,7 +382,7 @@ const OrdersPage = () => {
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <p className="font-medium text-[#DB4444]">Rs. {order.amount}</p>
-                            <p className="text-sm text-gray-600 mt-1">{order.itemStatus || 'Order Accepted'}</p>
+                            <p className="text-sm text-gray-600 mt-1">{formatStatus(order.itemStatus)}</p>
                           </div>
                           <motion.button
                             animate={{ rotate: expandedOrders.has(order.orderId) ? 180 : 0 }}
