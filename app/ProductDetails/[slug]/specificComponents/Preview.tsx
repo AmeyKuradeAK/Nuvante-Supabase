@@ -11,6 +11,7 @@ import ProductCarousel from "@/components/ProductCarousel";
 import { useAlert } from "@/context/AlertContext";
 import { useRouter } from "next/navigation";
 import ProductDetailsSkeleton from "@/components/ProductDetailsSkeleton";
+import SizeChart from "@/components/SizeChart";
 
 const return_icon = "/icon-return.png";
 const delivery_icon = "/icon-delivery.png";
@@ -58,6 +59,7 @@ const Preview: React.FC = () => {
   const [collapsible, setCollapsible] = useState<boolean[]>(
     Array(4).fill(false)
   );
+  const [showSizeChart, setShowSizeChart] = useState(false);
 
   const context = useContext(GlobalContext);
   if (!context) {
@@ -286,7 +288,20 @@ const Preview: React.FC = () => {
 
             {/* Size Selection */}
             <div className="mt-6">
-              <h2 className="text-sm font-medium mb-3">Select Size</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-medium">Select Size</h2>
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowSizeChart(true)}
+                  className="group flex items-center gap-1.5 text-xs text-[#DB4444] hover:text-[#c13a3a] transition-all duration-300 font-medium border border-[#DB4444] hover:border-[#c13a3a] px-3 py-1.5 rounded-full hover:bg-[#DB4444]/5 hover:shadow-md"
+                >
+                  <svg className="w-3.5 h-3.5 transition-transform duration-300 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span className="transition-transform duration-300 group-hover:translate-x-0.5">Size Chart</span>
+                </motion.button>
+              </div>
               <div className="grid grid-cols-4 gap-2">
                 {["S", "M", "L", "XL"].map((size) => {
                   const isSizeSoldOut = currentProduct.soldOutSizes?.includes(size);
@@ -516,6 +531,12 @@ const Preview: React.FC = () => {
       {!loaded && (
         <ProductDetailsSkeleton />
       )}
+      
+      {/* Size Chart Modal */}
+      <SizeChart
+        isOpen={showSizeChart}
+        onClose={() => setShowSizeChart(false)}
+      />
     </>
   );
 };
