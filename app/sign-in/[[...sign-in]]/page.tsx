@@ -14,8 +14,6 @@ const sideImg = "/Side-Image.jpg";
 
 type Props = {};
 
-
-
 const page = (props: Props) => {
   const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = React.useState("");
@@ -76,21 +74,6 @@ const page = (props: Props) => {
     }
   };
 
-  const handleFacebookSignIn = async () => {
-    if (!isLoaded) return;
-
-    try {
-      await signIn.authenticateWithRedirect({
-        strategy: "oauth_facebook",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: searchParams.get('redirect_url') || "/",
-      });
-    } catch (err: any) {
-      console.error(err);
-      showAlert("Error signing in with Facebook", "error");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {!user.isSignedIn && (
@@ -108,14 +91,14 @@ const page = (props: Props) => {
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.3 }}
-              >
-                <Image
-                  src={sideImg}
-                  alt="side-image"
-                  height={600}
-                  width={800}
-                  className="rounded-2xl shadow-xl"
-                />
+                >
+                  <Image
+                    src={sideImg}
+                    alt="side-image"
+                    height={600}
+                    width={800}
+                    className="rounded-2xl shadow-xl"
+                  />
                 </motion.div>
               </motion.div>
 
@@ -124,24 +107,24 @@ const page = (props: Props) => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="w-full lg:w-1/2 max-w-md"
+                className="w-full lg:w-1/2 max-w-md mx-auto"
               >
-                <motion.div 
+                <motion.div
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300"
+                  className="text-center mb-8"
                 >
-                  <motion.div 
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="text-center mb-8"
-                  >
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-                    <p className="text-gray-600">Sign in to your account</p>
-                  </motion.div>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+                  <p className="text-gray-600">Sign in to access your account</p>
+                </motion.div>
 
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-white p-8 rounded-2xl shadow-xl"
+                >
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Social Sign In Buttons - Priority */}
                     <div className="grid grid-cols-1 gap-3">
@@ -161,21 +144,6 @@ const page = (props: Props) => {
                           <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                         </svg>
                         Continue with Google
-                      </motion.button>
-
-                      {/* Facebook Sign In Button */}
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        type="button"
-                        onClick={handleFacebookSignIn}
-                        disabled={isLoading}
-                        className="w-full bg-[#1877F2] text-white py-3 px-4 rounded-lg hover:bg-[#166FE5] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-medium"
-                      >
-                        <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
-                        Continue with Facebook
                       </motion.button>
                     </div>
 

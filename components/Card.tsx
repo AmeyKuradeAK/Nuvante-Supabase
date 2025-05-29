@@ -8,7 +8,7 @@ import { useAlert } from "@/context/AlertContext";
 
 type propType = {
   id: string;
-  src: string;
+  thumbnail: string;
   productName: string;
   productPrice: number;
   cancelledPrice: number;
@@ -23,7 +23,7 @@ const domain = process.env.NEXT_PUBLIC_DOMAIN;
 
 export default function Card({
   id,
-  src,
+  thumbnail,
   productName,
   productPrice,
   cancelledPrice,
@@ -152,7 +152,7 @@ export default function Card({
     >
       <div className="card-body flex justify-center relative aspect-[3/4] w-full rounded-t-lg overflow-hidden">
         <Image
-          src={src}
+          src={thumbnail}
           alt={productName}
           fill
           className={`object-cover relative bg-[#F5F5F5] transition-transform duration-300 ${soldOut ? 'grayscale' : 'group-hover:scale-105'}`}

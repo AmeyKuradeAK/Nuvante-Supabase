@@ -8,7 +8,7 @@ type mainProp = {
   fragment: {
     _id: any;
     productName: string;
-    productImages: string;
+    thumbnail: string;
     productPrice: string;
     cancelledProductPrice: string;
     latest: boolean;
@@ -31,7 +31,7 @@ export default function Products({ fragment }: mainProp) {
               productName={product.productName}
               productPrice={Number(product.productPrice)}
               cancelledPrice={Number(product.cancelledProductPrice)}
-              src={product.productImages[0]}
+              thumbnail={product.thumbnail}
               status={product.latest ? "new" : "old"}
               soldOut={product.soldOut || false}
             />

@@ -5,6 +5,11 @@ let productSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  thumbnail: {
+    type: String,
+    required: true,
+    default: "https://fastly.picsum.photos/id/1050/536/354.jpg?hmac=fjxUSeQRIROZvo_be9xEf-vMhMutXf2F5yw-WaWyaWA",
+  },
   productImages: {
     type: Array,
     required: true,
@@ -43,6 +48,11 @@ let productSchema = new mongoose.Schema({
     type: Boolean,
     required: true,
     default: false,
+  },
+  soldOutSizes: {
+    type: [String],
+    required: true,
+    default: [],
   },
   packaging: {
     type: String,

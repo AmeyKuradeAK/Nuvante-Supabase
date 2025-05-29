@@ -36,7 +36,7 @@ interface Product {
   productName: string;
   productPrice: string;
   cancelledProductPrice: string;
-  productImages: string[];
+  thumbnail: string;
   latest: boolean;
   soldOut?: boolean;
 }
@@ -263,11 +263,7 @@ const Page = () => {
                           productName={product.productName}
                           productPrice={Number(product.productPrice)}
                           cancelledPrice={product.cancelledProductPrice}
-                          src={
-                            product.productImages[0] === undefined
-                              ? "https://fastly.picsum.photos/id/1050/536/354.jpg?hmac=fjxUSeQRIROZvo_be9xEf-vMhMutXf2F5yw-WaWyaWA"
-                              : product.productImages[0]
-                          }
+                          thumbnail={product.thumbnail || "https://fastly.picsum.photos/id/1050/536/354.jpg?hmac=fjxUSeQRIROZvo_be9xEf-vMhMutXf2F5yw-WaWyaWA"}
                           status={product.latest ? "new" : "old"}
                           soldOut={product.soldOut || false}
                           isWishlist={true}

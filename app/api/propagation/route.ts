@@ -32,7 +32,7 @@ export async function POST(request: any) {
     if (full_query) {
       // Optimize: Only fetch necessary fields for product listing
       data = await productModel.find({}).select(
-        '_id productName productImages productPrice cancelledProductPrice latest soldOut'
+        '_id productName thumbnail productPrice cancelledProductPrice latest soldOut type'
       ).lean(); // Use lean() for better performance
     } else {
       // Fetch specific product with all details

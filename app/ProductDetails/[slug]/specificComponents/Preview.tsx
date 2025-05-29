@@ -30,6 +30,7 @@ interface ProductData {
   shipping: string;
   productImages: string[];
   soldOut?: boolean;
+  soldOutSizes?: string[];
 }
 
 const Preview: React.FC = () => {
@@ -52,6 +53,7 @@ const Preview: React.FC = () => {
     shipping: "",
     productImages: [],
     soldOut: false,
+    soldOutSizes: [],
   });
   const [collapsible, setCollapsible] = useState<boolean[]>(
     Array(4).fill(false)
@@ -120,9 +122,15 @@ const Preview: React.FC = () => {
   const handleAddToCart = async (event: React.MouseEvent) => {
     event.stopPropagation();
 
-    // Prevent interaction if sold out
+    // Prevent interaction if product is sold out
     if (currentProduct.soldOut) {
       showAlert("This product is sold out", "warning");
+      return;
+    }
+
+    // Check if selected size is sold out
+    if (current && currentProduct.soldOutSizes?.includes(current)) {
+      showAlert(`Size ${current} is currently sold out. Please select another size.`, "warning");
       return;
     }
 
@@ -237,6 +245,12 @@ const Preview: React.FC = () => {
       return;
     }
 
+    // Check if selected size is sold out
+    if (currentProduct.soldOutSizes?.includes(current)) {
+      showAlert(`Size ${current} is currently sold out. Please select another size.`, "warning");
+      return;
+    }
+
     // Navigate directly to checkout with the product details
     router.push(`/CheckOut?product=${id}&size=${current}&quantity=${quantity}`);
   };
@@ -274,26 +288,41 @@ const Preview: React.FC = () => {
             <div className="mt-6">
               <h2 className="text-sm font-medium mb-3">Select Size</h2>
               <div className="grid grid-cols-4 gap-2">
-                {["S", "M", "L", "XL"].map((size) => (
-                  <button
-                    key={size}
-                    disabled={currentProduct.soldOut}
-                    className={`border-2 py-2 text-center transition-colors ${
-                      currentProduct.soldOut 
-                        ? "border-gray-200 text-gray-400 cursor-not-allowed bg-gray-100"
-                        : size === current
-                          ? "bg-black text-white border-black"
-                          : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => !currentProduct.soldOut && handleSwitch(size)}
-                  >
-                    {size}
-                  </button>
-                ))}
+                {["S", "M", "L", "XL"].map((size) => {
+                  const isSizeSoldOut = currentProduct.soldOutSizes?.includes(size);
+                  const isDisabled = currentProduct.soldOut || isSizeSoldOut;
+                  
+                  return (
+                    <button
+                      key={size}
+                      disabled={isDisabled}
+                      className={`border-2 py-2 text-center transition-colors relative ${
+                        isDisabled
+                          ? "border-gray-200 text-gray-400 cursor-not-allowed bg-gray-100"
+                          : size === current
+                            ? "bg-black text-white border-black"
+                            : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      onClick={() => !isDisabled && handleSwitch(size)}
+                    >
+                      {size}
+                      {isSizeSoldOut && !currentProduct.soldOut && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
+                          ✕
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 This product has a larger fit than usual. Model is wearing L.
               </p>
+              {currentProduct.soldOutSizes && currentProduct.soldOutSizes.length > 0 && !currentProduct.soldOut && (
+                <p className="text-xs text-red-500 mt-2">
+                  Sizes {currentProduct.soldOutSizes.join(", ")} are currently sold out
+                </p>
+              )}
             </div>
 
             {/* Add to Cart Buttons */}

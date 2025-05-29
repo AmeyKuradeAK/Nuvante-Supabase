@@ -5,7 +5,6 @@ import { useUser } from "@clerk/nextjs";
 import { useAlert } from "@/context/AlertContext";
 import { useRouter } from "next/navigation";
 
-const facebook_icon = "/facebook.svg";
 const gram_icon = "/instagram.svg";
 const linkedin_icon = "/linkedin.svg";
 const caret_right = "/caret-right.svg";
