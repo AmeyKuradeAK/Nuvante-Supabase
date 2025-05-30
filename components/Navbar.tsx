@@ -245,7 +245,9 @@ export default function Navbar() {
       </div>
 
       <div
-        className={`navbar_responsive lg:hidden flex flex-col py-3 relative h-[90px] transition-none`}
+        className={`navbar_responsive lg:hidden flex flex-col py-3 relative transition-all duration-200 ease-out ${
+          open ? 'pb-6' : ''
+        }`}
       >
         <div className="flex justify-between items-center px-4">
           <div
@@ -298,70 +300,60 @@ export default function Navbar() {
           </div>
         </div>
         
-        {/* Menu Items Container - Fixed position overlay for Android performance */}
+        {/* Menu Items Container - Inline menu that pushes content down */}
         {open && (
-          <>
-            {/* Backdrop */}
-            <div 
-              className="fixed inset-0 bg-black/20 z-30"
-              onClick={() => setOpen(false)}
-              style={{ top: '90px' }}
-            />
-            {/* Menu Content */}
-            <div 
-              className="fixed left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40 animate-fade-in-up"
-              style={{ top: '90px' }}
-            >
-              <div className="px-4 py-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-4">
-                    {navigation.slice(0, 2).map((item) => (
-                      <Link 
-                        key={item.name}
-                        href={item.href} 
-                        className="block hover:text-[#DB4444] transition-colors"
-                        onClick={() => setOpen(false)}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
+          <div 
+            className="bg-white border-t border-gray-200 shadow-sm animate-fade-in-up"
+          >
+            <div className="px-4 py-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  {navigation.slice(0, 2).map((item) => (
                     <Link 
-                      href="/Wishlist" 
+                      key={item.name}
+                      href={item.href} 
                       className="block hover:text-[#DB4444] transition-colors"
-                      onClick={(e) => {
-                        handleWishlistClick(e);
-                        setOpen(false);
-                      }}
+                      onClick={() => setOpen(false)}
                     >
-                      Wishlist
+                      {item.name}
                     </Link>
-                  </div>
-                  <div className="space-y-4">
-                    {navigation.slice(2).map((item) => (
-                      <Link 
-                        key={item.name}
-                        href={item.href} 
-                        className="block hover:text-[#DB4444] transition-colors"
-                        onClick={() => setOpen(false)}
-                      >
-                        {item.name}
-                      </Link>
-                    ))}
+                  ))}
+                  <Link 
+                    href="/Wishlist" 
+                    className="block hover:text-[#DB4444] transition-colors"
+                    onClick={(e) => {
+                      handleWishlistClick(e);
+                      setOpen(false);
+                    }}
+                  >
+                    Wishlist
+                  </Link>
+                </div>
+                <div className="space-y-4">
+                  {navigation.slice(2).map((item) => (
                     <Link 
-                      href="/orders" 
+                      key={item.name}
+                      href={item.href} 
                       className="block hover:text-[#DB4444] transition-colors"
-                      onClick={(e) => {
-                        handleOrdersClick(e);
-                        setOpen(false);
-                      }}
+                      onClick={() => setOpen(false)}
                     >
-                      Orders
+                      {item.name}
                     </Link>
-                  </div>
+                  ))}
+                  <Link 
+                    href="/orders" 
+                    className="block hover:text-[#DB4444] transition-colors"
+                    onClick={(e) => {
+                      handleOrdersClick(e);
+                      setOpen(false);
+                    }}
+                  >
+                    Orders
+                  </Link>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </>
