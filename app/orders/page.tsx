@@ -147,9 +147,11 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                       </div>
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-2">
-                      <div className="flex items-start gap-2">
-                        <Mail className="w-4 h-4 text-[#DB4444] flex-shrink-0 mt-0.5" />
-                        <p className="text-gray-600 text-sm sm:text-base break-all sm:break-words overflow-wrap-anywhere">{order.shippingAddress.email}</p>
+                      <div className="flex items-center gap-2 w-full">
+                        <Mail className="w-4 h-4 text-[#DB4444] flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-gray-600 text-sm sm:text-base whitespace-nowrap overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">{order.shippingAddress.email}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
