@@ -5,6 +5,7 @@ import connect from "@/db";
 import { ClerkProvider } from "@clerk/nextjs";
 import { GlobalContextProvider } from "@/context/Global";
 import { AlertProvider } from "@/context/AlertContext";
+import CacheBuster from "@/components/CacheBuster";
 
 //? an inline function to connect to mongodb atlas using mongoose.
 (async () => {
@@ -37,19 +38,36 @@ import { AlertProvider } from "@/context/AlertContext";
 // })();
 
 const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
+  src: "./fonts/GeistVF.woff2",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
 const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
+  src: "./fonts/GeistMonoVF.woff2",
   variable: "--font-geist-mono",
   weight: "100 900",
 });
 
 export const metadata: Metadata = {
-  title: "Nuvante | E-Commerce",
-  description: "Nuvante Fashion",
+  title: "Nuvante | Premium Fashion & Lifestyle",
+  description: "Discover premium fashion and lifestyle products at Nuvante. Shop the latest trends in clothing, accessories, and more.",
+  keywords: "fashion, lifestyle, clothing, accessories, premium, trendy",
+  authors: [{ name: "Nuvante Team" }],
+  viewport: "width=device-width, initial-scale=1",
+  robots: "index, follow",
+  openGraph: {
+    title: "Nuvante | Premium Fashion & Lifestyle",
+    description: "Discover premium fashion and lifestyle products at Nuvante. Shop the latest trends in clothing, accessories, and more.",
+    type: "website",
+    locale: "en_US",
+  },
+  // Cache busting metadata
+  other: {
+    "cache-control": "no-cache, no-store, must-revalidate",
+    "pragma": "no-cache",
+    "expires": "0",
+    "app-version": Date.now().toString(),
+  },
 };
 
 export default function RootLayout({
@@ -57,20 +75,95 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const appVersion = "2024122901"; // Update this when deploying fixes
+  
   return (
-    <html lang="en">
-      <head>
-        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-      </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ClerkProvider>
+    <ClerkProvider>
+      <html lang="en">
+        <head>
+          {/* Razorpay Script */}
+          <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+          
+          {/* Cache busting meta tags */}
+          <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+          <meta httpEquiv="Pragma" content="no-cache" />
+          <meta httpEquiv="Expires" content="0" />
+          <meta name="app-version" content={appVersion} />
+          
+          {/* PWA Cache Busting */}
+          <meta name="theme-color" content="#DB4444" />
+          <meta name="msapplication-navbutton-color" content="#DB4444" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          
+          {/* Force refresh script */}
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                // Force cache clear and reload if version changed
+                (function() {
+                  const currentVersion = '${appVersion}';
+                  const storedVersion = localStorage.getItem('nuvante-app-version');
+                  
+                  if (storedVersion && storedVersion !== currentVersion) {
+                    console.log('New app version detected, clearing cache...');
+                    
+                    // Clear all browser caches
+                    if ('caches' in window) {
+                      caches.keys().then(function(names) {
+                        names.forEach(function(name) {
+                          caches.delete(name);
+                        });
+                      });
+                    }
+                    
+                    // Clear service worker cache
+                    if ('serviceWorker' in navigator) {
+                      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                        registrations.forEach(function(registration) {
+                          registration.update();
+                        });
+                      });
+                    }
+                    
+                    // Clear localStorage (except essential items)
+                    const essentialKeys = ['clerk-session', 'clerk-db-jwt'];
+                    const keys = Object.keys(localStorage);
+                    keys.forEach(function(key) {
+                      if (!essentialKeys.some(function(essential) { return key.includes(essential); })) {
+                        localStorage.removeItem(key);
+                      }
+                    });
+                    
+                    // Clear sessionStorage
+                    sessionStorage.clear();
+                    
+                    // Set new version
+                    localStorage.setItem('nuvante-app-version', currentVersion);
+                    
+                    // Force hard reload with cache bypass
+                    window.location.reload(true);
+                    return;
+                  }
+                  
+                  if (!storedVersion) {
+                    localStorage.setItem('nuvante-app-version', currentVersion);
+                  }
+                })();
+              `,
+            }}
+          />
+        </head>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
           <GlobalContextProvider>
             <AlertProvider>
               {children}
+              <CacheBuster />
             </AlertProvider>
           </GlobalContextProvider>
-        </ClerkProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
