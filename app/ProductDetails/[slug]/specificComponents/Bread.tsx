@@ -24,7 +24,7 @@ export default function Bread() {
     const fetchBreadcrumb = async () => {
       try {
         const response = await axios.post(`/api/propagation/`, {
-          id: url_param.slug,
+          id: url_param?.slug,
           every: false,
         });
         const data = response.data as { productName: string; type: string };
@@ -35,7 +35,7 @@ export default function Bread() {
       }
     };
     fetchBreadcrumb();
-  }, [url_param.slug]);
+  }, [url_param?.slug]);
 
   return (
     <>

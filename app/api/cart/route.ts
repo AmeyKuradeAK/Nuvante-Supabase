@@ -43,35 +43,38 @@ export async function POST(request: any) {
     }
 
     if (body.append) {
-        if (!existingModel.cart.includes(body.identifier)) {
-          existingModel.cart.push(body.identifier);
-          // Set default quantity to 1 when adding to cart
-          existingModel.cartQuantities.set(body.identifier, 1);
-          // Set size if provided
-          if (body.size) {
-            existingModel.cartSizes.set(body.identifier, body.size);
-          }
+      if (!existingModel.cart.includes(body.identifier)) {
+        existingModel.cart.push(body.identifier);
+        // Set default quantity to 1 when adding to cart
+        existingModel.cartQuantities.set(body.identifier, body.quantity || 1);
+        // Set size if provided
+        if (body.size) {
+          existingModel.cartSizes.set(body.identifier, body.size);
         }
-      } else {
-        existingModel.cart = popElement(existingModel.cart, body.identifier);
-        // Remove quantity and size when item is removed from cart
-        existingModel.cartQuantities.delete(body.identifier);
-        existingModel.cartSizes.delete(body.identifier);
+      } else if (body.quantity) {
+        // Update quantity if item already exists and quantity is provided
+        existingModel.cartQuantities.set(body.identifier, body.quantity);
       }
-
-      // If cart is empty, clear all quantities and sizes
-      if (existingModel.cart.length === 0) {
-        existingModel.cartQuantities = new Map();
-        existingModel.cartSizes = new Map();
-      }
-
-      await existingModel.save();
-      return NextResponse.json({ success: true }, { status: 200 });
-    } catch (error) {
-      console.error("Error updating cart:", error);
-      return NextResponse.json({ 
-        error: "Failed to update cart", 
-        details: error instanceof Error ? error.message : "Unknown error" 
-      }, { status: 500 });
+    } else {
+      existingModel.cart = popElement(existingModel.cart, body.identifier);
+      // Remove quantity and size when item is removed from cart
+      existingModel.cartQuantities.delete(body.identifier);
+      existingModel.cartSizes.delete(body.identifier);
     }
+
+    // If cart is empty, clear all quantities and sizes
+    if (existingModel.cart.length === 0) {
+      existingModel.cartQuantities = new Map();
+      existingModel.cartSizes = new Map();
+    }
+
+    await existingModel.save();
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("Error updating cart:", error);
+    return NextResponse.json({ 
+      error: "Failed to update cart", 
+      details: error instanceof Error ? error.message : "Unknown error" 
+    }, { status: 500 });
+  }
 }

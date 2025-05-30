@@ -36,7 +36,8 @@ interface ProductData {
 
 const Preview: React.FC = () => {
   const [hash, setHash] = useState<string | string[]>("");
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params?.slug;
   const [current, setCurrent] = useState("");
   const [productImages, setProductImages] = useState<string[]>([]);
   const [quantity, setQuantity] = useState(1);

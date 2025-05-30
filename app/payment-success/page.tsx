@@ -19,8 +19,8 @@ function PaymentSuccessContent() {
   const router = useRouter();
   const { showAlert } = useAlert();
 
-  const orderId = searchParams.get("orderId");
-  const paymentId = searchParams.get("paymentId");
+  const orderId = searchParams?.get("orderId");
+  const paymentId = searchParams?.get("paymentId");
 
   useEffect(() => {
     if (!orderId || !paymentId) {

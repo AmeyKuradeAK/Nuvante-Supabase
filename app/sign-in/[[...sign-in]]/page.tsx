@@ -26,7 +26,7 @@ const page = (props: Props) => {
 
   useEffect(() => {
     if (user.isSignedIn) {
-      const redirectUrl = searchParams.get('redirect_url') || '/';
+      const redirectUrl = searchParams?.get('redirect_url') || '/';
       router.push(redirectUrl);
     }
   }, [user.isSignedIn, router, searchParams]);
@@ -45,7 +45,7 @@ const page = (props: Props) => {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         showAlert("Successfully signed in!", "success");
-        const redirectUrl = searchParams.get('redirect_url') || '/';
+        const redirectUrl = searchParams?.get('redirect_url') || '/';
         router.push(redirectUrl);
       } else {
         console.error(JSON.stringify(result, null, 2));
@@ -66,7 +66,7 @@ const page = (props: Props) => {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: searchParams.get('redirect_url') || "/",
+        redirectUrlComplete: searchParams?.get('redirect_url') || "/",
       });
     } catch (err: any) {
       console.error(err);

@@ -12,22 +12,22 @@ export default function Suggestion() {
   const [products, setProducts] = useState<any>([]);
 
   useEffect(() => {
-    setHash(url_param.slug);
+    setHash(url_param?.slug);
     (async () => {
       const response = await axios.post(`/api/propagation/`, {
-        id: hash === "" ? url_param.slug : hash,
+        id: hash === "" ? url_param?.slug : hash,
         every: true,
       });
       const data = response.data as any[];
       const filteredProducts = data.filter(
-        (product: any) => product._id !== url_param.slug
+        (product: any) => product._id !== url_param?.slug
       );
       filteredProducts.sort(
         (a: any, b: any) => b.productStars - a.productStars
       );
       setProducts(filteredProducts);
     })();
-  }, [hash, url_param.slug]);
+  }, [hash, url_param?.slug]);
 
   return (
     <div className="cards flex flex-wrap gap-x-5 gap-y-10 w-fit mx-auto">

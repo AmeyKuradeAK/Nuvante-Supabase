@@ -43,7 +43,7 @@ const Page = () => {
                   {loaded ? (
                     data.length > 0 ? (
                       data.map((product: any, index: any) =>
-                        product.type === params.slug ? (
+                        product.type === params?.slug ? (
                           <Card
                             id={product._id}
                             key={index}

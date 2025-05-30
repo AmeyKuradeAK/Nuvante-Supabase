@@ -153,7 +153,7 @@ const CheckoutContent = () => {
     }));
 
     // If it's a cart item, update the cart
-    if (!searchParams.get('product')) {
+    if (!searchParams?.get('product')) {
       try {
         await axios.post("/api/cart", {
           identifier: productId,
@@ -171,9 +171,9 @@ const CheckoutContent = () => {
     const fetchCartData = async () => {
       try {
         // Get all product IDs from URL
-        const productIds = searchParams.getAll('product');
-        const sizes = searchParams.getAll('size');
-        const quantities = searchParams.getAll('quantity');
+        const productIds = searchParams?.getAll('product') || [];
+        const sizes = searchParams?.getAll('size') || [];
+        const quantities = searchParams?.getAll('quantity') || [];
 
         // Fetch user profile data
         const profileResponse = await axios.get<ProfileResponse>("/api/propagation_client");
