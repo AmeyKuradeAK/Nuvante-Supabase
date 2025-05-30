@@ -158,7 +158,7 @@ const Preview: React.FC = () => {
       // Check if response is successful
       if (response.status === 200) {
         // Update both states after successful API call
-        changeGlobalCart(id);
+        await changeGlobalCart(id);
         setIsInCart(!isPresent);
         showAlert(
           isPresent ? "Item removed from cart" : "Item added to cart",

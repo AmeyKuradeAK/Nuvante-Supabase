@@ -124,7 +124,8 @@ export default function Card({
       });
 
       if (response.status === 200) {
-        changeGlobalCart(id);
+        // Wait for the global cart to be updated from server
+        await changeGlobalCart(id);
         showAlert(
           isPresent ? "Removed from cart" : "Added to cart",
           "success"

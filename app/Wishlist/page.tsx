@@ -135,7 +135,7 @@ const Page = () => {
           identifier: item,
           append: true,
         });
-        changeGlobalCart(item);
+        await changeGlobalCart(item);
       }
 
       showAlert(`Successfully moved ${itemsToAdd.length} items to cart`, "success");

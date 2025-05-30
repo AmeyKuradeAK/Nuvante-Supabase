@@ -40,7 +40,7 @@ interface GlobalContextType {
   GlobalCartSizes: Record<string, string>;
   GlobalOrders: OrderItem[];
   changeGlobalWishlist: (updatedWishlist: string[]) => void;
-  changeGlobalCart: (element: string) => void;
+  changeGlobalCart: (element: string) => Promise<void>;
   changeGlobalCartQuantity: (productId: string, quantity: number) => void;
   changeGlobalCartSize: (productId: string, size: string) => void;
   changeGlobalOrders: (order: OrderItem) => void;
@@ -155,30 +155,15 @@ export const GlobalContextProvider = ({
     debouncedFetchData();
   };
 
-  const changeGlobalCart = (element: string) => {
+  const changeGlobalCart = async (element: string) => {
     if (!isSignedIn || !user) {
       router.push('/sign-in');
       return;
     }
-    if (GlobalCart.includes(element)) {
-      // Remove item from cart
-      const updatedCart = GlobalCart.filter(item => item !== element);
-      setGlobalCart(updatedCart);
-      // Also remove quantities and sizes
-      const { [element]: removedQuantity, ...remainingQuantities } = GlobalCartQuantities;
-      const { [element]: removedSize, ...remainingSizes } = GlobalCartSizes;
-      setGlobalCartQuantities(remainingQuantities);
-      setGlobalCartSizes(remainingSizes);
-    } else {
-      // Add item to cart
-      setGlobalCart([...GlobalCart, element]);
-      // Initialize quantity to 1
-      setGlobalCartQuantities(prev => ({
-        ...prev,
-        [element]: 1
-      }));
-    }
-    debouncedFetchData();
+    
+    // Don't update local state immediately, let the server be the source of truth
+    // Instead, fetch fresh data after the API call
+    await fetchData();
   };
 
   const changeGlobalCartQuantity = (productId: string, quantity: number) => {
