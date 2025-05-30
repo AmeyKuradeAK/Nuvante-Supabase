@@ -258,20 +258,32 @@ video::-webkit-media-controls-start-playback-button {
   border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 }
 
-/* Mobile navbar transitions */
+/* Mobile navbar transitions - Android optimized */
 .navbar_responsive {
   border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 }
 
-/* Optimized hamburger menu transitions */
+/* Optimized hamburger menu for Android performance */
 .hamburger_responsive .line {
   transform-origin: center;
-  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
-/* Smooth height transitions */
-.menu-content {
-  will-change: transform, opacity, max-height;
+/* Force hardware acceleration for mobile menu */
+.navbar_responsive .fixed {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Android-specific optimizations */
+@media screen and (-webkit-min-device-pixel-ratio: 1) {
+  .hamburger_responsive .line {
+    transition: transform 0.08s ease-out, opacity 0.08s ease-out;
+  }
+  
+  .navbar_responsive .fixed {
+    transition: transform 0.1s ease-out;
+  }
 }
 
 .embla {

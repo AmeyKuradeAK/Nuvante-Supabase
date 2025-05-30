@@ -245,18 +245,16 @@ export default function Navbar() {
       </div>
 
       <div
-        className={`navbar_responsive lg:hidden flex flex-col py-3 relative ${
-          open ? "h-[280px] menu-open" : "h-[90px]"
-        } overflow-hidden transition-all duration-200 ease-out`}
+        className={`navbar_responsive lg:hidden flex flex-col py-3 relative h-[90px] transition-none`}
       >
         <div className="flex justify-between items-center px-4">
           <div
             onClick={handleNavbar}
             className="hamburger_responsive lg:hidden flex-col gap-1 cursor-pointer flex p-2"
           >
-            <div className={`line w-5 h-[2px] bg-black transition-all duration-150 ${open ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-            <div className={`line w-5 h-[2px] bg-black transition-all duration-150 ${open ? 'opacity-0' : ''}`}></div>
-            <div className={`line w-5 h-[2px] bg-black transition-all duration-150 ${open ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+            <div className={`line w-5 h-[2px] bg-black transition-transform duration-100 ${open ? 'rotate-45 translate-y-1.5' : ''}`}></div>
+            <div className={`line w-5 h-[2px] bg-black transition-opacity duration-100 ${open ? 'opacity-0' : ''}`}></div>
+            <div className={`line w-5 h-[2px] bg-black transition-transform duration-100 ${open ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
           </div>
           <div
             className="navbar-brand flex items-center cursor-pointer w-fit"
@@ -300,62 +298,63 @@ export default function Navbar() {
           </div>
         </div>
         
-        {/* Menu Items Container with strict visibility control */}
+        {/* Menu Items Container - Fixed position overlay for Android performance */}
         <div 
-          className={`menu-content px-4 transition-all duration-200 ease-out ${
+          className={`fixed left-0 right-0 bg-white border-t border-gray-200 shadow-lg transform transition-transform duration-150 ease-out z-40 ${
             open 
-              ? 'opacity-100 translate-y-0 visible' 
-              : 'opacity-0 -translate-y-4 invisible'
+              ? 'translate-y-0' 
+              : '-translate-y-full'
           }`}
           style={{
-            maxHeight: open ? '300px' : '0px',
-            overflow: 'hidden'
+            top: '90px'
           }}
         >
-          <div className="grid grid-cols-2 gap-4 mt-4 pb-6">
-            <div className="space-y-4">
-              {navigation.slice(0, 2).map((item) => (
+          <div className="px-4 py-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
+                {navigation.slice(0, 2).map((item) => (
+                  <Link 
+                    key={item.name}
+                    href={item.href} 
+                    className="block hover:text-[#DB4444] transition-colors"
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
                 <Link 
-                  key={item.name}
-                  href={item.href} 
+                  href="/Wishlist" 
                   className="block hover:text-[#DB4444] transition-colors"
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => {
+                    handleWishlistClick(e);
+                    setOpen(false);
+                  }}
                 >
-                  {item.name}
+                  Wishlist
                 </Link>
-              ))}
-              <Link 
-                href="/Wishlist" 
-                className="block hover:text-[#DB4444] transition-colors"
-                onClick={(e) => {
-                  handleWishlistClick(e);
-                  setOpen(false);
-                }}
-              >
-                Wishlist
-              </Link>
-            </div>
-            <div className="space-y-4">
-              {navigation.slice(2).map((item) => (
+              </div>
+              <div className="space-y-4">
+                {navigation.slice(2).map((item) => (
+                  <Link 
+                    key={item.name}
+                    href={item.href} 
+                    className="block hover:text-[#DB4444] transition-colors"
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
                 <Link 
-                  key={item.name}
-                  href={item.href} 
+                  href="/orders" 
                   className="block hover:text-[#DB4444] transition-colors"
-                  onClick={() => setOpen(false)}
+                  onClick={(e) => {
+                    handleOrdersClick(e);
+                    setOpen(false);
+                  }}
                 >
-                  {item.name}
+                  Orders
                 </Link>
-              ))}
-              <Link 
-                href="/orders" 
-                className="block hover:text-[#DB4444] transition-colors"
-                onClick={(e) => {
-                  handleOrdersClick(e);
-                  setOpen(false);
-                }}
-              >
-                Orders
-              </Link>
+              </div>
             </div>
           </div>
         </div>
