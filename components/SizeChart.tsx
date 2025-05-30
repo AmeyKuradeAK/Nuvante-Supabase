@@ -121,15 +121,15 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
             </motion.div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+            <div className="p-3 sm:p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
               {/* Size Chart Table */}
               <motion.div
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ delay: 0.15, duration: 0.25, ease: "easeOut" }}
-                className="overflow-hidden rounded-xl border border-gray-200 shadow-sm bg-white"
+                className="overflow-x-auto overflow-hidden rounded-xl border border-gray-200 shadow-sm bg-white"
               >
-                <table className="w-full">
+                <table className="w-full min-w-[480px]">
                   <motion.thead 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -137,11 +137,11 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                     className="bg-gradient-to-r from-[#DB4444] to-[#c13a3a] text-white"
                   >
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-bold">Size</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold">Chest</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold">Length</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold">Bottom</th>
-                      <th className="px-6 py-4 text-left text-sm font-bold">Shoulder</th>
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold">Size</th>
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold">Chest</th>
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold">Length</th>
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold">Bottom</th>
+                      <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold">Shoulder</th>
                     </tr>
                   </motion.thead>
                   <tbody className="bg-white divide-y divide-gray-100">
@@ -167,10 +167,10 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                         }`}
                         onClick={() => handleRowClick(item.size)}
                       >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             <motion.span 
-                              className={`font-bold text-xl ${selectedSize === item.size ? "text-[#DB4444]" : "text-gray-900"}`}
+                              className={`font-bold text-lg sm:text-xl ${selectedSize === item.size ? "text-[#DB4444]" : "text-gray-900"}`}
                               whileHover={{ scale: 1.1 }}
                               transition={{ duration: 0.1 }}
                             >
@@ -187,28 +187,28 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                           </div>
                         </td>
                         <motion.td 
-                          className="px-6 py-4 text-sm text-gray-700 font-semibold"
+                          className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-700 font-semibold"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
                           {item.chest}
                         </motion.td>
                         <motion.td 
-                          className="px-6 py-4 text-sm text-gray-700 font-semibold"
+                          className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-700 font-semibold"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
                           {item.length}
                         </motion.td>
                         <motion.td 
-                          className="px-6 py-4 text-sm text-gray-700 font-semibold"
+                          className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-700 font-semibold"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
                           {item.bottom}
                         </motion.td>
                         <motion.td 
-                          className="px-6 py-4 text-sm text-gray-700 font-semibold"
+                          className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-700 font-semibold"
                           whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.1 }}
                         >
@@ -231,14 +231,14 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                   initial={{ opacity: 0, y: 20, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ delay: 0.35, duration: 0.2, ease: "easeOut" }}
-                  className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm"
+                  className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm"
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-2 sm:gap-3">
                     <motion.svg 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.4, duration: 0.2, ease: "easeOut" }}
-                      className="w-5 h-5 text-blue-600 mt-0.5" 
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mt-0.5" 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -246,8 +246,8 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </motion.svg>
                     <div>
-                      <h3 className="font-semibold text-blue-900 mb-1">Oversized Fit Measurements</h3>
-                      <p className="text-sm text-blue-800">
+                      <h3 className="font-semibold text-blue-900 mb-1 text-sm sm:text-base">Oversized Fit Measurements</h3>
+                      <p className="text-xs sm:text-sm text-blue-800">
                         These measurements are specific to our oversized shirt design. All measurements are in centimeters and represent the actual garment dimensions.
                       </p>
                     </div>
@@ -258,13 +258,13 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.45, duration: 0.2, ease: "easeOut" }}
-                  className="p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border border-yellow-200 shadow-sm"
+                  className="p-3 sm:p-4 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl border border-yellow-200 shadow-sm"
                 >
                   <motion.h4 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5, duration: 0.2 }}
-                    className="font-semibold text-yellow-900 mb-2 flex items-center gap-2"
+                    className="font-semibold text-yellow-900 mb-2 flex items-center gap-2 text-sm sm:text-base"
                   >
                     <motion.span
                       animate={{ rotate: [0, 10, -10, 0] }}
@@ -278,7 +278,7 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.55, duration: 0.2 }}
-                    className="text-sm text-yellow-800 space-y-1"
+                    className="text-xs sm:text-sm text-yellow-800 space-y-1"
                   >
                     <li>• <strong>Chest:</strong> Measured across the chest from armpit to armpit</li>
                     <li>• <strong>Length:</strong> Measured from shoulder to bottom hem</li>
@@ -293,9 +293,9 @@ const SizeChart: React.FC<SizeChartProps> = ({ isOpen, onClose }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.2, ease: "easeOut" }}
-                className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200 shadow-sm"
+                className="mt-6 p-3 sm:p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200 shadow-sm"
               >
-                <p className="text-sm text-amber-800">
+                <p className="text-xs sm:text-sm text-amber-800">
                   <span className="font-semibold">Oversized Fit:</span> This shirt is designed for a relaxed, oversized look. 
                   Model is wearing size L. Choose your regular size for the intended oversized fit.
                 </p>

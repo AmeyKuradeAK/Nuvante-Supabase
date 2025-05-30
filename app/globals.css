@@ -258,18 +258,20 @@ video::-webkit-media-controls-start-playback-button {
   border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 }
 
-/* Mobile navbar strict visibility controls */
+/* Mobile navbar transitions */
 .navbar_responsive {
   border-bottom: 1px solid rgba(0, 0, 0, 0.3);
 }
 
-/* Ensure hamburger menu content is strictly hidden when closed */
-.navbar_responsive:not(.menu-open) .menu-content {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  max-height: 0 !important;
-  overflow: hidden !important;
+/* Optimized hamburger menu transitions */
+.hamburger_responsive .line {
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+/* Smooth height transitions */
+.menu-content {
+  will-change: transform, opacity, max-height;
 }
 
 .embla {
