@@ -134,19 +134,23 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
                   <div className="bg-[#DB4444]/10 p-3 rounded-full">
                     <MapPin className="w-6 h-6 text-[#DB4444]" />
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-800 text-lg">{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
                     <p className="text-gray-600 mt-1">{order.shippingAddress.streetAddress}</p>
                     {order.shippingAddress.apartment && <p className="text-gray-600">{order.shippingAddress.apartment}</p>}
                     <p className="text-gray-600">{order.shippingAddress.city}</p>
                     {order.shippingAddress.pin && <p className="text-gray-600">PIN: {order.shippingAddress.pin}</p>}
-                    <div className="flex items-center gap-3 mt-3">
-                      <Phone className="w-4 h-4 text-[#DB4444]" />
-                      <p className="text-gray-600">{order.shippingAddress.phone}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-3">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-[#DB4444] flex-shrink-0" />
+                        <p className="text-gray-600 text-sm sm:text-base">{order.shippingAddress.phone}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 mt-2">
-                      <Mail className="w-4 h-4 text-[#DB4444]" />
-                      <p className="text-gray-600">{order.shippingAddress.email}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-2">
+                      <div className="flex items-start gap-2">
+                        <Mail className="w-4 h-4 text-[#DB4444] flex-shrink-0 mt-0.5" />
+                        <p className="text-gray-600 text-sm sm:text-base break-all sm:break-words overflow-wrap-anywhere">{order.shippingAddress.email}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
