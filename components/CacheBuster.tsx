@@ -1,10 +1,15 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAlert } from '@/context/AlertContext';
 
 const CacheBuster = () => {
   const { showAlert } = useAlert();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const clearAllCache = async () => {
     try {
@@ -54,12 +59,14 @@ const CacheBuster = () => {
 
   // Check if user is experiencing cache issues
   const hasIssues = () => {
+    if (!isMounted || typeof window === 'undefined') return false;
+    
     // Check if localStorage has old data
     const version = localStorage.getItem('nuvante-app-version');
     return !version || version < "2024122901";
   };
 
-  if (!hasIssues()) return null;
+  if (!isMounted || !hasIssues()) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-50">

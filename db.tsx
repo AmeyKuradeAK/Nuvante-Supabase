@@ -9,8 +9,6 @@ const connect = async () => {
     
     // Add connection options for better reliability
     const options = {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     };

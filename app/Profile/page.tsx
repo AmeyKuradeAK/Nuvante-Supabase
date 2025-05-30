@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { useState, useCallback, useEffect, Suspense } from "react";
-import dynamic from "next/dynamic";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -19,6 +18,9 @@ import { useAlert } from "@/context/AlertContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { LogOut, AlertCircle, CheckCircle } from "lucide-react";
+
+// Add export to prevent prerendering
+export const dynamic = 'force-dynamic';
 
 const logo = "/logo.png";
 
@@ -538,15 +540,13 @@ const ProfilePageLoading = () => (
   </div>
 );
 
-// Create a dynamic wrapper for the ProfilePageContent component
-const DynamicProfileContent = dynamic(() => Promise.resolve({ default: ProfilePageContent }), {
-  ssr: false,
-  loading: () => <ProfilePageLoading />
-});
-
 // Main Profile Page component
 const ProfilePage = () => {
-  return <DynamicProfileContent />;
+  return (
+    <Suspense fallback={<ProfilePageLoading />}>
+      <ProfilePageContent />
+    </Suspense>
+  );
 };
 
 export default ProfilePage;

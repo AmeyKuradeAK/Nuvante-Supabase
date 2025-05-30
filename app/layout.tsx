@@ -75,7 +75,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const appVersion = "2024122901"; // Update this when deploying fixes
+  const appVersion = "2024122902"; // Update this when deploying fixes
   
   return (
     <ClerkProvider>
@@ -94,64 +94,6 @@ export default function RootLayout({
           <meta name="theme-color" content="#DB4444" />
           <meta name="msapplication-navbutton-color" content="#DB4444" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-          
-          {/* Force refresh script */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                // Force cache clear and reload if version changed
-                (function() {
-                  const currentVersion = '${appVersion}';
-                  const storedVersion = localStorage.getItem('nuvante-app-version');
-                  
-                  if (storedVersion && storedVersion !== currentVersion) {
-                    console.log('New app version detected, clearing cache...');
-                    
-                    // Clear all browser caches
-                    if ('caches' in window) {
-                      caches.keys().then(function(names) {
-                        names.forEach(function(name) {
-                          caches.delete(name);
-                        });
-                      });
-                    }
-                    
-                    // Clear service worker cache
-                    if ('serviceWorker' in navigator) {
-                      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                        registrations.forEach(function(registration) {
-                          registration.update();
-                        });
-                      });
-                    }
-                    
-                    // Clear localStorage (except essential items)
-                    const essentialKeys = ['clerk-session', 'clerk-db-jwt'];
-                    const keys = Object.keys(localStorage);
-                    keys.forEach(function(key) {
-                      if (!essentialKeys.some(function(essential) { return key.includes(essential); })) {
-                        localStorage.removeItem(key);
-                      }
-                    });
-                    
-                    // Clear sessionStorage
-                    sessionStorage.clear();
-                    
-                    // Set new version
-                    localStorage.setItem('nuvante-app-version', currentVersion);
-                    
-                    // Force hard reload with cache bypass
-                    window.location.reload(true);
-                    return;
-                  }
-                  
-                  if (!storedVersion) {
-                    localStorage.setItem('nuvante-app-version', currentVersion);
-                  }
-                })();
-              `,
-            }}
-          />
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -160,6 +102,67 @@ export default function RootLayout({
             <AlertProvider>
               {children}
               <CacheBuster />
+              
+              {/* Client-side only cache busting script */}
+              <script
+                dangerouslySetInnerHTML={{
+                  __html: `
+                    // Ensure this only runs on client side after hydration
+                    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+                      // Force cache clear and reload if version changed
+                      (function() {
+                        const currentVersion = '${appVersion}';
+                        const storedVersion = localStorage.getItem('nuvante-app-version');
+                        
+                        if (storedVersion && storedVersion !== currentVersion) {
+                          console.log('New app version detected, clearing cache...');
+                          
+                          // Clear all browser caches
+                          if ('caches' in window) {
+                            caches.keys().then(function(names) {
+                              names.forEach(function(name) {
+                                caches.delete(name);
+                              });
+                            });
+                          }
+                          
+                          // Clear service worker cache
+                          if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                              registrations.forEach(function(registration) {
+                                registration.update();
+                              });
+                            });
+                          }
+                          
+                          // Clear localStorage (except essential items)
+                          const essentialKeys = ['clerk-session', 'clerk-db-jwt'];
+                          const keys = Object.keys(localStorage);
+                          keys.forEach(function(key) {
+                            if (!essentialKeys.some(function(essential) { return key.includes(essential); })) {
+                              localStorage.removeItem(key);
+                            }
+                          });
+                          
+                          // Clear sessionStorage
+                          sessionStorage.clear();
+                          
+                          // Set new version
+                          localStorage.setItem('nuvante-app-version', currentVersion);
+                          
+                          // Force hard reload with cache bypass
+                          window.location.reload(true);
+                          return;
+                        }
+                        
+                        if (!storedVersion) {
+                          localStorage.setItem('nuvante-app-version', currentVersion);
+                        }
+                      })();
+                    }
+                  `,
+                }}
+              />
             </AlertProvider>
           </GlobalContextProvider>
         </body>
