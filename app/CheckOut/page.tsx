@@ -193,6 +193,12 @@ const CheckoutContent = () => {
             const response = await axios.post("/api/propagation", {
               id: productId,
               every: false
+            }, {
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+              }
             });
             return response.data;
           });
@@ -217,6 +223,12 @@ const CheckoutContent = () => {
             const response = await axios.post("/api/propagation", {
               id: itemId,
               every: false
+            }, {
+              headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+              }
             });
             return response.data;
           });
@@ -224,14 +236,26 @@ const CheckoutContent = () => {
           const productsData = await Promise.all(productPromises);
           setProducts(productsData);
 
-          // Load quantities from database
-          const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities');
+          // Load quantities from database with cache busting
+          const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities', {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
           if (quantitiesResponse.status === 200 && quantitiesResponse.data.quantities) {
             setQuantities(quantitiesResponse.data.quantities);
           }
 
-          // Load sizes from database
-          const sizesResponse = await axios.get<SizesResponse>('/api/cart/size');
+          // Load sizes from database with cache busting
+          const sizesResponse = await axios.get<SizesResponse>('/api/cart/size', {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
           if (sizesResponse.status === 200 && sizesResponse.data.sizes) {
             setSizes(sizesResponse.data.sizes);
           }

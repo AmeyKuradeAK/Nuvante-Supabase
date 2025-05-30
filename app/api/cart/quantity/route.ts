@@ -10,7 +10,14 @@ export async function POST(request: Request) {
     if (!user || !global_user_email) {
       return NextResponse.json(
         { error: "Unauthorized" },
-        { status: 401 }
+        { 
+          status: 401,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
       );
     }
 
@@ -19,7 +26,14 @@ export async function POST(request: Request) {
     if (!productId || !quantity) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
       );
     }
 
@@ -28,7 +42,14 @@ export async function POST(request: Request) {
     if (!existingModel) {
       return NextResponse.json(
         { error: "User not found" },
-        { status: 404 }
+        { 
+          status: 404,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
       );
     }
 
@@ -36,12 +57,28 @@ export async function POST(request: Request) {
     existingModel.cartQuantities.set(productId, quantity);
     await existingModel.save();
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
+    );
   } catch (error) {
     console.error("Error updating cart quantity:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
     );
   }
 } 

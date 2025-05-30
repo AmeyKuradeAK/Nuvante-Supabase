@@ -104,21 +104,59 @@ const CartPage = () => {
       // Only fetch quantities and sizes if there are items in the cart
       if (GlobalCart && GlobalCart.length > 0) {
         try {
-          // Load quantities from database
-          const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities');
+          // Load quantities from database with cache busting
+          const quantitiesResponse = await axios.get<QuantitiesResponse>('/api/cart/quantities', {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+          let normalizedQuantities: { [key: string]: number } = {};
+          
           if (quantitiesResponse.status === 200 && quantitiesResponse.data?.quantities) {
-            const normalizedQuantities = Object.entries(quantitiesResponse.data.quantities).reduce(
+            normalizedQuantities = Object.entries(quantitiesResponse.data.quantities).reduce(
               (acc, [key, value]) => ({
                 ...acc,
                 [key]: Math.max(1, Number(value) || 1)
               }),
               {}
             );
-            setQuantities(normalizedQuantities);
           }
 
-          // Load sizes from database
-          const sizesResponse = await axios.get<SizesResponse>('/api/cart/size');
+          // Ensure all cart items have default quantities set
+          const allQuantities = { ...normalizedQuantities };
+          for (const itemId of GlobalCart) {
+            if (!allQuantities[itemId]) {
+              allQuantities[itemId] = 1;
+              // Also set default quantity in database
+              try {
+                await axios.post('/api/cart/quantity', {
+                  productId: itemId,
+                  quantity: 1
+                }, {
+                  headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                  }
+                });
+              } catch (error) {
+                console.error(`Error setting default quantity for ${itemId}:`, error);
+              }
+            }
+          }
+          
+          setQuantities(allQuantities);
+
+          // Load sizes from database with cache busting
+          const sizesResponse = await axios.get<SizesResponse>('/api/cart/size', {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
           if (sizesResponse.status === 200 && sizesResponse.data?.sizes) {
             setSelectedSizes(sizesResponse.data.sizes);
           }
@@ -220,6 +258,12 @@ const CartPage = () => {
       const response = await axios.post('/api/cart/quantity', {
         productId: id,
         quantity: newValue
+      }, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       });
 
       if (response.status !== 200) {
@@ -305,17 +349,17 @@ const CartPage = () => {
       return;
     }
 
-    // Check if all items have quantities
-    const allItemsHaveQuantities = cartItems.every(item => quantities[item._id] >= 1);
+    // Check if all items have valid quantities (use same logic as UI with fallback to 1)
+    const allItemsHaveQuantities = cartItems.every(item => (quantities[item._id] || 1) >= 1);
     
     if (!allItemsHaveQuantities) {
       showAlert("Please set quantities for all items before checkout", "error");
       return;
     }
 
-    // Build URL with all cart items' sizes and quantities
+    // Build URL with all cart items' sizes and quantities (use fallback to 1 for quantities)
     const queryParams = cartItems.map(item => 
-      `product=${encodeURIComponent(item._id)}&size=${encodeURIComponent(selectedSizes[item._id])}&quantity=${encodeURIComponent(quantities[item._id])}`
+      `product=${encodeURIComponent(item._id)}&size=${encodeURIComponent(selectedSizes[item._id])}&quantity=${encodeURIComponent(quantities[item._id] || 1)}`
     ).join('&');
 
     router.push(`/CheckOut?${queryParams}`);

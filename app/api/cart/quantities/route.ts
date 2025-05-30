@@ -10,7 +10,14 @@ export async function GET() {
     if (!user || !global_user_email) {
       return NextResponse.json(
         { error: "Unauthorized" },
-        { status: 401 }
+        { 
+          status: 401,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
       );
     }
 
@@ -19,19 +26,42 @@ export async function GET() {
     if (!existingModel) {
       return NextResponse.json(
         { error: "User not found" },
-        { status: 404 }
+        { 
+          status: 404,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
       );
     }
 
     // Convert Map to object for JSON serialization
     const quantities = Object.fromEntries(existingModel.cartQuantities);
 
-    return NextResponse.json({ quantities });
+    return NextResponse.json(
+      { quantities },
+      {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
+    );
   } catch (error) {
     console.error("Error fetching cart quantities:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      }
     );
   }
 } 
