@@ -73,36 +73,42 @@ const Preview: React.FC = () => {
 
   useEffect(() => {
     const fetchImages = async () => {
-      const id = hash || slug;
+      const productId = hash || slug;
+      if (!productId) return;
+      
       try {
-        const response = await axios
-          .post(`/api/propagation/`, {
-            id: id,
-            every: false,
-          })
-          .then((data) => {
-            const responseData = data.data as ProductData;
-            const altered = responseData.productImages || [];
-            altered.reverse();
-            setProductImages(altered);
-            setCurrentProduct(responseData);
-          });
-
+        setLoaded(false); // Reset loading state
+        const response = await axios.post(`/api/propagation/`, {
+          id: productId,
+          every: false,
+        });
+        
+        if (!response.data) {
+          throw new Error('No product data received');
+        }
+        
+        const responseData = response.data as ProductData;
+        const altered = responseData.productImages || [];
+        altered.reverse();
+        setProductImages(altered);
+        setCurrentProduct(responseData);
         setLoaded(true);
-        productImages.reverse();
       } catch (error) {
         console.error("Error fetching product images:", error);
-        showAlert("Error loading product images", "error");
+        showAlert("Error loading product. Please try again.", "error");
+        setLoaded(true); // Set loaded to true even on error to prevent infinite loading
       }
     };
 
     fetchImages();
-    if (slug === undefined) {
-      window.location.href = "/";
-    } else {
+  }, [slug]); // Only depend on slug, remove hash dependency
+
+  // Update hash when slug changes
+  useEffect(() => {
+    if (slug) {
       setHash(slug);
     }
-  }, [hash, slug, showAlert]);
+  }, [slug]);
 
   useEffect(() => {
     // Only check cart state if user is signed in
