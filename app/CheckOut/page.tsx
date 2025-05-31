@@ -297,7 +297,7 @@ const CheckoutContent = () => {
         timestamp: new Date().toISOString(),
         estimatedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
         items: products.map(p => p._id),
-        trackingId: `TRK${Date.now()}`, // Generate a unique tracking ID
+        trackingId: "Tracking ID will be provided soon", // Will be updated when tracking is available
         itemStatus: 'processing', // Initial status for the order
         itemDetails: products.map((product) => ({
           productId: product._id,

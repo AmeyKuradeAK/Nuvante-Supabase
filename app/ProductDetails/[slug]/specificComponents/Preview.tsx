@@ -40,7 +40,6 @@ const Preview: React.FC = () => {
   const slug = params?.slug;
   const [current, setCurrent] = useState("");
   const [productImages, setProductImages] = useState<string[]>([]);
-  const [quantity, setQuantity] = useState(1);
   const [loaded, setLoaded] = useState(false);
   const [isInCart, setIsInCart] = useState(false);
   const id: any = hash || slug;
@@ -113,13 +112,6 @@ const Preview: React.FC = () => {
 
   const handleSwitch = (size: any) => {
     setCurrent(size);
-  };
-
-  const handleQuantityChange = (delta: any) => {
-    if (quantity + delta < 1) {
-      return;
-    }
-    setQuantity((prevQuantity) => prevQuantity + delta);
   };
 
   const handleAddToCart = async (event: React.MouseEvent) => {
@@ -255,7 +247,7 @@ const Preview: React.FC = () => {
     }
 
     // Navigate directly to checkout with the product details
-    router.push(`/CheckOut?product=${id}&size=${current}&quantity=${quantity}`);
+    router.push(`/CheckOut?product=${id}&size=${current}&quantity=1`);
   };
 
   return (
@@ -358,43 +350,13 @@ const Preview: React.FC = () => {
                     Sold Out
                   </motion.button>
                 </div>
-              ) : isInCart ? (
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center border rounded-md">
-                    <button
-                      onClick={() => handleQuantityChange(-1)}
-                      className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                      className="w-16 text-center border-x focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent"
-                      min={1}
-                    />
-                    <button
-                      onClick={() => handleQuantityChange(1)}
-                      className="px-3 py-2 text-gray-600 hover:bg-gray-100 transition-colors"
-                    >
-                      +
-                    </button>
-                  </div>
-                  <button
-                    onClick={handleAddToCart}
-                    className="flex-1 bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
-                  >
-                    Remove from Cart
-                  </button>
-                </div>
               ) : (
                 <>
                   <button
                     onClick={handleAddToCart}
                     className="w-full bg-[#DB4444] text-white font-medium py-2.5 px-4 rounded-md hover:bg-black transition-colors duration-200"
                   >
-                    Add to Cart
+                    {isInCart ? "Remove from Cart" : "Add to Cart"}
                   </button>
                   <motion.button 
                     whileHover={{ scale: 1.02 }}
