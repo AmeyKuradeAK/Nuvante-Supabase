@@ -104,7 +104,8 @@ const faqData: FAQItem[] = [
     answer: [
       "You can reach us via:",
       "• Email: nuvanteindia@gmail.com",
-      "• Phone: +91 9899044148"
+      "• Phone: +91 9899044148",
+      "• Or visit our Support Center for instant help"
     ]
   }
 ];
@@ -231,12 +232,20 @@ export default function FAQPage() {
             <p className="text-gray-600 mb-6">
               If you have any additional questions, don't hesitate to reach out. We're here to help!
             </p>
-            <a
-              href="/Contact"
-              className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-colors duration-200"
-            >
-              Contact Us
-            </a>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="/support"
+                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-colors duration-200"
+              >
+                Visit Support Center
+              </a>
+              <a
+                href="/Contact"
+                className="inline-flex items-center justify-center px-6 py-3 border border-[#DB4444] text-base font-medium rounded-md text-[#DB4444] bg-white hover:bg-gray-50 transition-colors duration-200"
+              >
+                Contact Us
+              </a>
+            </div>
           </motion.div>
         </div>
       </div>

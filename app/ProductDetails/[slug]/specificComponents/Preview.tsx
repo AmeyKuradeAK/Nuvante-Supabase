@@ -127,14 +127,20 @@ const Preview: React.FC = () => {
       return;
     }
 
-    if (!current) {
-      showAlert("Please select a size", "error");
-      return;
-    }
+    const id: any = hash || slug;
+    const isPresent = GlobalCart.includes(id);
 
-    if (current && currentProduct.soldOutSizes?.includes(current)) {
-      showAlert(`Size ${current} is currently sold out. Please select another size.`, "warning");
-      return;
+    // Only require size selection when ADDING to cart, not when removing
+    if (!isPresent) {
+      if (!current) {
+        showAlert("Please select a size", "error");
+        return;
+      }
+
+      if (current && currentProduct.soldOutSizes?.includes(current)) {
+        showAlert(`Size ${current} is currently sold out. Please select another size.`, "warning");
+        return;
+      }
     }
 
     if (!user.isSignedIn) {
@@ -145,10 +151,7 @@ const Preview: React.FC = () => {
       return;
     }
 
-    const id: any = hash || slug;
     try {
-      const isPresent = GlobalCart.includes(id);
-      
       const response = await axios.post("/api/cart", {
           identifier: id,
           append: !isPresent,

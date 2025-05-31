@@ -124,6 +124,11 @@ export default function Footer() {
           <h3 className="font-semibold text-lg">Quick Link</h3>
           <ul className="text-gray-400 flex flex-col gap-2">
             <li>
+              <a href="/support" className="hover:text-white">
+                Support
+              </a>
+            </li>
+            <li>
               <a href="/Contact" className="hover:text-white">
                 Contact us
               </a>

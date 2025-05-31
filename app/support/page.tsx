@@ -1,0 +1,537 @@
+"use client";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { useAlert } from "@/context/AlertContext";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  HelpCircle, 
+  MessageSquare, 
+  Clock, 
+  CheckCircle,
+  Upload,
+  X,
+  Send,
+  Mail,
+  Phone,
+  MapPin
+} from "lucide-react";
+import axios from "axios";
+
+interface ApiResponse {
+  success: boolean;
+  message: string;
+  ticketId: string;
+}
+
+const commonIssues = [
+  {
+    id: 1,
+    question: "How can I track my order?",
+    answer: "You can track your order by going to the 'Orders' section in your account. You'll find your tracking ID there, which you can use on our delivery partner's website. If the tracking ID shows 'Tracking ID will be provided soon', please wait 24-48 hours after order confirmation."
+  },
+  {
+    id: 2,
+    question: "What is your return and exchange policy?",
+    answer: "We offer a 7-day return and exchange policy from the date of delivery. Items must be unworn, with tags attached, and in original packaging. Please visit our Returns & Exchange page for detailed terms and conditions."
+  },
+  {
+    id: 3,
+    question: "I can't add items to my cart. What should I do?",
+    answer: "Make sure you have selected a size before adding items to cart. If you're still facing issues, try clearing your browser cache, disable ad blockers, or try using a different browser. Ensure you're signed in to your account."
+  },
+  {
+    id: 4,
+    question: "My payment failed but money was deducted. What now?",
+    answer: "If your payment failed but money was deducted, don't worry. The amount will be automatically refunded within 5-7 business days. If you don't receive the refund within this timeframe, please create a support ticket with your transaction details."
+  },
+  {
+    id: 5,
+    question: "How do I change or cancel my order?",
+    answer: "Orders can be modified or cancelled within 1 hour of placement. After that, our fulfillment process begins and changes may not be possible. Please contact support immediately if you need to make changes."
+  },
+  {
+    id: 6,
+    question: "What are your delivery charges and timeframes?",
+    answer: "We offer free delivery on all orders above ₹499. For orders below this amount, delivery charges of ₹99 apply. Standard delivery takes 3-7 business days depending on your location."
+  },
+  {
+    id: 7,
+    question: "I received a damaged or wrong product. What should I do?",
+    answer: "We apologize for the inconvenience. Please contact our support team immediately with photos of the damaged/wrong product. We'll arrange for a replacement or refund at no additional cost to you."
+  },
+  {
+    id: 8,
+    question: "How do I apply discount coupons?",
+    answer: "You can apply discount coupons during checkout. Enter your coupon code in the 'Promo Code' field and click 'Apply'. The discount will be reflected in your order total. Please note that coupons have expiry dates and terms & conditions."
+  }
+];
+
+const issueTypes = [
+  "Technical Issue",
+  "Order Related",
+  "Payment Issue",
+  "Shipping & Delivery",
+  "Product Quality",
+  "Return & Refund",
+  "Account Issue",
+  "Website Bug",
+  "Feature Request",
+  "Other"
+];
+
+const SupportPage = () => {
+  const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [showTicketForm, setShowTicketForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showAlert } = useAlert();
+  
+  const [formData, setFormData] = useState({
+    email: "",
+    issueType: "",
+    subject: "",
+    details: "",
+    images: [] as File[]
+  });
+
+  const toggleFAQ = (id: number) => {
+    setExpandedFAQ(expandedFAQ === id ? null : id);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + formData.images.length > 5) {
+      showAlert("You can upload maximum 5 images", "warning");
+      return;
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, ...files]
+    }));
+  };
+
+  const removeImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.email || !formData.issueType || !formData.subject || !formData.details) {
+      showAlert("Please fill all required fields", "error");
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      // For now, we'll store images as base64 strings (in production, you'd upload to cloud storage)
+      const imagePromises = formData.images.map(file => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      });
+      
+      const imageData = await Promise.all(imagePromises);
+      
+      const response = await axios.post<ApiResponse>("/api/support", {
+        email: formData.email,
+        issueType: formData.issueType,
+        subject: formData.subject,
+        details: formData.details,
+        images: imageData
+      });
+
+      if (response.data.success) {
+        showAlert(`Support ticket created successfully! Ticket ID: ${response.data.ticketId}`, "success");
+        setFormData({
+          email: "",
+          issueType: "",
+          subject: "",
+          details: "",
+          images: []
+        });
+        setShowTicketForm(false);
+      }
+    } catch (error: any) {
+      console.error("Error creating ticket:", error);
+      showAlert(error.response?.data?.error || "Failed to create support ticket", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <Navbar />
+      
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Breadcrumb */}
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mb-8"
+        >
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/" className="text-gray-600 hover:text-[#DB4444] transition-colors duration-300">Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="text-[#DB4444]">Support</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </motion.div>
+
+        {/* Header Section */}
+        <motion.div 
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="text-center mb-12"
+        >
+          <div className="bg-white rounded-2xl shadow-xl p-8 mx-auto max-w-4xl relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#DB4444]/5 to-transparent"></div>
+            <div className="relative z-10">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2 }}
+                className="w-20 h-20 bg-[#DB4444] rounded-full flex items-center justify-center mx-auto mb-6"
+              >
+                <HelpCircle className="w-10 h-10 text-white" />
+              </motion.div>
+              <h1 className="text-4xl font-bold text-gray-800 mb-4">How can we help you?</h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Find answers to common questions or create a support ticket for personalized assistance
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* FAQ Section */}
+          <div className="lg:col-span-2">
+            <motion.div
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-2xl shadow-xl p-8"
+            >
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <MessageSquare className="w-6 h-6 text-[#DB4444] mr-3" />
+                Frequently Asked Questions
+              </h2>
+              
+              <div className="space-y-4">
+                {commonIssues.map((issue, index) => (
+                  <motion.div
+                    key={issue.id}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
+                  >
+                    <button
+                      onClick={() => toggleFAQ(issue.id)}
+                      className="w-full text-left p-6 bg-gray-50 hover:bg-gray-100 transition-colors duration-300 flex justify-between items-center"
+                    >
+                      <span className="font-semibold text-gray-800 pr-4">{issue.question}</span>
+                      <motion.div
+                        animate={{ rotate: expandedFAQ === issue.id ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ChevronDown className="w-5 h-5 text-[#DB4444]" />
+                      </motion.div>
+                    </button>
+                    
+                    <AnimatePresence>
+                      {expandedFAQ === issue.id && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="p-6 bg-white border-t border-gray-200">
+                            <p className="text-gray-700 leading-relaxed">{issue.answer}</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* Nothing Worked Button */}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="mt-8 text-center"
+              >
+                <div className="bg-gradient-to-r from-[#DB4444]/10 to-transparent p-6 rounded-xl">
+                  <p className="text-gray-600 mb-4">Didn't find what you're looking for?</p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowTicketForm(true)}
+                    className="bg-[#DB4444] text-white px-8 py-3 rounded-lg font-semibold hover:bg-black transition-all duration-300 shadow-lg hover:shadow-xl"
+                  >
+                    Create Support Ticket
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
+
+          {/* Contact Info Sidebar */}
+          <div className="space-y-6">
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white rounded-2xl shadow-xl p-6"
+            >
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Contact Information</h3>
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <Mail className="w-5 h-5 text-[#DB4444] mr-3" />
+                  <span className="text-gray-600">support@nuvante.com</span>
+                </div>
+                <div className="flex items-center">
+                  <Phone className="w-5 h-5 text-[#DB4444] mr-3" />
+                  <span className="text-gray-600">+91 9899044148</span>
+                </div>
+                <div className="flex items-start">
+                  <MapPin className="w-5 h-5 text-[#DB4444] mr-3 mt-1" />
+                  <span className="text-gray-600">Support hours: Mon-Fri 9AM-6PM IST</span>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-white rounded-2xl shadow-xl p-6"
+            >
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Response Times</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Email Support</span>
+                  <span className="text-[#DB4444] font-semibold">24-48 hours</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Critical Issues</span>
+                  <span className="text-[#DB4444] font-semibold">2-6 hours</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Support Ticket Modal */}
+        <AnimatePresence>
+          {showTicketForm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+              >
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-gray-800">Create Support Ticket</h2>
+                    <button
+                      onClick={() => setShowTicketForm(false)}
+                      className="text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                      placeholder="your.email@example.com"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Issue Type *
+                    </label>
+                    <select
+                      name="issueType"
+                      value={formData.issueType}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                      required
+                    >
+                      <option value="">Select an issue type</option>
+                      {issueTypes.map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject *
+                    </label>
+                    <input
+                      type="text"
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                      placeholder="Brief description of your issue"
+                      maxLength={200}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Issue Details *
+                    </label>
+                    <textarea
+                      name="details"
+                      value={formData.details}
+                      onChange={handleInputChange}
+                      rows={5}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300 resize-none"
+                      placeholder="Please provide detailed information about your issue..."
+                      maxLength={2000}
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {formData.details.length}/2000 characters
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Attach Images (Optional)
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#DB4444] transition-colors duration-300">
+                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB (Max 5 files)</p>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <label
+                        htmlFor="image-upload"
+                        className="mt-2 inline-block bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg cursor-pointer transition-colors duration-300"
+                      >
+                        Choose Files
+                      </label>
+                    </div>
+
+                    {formData.images.length > 0 && (
+                      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {formData.images.map((file, index) => (
+                          <div key={index} className="relative">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Upload ${index + 1}`}
+                              className="w-full h-20 object-cover rounded-lg"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowTicketForm(false)}
+                      className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-1 bg-[#DB4444] text-white px-6 py-3 rounded-lg hover:bg-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                      {isSubmitting ? (
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="w-5 h-5 mr-2" />
+                          Submit Ticket
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default SupportPage; 
