@@ -34,46 +34,136 @@ interface ApiResponse {
   ticketId: string;
 }
 
-const commonIssues = [
+interface FAQItem {
+  id: number;
+  question: string;
+  answer: string | string[];
+  category: string;
+}
+
+const faqData: FAQItem[] = [
   {
     id: 1,
-    question: "How can I track my order?",
-    answer: "You can track your order by going to the 'Orders' section in your account. You'll find your tracking ID there, which you can use on our delivery partner's website. If the tracking ID shows 'Tracking ID will be provided soon', please wait 24-48 hours after order confirmation."
+    category: "Orders",
+    question: "How can I place an order?",
+    answer: "You can place an order by browsing our collection, selecting your desired items, choosing your size, and adding them to your cart. Once done, proceed to checkout to complete your purchase. Another way to place an order is through our Instagram Page."
   },
   {
     id: 2,
-    question: "What is your return and exchange policy?",
-    answer: "We offer a 7-day return and exchange policy from the date of delivery. Items must be unworn, with tags attached, and in original packaging. Please visit our Returns & Exchange page for detailed terms and conditions."
+    category: "Orders",
+    question: "Can I cancel or modify my order?",
+    answer: "Yes, you can cancel or modify your order within 12 hours of placing it, provided it hasn't been shipped. Please contact our customer support team immediately for assistance."
   },
   {
     id: 3,
-    question: "I can't add items to my cart. What should I do?",
-    answer: "Make sure you have selected a size before adding items to cart. If you're still facing issues, try clearing your browser cache, disable ad blockers, or try using a different browser. Ensure you're signed in to your account."
+    category: "Orders",
+    question: "How do I check the status of my order?",
+    answer: "You can track your order status by logging into your account and navigating to the \"My Orders\" section or by contacting our Customer Support."
   },
   {
     id: 4,
+    category: "Shipping",
+    question: "What are the shipping charges?",
+    answer: "Shipping charges may vary based on your location and the size of your order. Free shipping is available for orders above ₹2500."
+  },
+  {
+    id: 5,
+    category: "Shipping",
+    question: "How long does delivery take?",
+    answer: "Delivery typically takes 4-7 business days, depending on your location. Remote areas may take longer."
+  },
+  {
+    id: 6,
+    category: "Shipping",
+    question: "Do you ship internationally?",
+    answer: "Currently, we deliver only within India. International shipping will be announced in the future."
+  },
+  {
+    id: 7,
+    category: "Returns & Refunds",
+    question: "What is your return policy?",
+    answer: "Returns are accepted for damaged or defective items within 24 hours of delivery. A valid unboxing video is required for returns."
+  },
+  {
+    id: 8,
+    category: "Returns & Refunds",
+    question: "How do I initiate a return or refund?",
+    answer: "Contact Customer Support with your order details and unboxing video. Once approved, we will guide you through the return process."
+  },
+  {
+    id: 9,
+    category: "Returns & Refunds",
+    question: "How long will it take to receive my refund?",
+    answer: "Refunds are processed within 7-14 business days after the returned item has been inspected and approved."
+  },
+  {
+    id: 10,
+    category: "Products & Customization",
+    question: "What type of clothing does Nuvante India offer?",
+    answer: "We specialize in high-quality, stylish clothing accessories with an option for custom printing. Our collection is designed to offer comfort and style for all occasions."
+  },
+  {
+    id: 11,
+    category: "Products & Customization",
+    question: "Are customized items eligible for return?",
+    answer: "Customized items are non-returnable unless they are defective or damaged."
+  },
+  {
+    id: 12,
+    category: "Payments",
+    question: "What payment methods do you accept?",
+    answer: "We accept all major payment methods, including credit cards, debit cards, UPI, net banking, and wallets."
+  },
+  {
+    id: 13,
+    category: "Payments",
+    question: "Is my payment information secure?",
+    answer: "Yes, we use secure payment gateways and encryption to ensure your payment information is safe and confidential."
+  },
+  {
+    id: 14,
+    category: "Payments",
     question: "My payment failed but money was deducted. What now?",
     answer: "If your payment failed but money was deducted, don't worry. The amount will be automatically refunded within 5-7 business days. If you don't receive the refund within this timeframe, please create a support ticket with your transaction details."
   },
   {
-    id: 5,
-    question: "How do I change or cancel my order?",
-    answer: "Orders can be modified or cancelled within 1 hour of placement. After that, our fulfillment process begins and changes may not be possible. Please contact support immediately if you need to make changes."
+    id: 15,
+    category: "Care Instructions",
+    question: "How do I care for my Nuvante T-shirt?",
+    answer: [
+      "1. Avoid excessive washing and turn the T-shirt inside out before washing to maintain fabric and print quality.",
+      "2. Do not use bleach or harsh detergents.",
+      "3. Use a protective layer or turn the T-shirt inside out before ironing over the design."
+    ]
   },
   {
-    id: 6,
-    question: "What are your delivery charges and timeframes?",
-    answer: "We offer free delivery on all orders above ₹499. For orders below this amount, delivery charges of ₹99 apply. Standard delivery takes 3-7 business days depending on your location."
+    id: 16,
+    category: "Care Instructions",
+    question: "What happens if I don't follow the care instructions?",
+    answer: "Not following the care instructions may void eligibility for returns or refunds in case of product damage."
   },
   {
-    id: 7,
-    question: "I received a damaged or wrong product. What should I do?",
-    answer: "We apologize for the inconvenience. Please contact our support team immediately with photos of the damaged/wrong product. We'll arrange for a replacement or refund at no additional cost to you."
+    id: 17,
+    category: "Technical Issues",
+    question: "I can't add items to my cart. What should I do?",
+    answer: "Make sure you have selected a size before adding items to cart. If you're still facing issues, try clearing your browser cache, disable ad blockers, or try using a different browser. Ensure you're signed in to your account."
   },
   {
-    id: 8,
-    question: "How do I apply discount coupons?",
-    answer: "You can apply discount coupons during checkout. Enter your coupon code in the 'Promo Code' field and click 'Apply'. The discount will be reflected in your order total. Please note that coupons have expiry dates and terms & conditions."
+    id: 18,
+    category: "Technical Issues",
+    question: "The website is not loading properly. What should I do?",
+    answer: "Try refreshing the page, clearing your browser cache, or switching to a different browser. If the problem persists, please contact our support team."
+  },
+  {
+    id: 19,
+    category: "General",
+    question: "How do I contact customer support?",
+    answer: [
+      "You can reach us via:",
+      "• Email: nuvanteindia@gmail.com",
+      "• Phone: +91 9899044148",
+      "• Or visit our Support Center for instant help"
+    ]
   }
 ];
 
@@ -92,6 +182,7 @@ const issueTypes = [
 
 const SupportPage = () => {
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("Orders");
   const [showTicketForm, setShowTicketForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { showAlert } = useAlert();
@@ -103,6 +194,8 @@ const SupportPage = () => {
     details: "",
     images: [] as File[]
   });
+
+  const categories = Array.from(new Set(faqData.map(item => item.category)));
 
   const toggleFAQ = (id: number) => {
     setExpandedFAQ(expandedFAQ === id ? null : id);
@@ -247,23 +340,42 @@ const SupportPage = () => {
                 <MessageSquare className="w-6 h-6 text-[#DB4444] mr-3" />
                 Frequently Asked Questions
               </h2>
+
+              {/* Category Navigation */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setActiveCategory(category)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${
+                      activeCategory === category
+                        ? "bg-[#DB4444] text-white"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
               
               <div className="space-y-4">
-                {commonIssues.map((issue, index) => (
+                {faqData
+                  .filter((item) => item.category === activeCategory)
+                  .map((item, index) => (
                   <motion.div
-                    key={issue.id}
+                    key={item.id}
                     initial={{ y: 20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.1 * index }}
                     className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
                   >
                     <button
-                      onClick={() => toggleFAQ(issue.id)}
+                      onClick={() => toggleFAQ(item.id)}
                       className="w-full text-left p-6 bg-gray-50 hover:bg-gray-100 transition-colors duration-300 flex justify-between items-center"
                     >
-                      <span className="font-semibold text-gray-800 pr-4">{issue.question}</span>
+                      <span className="font-semibold text-gray-800 pr-4">{item.question}</span>
                       <motion.div
-                        animate={{ rotate: expandedFAQ === issue.id ? 180 : 0 }}
+                        animate={{ rotate: expandedFAQ === item.id ? 180 : 0 }}
                         transition={{ duration: 0.3 }}
                       >
                         <ChevronDown className="w-5 h-5 text-[#DB4444]" />
@@ -271,7 +383,7 @@ const SupportPage = () => {
                     </button>
                     
                     <AnimatePresence>
-                      {expandedFAQ === issue.id && (
+                      {expandedFAQ === item.id && (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
@@ -280,7 +392,15 @@ const SupportPage = () => {
                           className="overflow-hidden"
                         >
                           <div className="p-6 bg-white border-t border-gray-200">
-                            <p className="text-gray-700 leading-relaxed">{issue.answer}</p>
+                            {Array.isArray(item.answer) ? (
+                              <ul className="space-y-2 text-gray-700 leading-relaxed">
+                                {item.answer.map((line, i) => (
+                                  <li key={i}>{line}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-gray-700 leading-relaxed">{item.answer}</p>
+                            )}
                           </div>
                         </motion.div>
                       )}
@@ -323,7 +443,7 @@ const SupportPage = () => {
               <div className="space-y-4">
                 <div className="flex items-center">
                   <Mail className="w-5 h-5 text-[#DB4444] mr-3" />
-                  <span className="text-gray-600">support@nuvante.com</span>
+                  <span className="text-gray-600">nuvanteindia@gmail.com</span>
                 </div>
                 <div className="flex items-center">
                   <Phone className="w-5 h-5 text-[#DB4444] mr-3" />
