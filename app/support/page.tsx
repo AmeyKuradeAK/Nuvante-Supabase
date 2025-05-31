@@ -61,12 +61,6 @@ const faqData: FAQItem[] = [
     answer: "You can track your order status by logging into your account and navigating to the \"My Orders\" section or by contacting our Customer Support."
   },
   {
-    id: 4,
-    category: "Shipping",
-    question: "What are the shipping charges?",
-    answer: "Shipping charges may vary based on your location and the size of your order. Free shipping is available for orders above ₹2500."
-  },
-  {
     id: 5,
     category: "Shipping",
     question: "How long does delivery take?",
@@ -97,18 +91,6 @@ const faqData: FAQItem[] = [
     answer: "Refunds are processed within 7-14 business days after the returned item has been inspected and approved."
   },
   {
-    id: 10,
-    category: "Products & Customization",
-    question: "What type of clothing does Nuvante India offer?",
-    answer: "We specialize in high-quality, stylish clothing accessories with an option for custom printing. Our collection is designed to offer comfort and style for all occasions."
-  },
-  {
-    id: 11,
-    category: "Products & Customization",
-    question: "Are customized items eligible for return?",
-    answer: "Customized items are non-returnable unless they are defective or damaged."
-  },
-  {
     id: 12,
     category: "Payments",
     question: "What payment methods do you accept?",
@@ -125,22 +107,6 @@ const faqData: FAQItem[] = [
     category: "Payments",
     question: "My payment failed but money was deducted. What now?",
     answer: "If your payment failed but money was deducted, don't worry. The amount will be automatically refunded within 5-7 business days. If you don't receive the refund within this timeframe, please create a support ticket with your transaction details."
-  },
-  {
-    id: 15,
-    category: "Care Instructions",
-    question: "How do I care for my Nuvante T-shirt?",
-    answer: [
-      "1. Avoid excessive washing and turn the T-shirt inside out before washing to maintain fabric and print quality.",
-      "2. Do not use bleach or harsh detergents.",
-      "3. Use a protective layer or turn the T-shirt inside out before ironing over the design."
-    ]
-  },
-  {
-    id: 16,
-    category: "Care Instructions",
-    question: "What happens if I don't follow the care instructions?",
-    answer: "Not following the care instructions may void eligibility for returns or refunds in case of product damage."
   },
   {
     id: 17,
