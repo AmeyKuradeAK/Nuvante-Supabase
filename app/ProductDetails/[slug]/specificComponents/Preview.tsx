@@ -127,6 +127,11 @@ const Preview: React.FC = () => {
       return;
     }
 
+    if (!current) {
+      showAlert("Please select a size", "error");
+      return;
+    }
+
     if (current && currentProduct.soldOutSizes?.includes(current)) {
       showAlert(`Size ${current} is currently sold out. Please select another size.`, "warning");
       return;
