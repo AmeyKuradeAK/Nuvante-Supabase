@@ -8,8 +8,8 @@ import { currentUser } from "@clerk/nextjs/server";
  * T̶O̶D̶O̶:̶ t̶r̶y̶ t̶o̶ c̶o̶n̶d̶i̶t̶i̶o̶n̶ u̶s̶i̶n̶g̶ "̶c̶o̶n̶d̶i̶t̶i̶o̶n̶s̶"̶
  */
 
-// Add caching for 5 minutes
-export const revalidate = 300;
+// Add caching for 1 minute
+export const revalidate = 60;
 
 export async function POST(request: any) {
   // using currentUser from @clerkjs/server to fetch details about the currentUser (if needed)
@@ -23,8 +23,13 @@ export async function POST(request: any) {
       body.id === null || body.id === undefined || !body.id || body.id === "";
 
     if (!full_query && invalid_arguments) {
-      console.log("identifier was undefined / invalid.");
-      return new NextResponse("404");
+      return new NextResponse(JSON.stringify({ error: "Invalid product ID" }), { 
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        }
+      });
     }
 
     let data;
@@ -37,17 +42,32 @@ export async function POST(request: any) {
     } else {
       // Fetch specific product with all details
       data = await productModel.findOne({ _id: body.id }).lean();
+      
+      if (!data) {
+        return new NextResponse(JSON.stringify({ error: "Product not found" }), { 
+          status: 404,
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store'
+          }
+        });
+      }
     }
 
     const response = new NextResponse(JSON.stringify(data));
     
     // Add optimized cache headers
-    response.headers.set('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
+    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
     response.headers.set('Content-Type', 'application/json');
     
     return response;
-  } catch (error: any) {
-    console.error("in api/propagation/route.ts: ", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+  } catch (error) {
+    return new NextResponse(JSON.stringify({ error: "Internal Server Error" }), { 
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store'
+      }
+    });
   }
 }
