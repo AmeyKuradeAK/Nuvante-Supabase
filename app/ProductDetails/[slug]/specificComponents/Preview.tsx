@@ -77,7 +77,7 @@ const Preview: React.FC = () => {
       if (!productId) return;
       
       try {
-        setLoaded(false); // Reset loading state
+        setLoaded(false);
         const response = await axios.post(`/api/propagation/`, {
           id: productId,
           every: false,
@@ -94,14 +94,13 @@ const Preview: React.FC = () => {
         setCurrentProduct(responseData);
         setLoaded(true);
       } catch (error) {
-        console.error("Error fetching product images:", error);
         showAlert("Error loading product. Please try again.", "error");
-        setLoaded(true); // Set loaded to true even on error to prevent infinite loading
+        setLoaded(true);
       }
     };
 
     fetchImages();
-  }, [slug]); // Only depend on slug, remove hash dependency
+  }, [slug]);
 
   // Update hash when slug changes
   useEffect(() => {
@@ -131,13 +130,11 @@ const Preview: React.FC = () => {
   const handleAddToCart = async (event: React.MouseEvent) => {
     event.stopPropagation();
 
-    // Prevent interaction if product is sold out
     if (currentProduct.soldOut) {
       showAlert("This product is sold out", "warning");
       return;
     }
 
-    // Check if selected size is sold out
     if (current && currentProduct.soldOutSizes?.includes(current)) {
       showAlert(`Size ${current} is currently sold out. Please select another size.`, "warning");
       return;
@@ -155,15 +152,12 @@ const Preview: React.FC = () => {
     try {
       const isPresent = GlobalCart.includes(id);
       
-      // Make the API call first
       const response = await axios.post("/api/cart", {
           identifier: id,
           append: !isPresent,
       });
 
-      // Check if response is successful
       if (response.status === 200) {
-        // Update both states after successful API call
         await changeGlobalCart(id);
         setIsInCart(!isPresent);
         showAlert(
@@ -174,7 +168,6 @@ const Preview: React.FC = () => {
         showAlert("Error updating cart", "error");
       }
     } catch (error) {
-      console.error("Error updating cart:", error);
       showAlert("Error updating cart", "error");
     }
   };
@@ -191,7 +184,6 @@ const Preview: React.FC = () => {
   const handleWishlistPresence = async (event: React.MouseEvent) => {
     event.stopPropagation();
     
-    // Prevent interaction if sold out
     if (currentProduct.soldOut) {
       showAlert("This product is sold out", "warning");
       return;
@@ -207,29 +199,26 @@ const Preview: React.FC = () => {
     try {
       const id: any = hash || slug;
       const isPresent = GlobalWishlist.includes(id);
-      await axios
-        .post(`/api/wishlist`, {
-          identifier: id,
-          append: !isPresent,
-        })
-        .then((response: any) => {
-          if (response.data === parseInt("200")) {
-            const updatedWishlist = isPresent
-              ? GlobalWishlist.filter((item) => item !== id)
-              : [...GlobalWishlist, id];
+      const response = await axios.post(`/api/wishlist`, {
+        identifier: id,
+        append: !isPresent,
+      });
+      
+      if (response.data === parseInt("200")) {
+        const updatedWishlist = isPresent
+          ? GlobalWishlist.filter((item) => item !== id)
+          : [...GlobalWishlist, id];
 
-            changeGlobalWishlist(updatedWishlist);
-            setLoaded(true);
-            showAlert(
-              isPresent ? "Item removed from wishlist" : "Item added to wishlist",
-              "success"
-            );
-          } else if (response.data === parseInt("404")) {
-            showAlert("Error updating wishlist", "error");
-          }
-        });
+        changeGlobalWishlist(updatedWishlist);
+        setLoaded(true);
+        showAlert(
+          isPresent ? "Item removed from wishlist" : "Item added to wishlist",
+          "success"
+        );
+      } else if (response.data === parseInt("404")) {
+        showAlert("Error updating wishlist", "error");
+      }
     } catch (error) {
-      console.error("Error updating wishlist:", error);
       showAlert("Error updating wishlist", "error");
     }
   };

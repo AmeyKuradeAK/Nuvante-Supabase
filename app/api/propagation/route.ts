@@ -61,8 +61,7 @@ export async function POST(request: any) {
     response.headers.set('Content-Type', 'application/json');
     
     return response;
-  } catch (error: any) {
-    console.error("in api/propagation/route.ts: ", error);
+  } catch (error) {
     return new NextResponse(JSON.stringify({ error: "Internal Server Error" }), { 
       status: 500,
       headers: {
