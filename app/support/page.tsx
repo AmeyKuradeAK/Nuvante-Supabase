@@ -91,37 +91,25 @@ const faqData: FAQItem[] = [
     answer: "Refunds are processed within 7-14 business days after the returned item has been inspected and approved."
   },
   {
-    id: 12,
-    category: "Payments",
-    question: "What payment methods do you accept?",
-    answer: "We accept all major payment methods, including credit cards, debit cards, UPI, net banking, and wallets."
-  },
-  {
-    id: 13,
-    category: "Payments",
-    question: "Is my payment information secure?",
-    answer: "Yes, we use secure payment gateways and encryption to ensure your payment information is safe and confidential."
-  },
-  {
-    id: 14,
+    id: 10,
     category: "Payments",
     question: "My payment failed but money was deducted. What now?",
     answer: "If your payment failed but money was deducted, don't worry. The amount will be automatically refunded within 5-7 business days. If you don't receive the refund within this timeframe, please create a support ticket with your transaction details."
   },
   {
-    id: 17,
+    id: 11,
     category: "Technical Issues",
     question: "I can't add items to my cart. What should I do?",
     answer: "Make sure you have selected a size before adding items to cart. If you're still facing issues, try clearing your browser cache, disable ad blockers, or try using a different browser. Ensure you're signed in to your account."
   },
   {
-    id: 18,
+    id: 12,
     category: "Technical Issues",
     question: "The website is not loading properly. What should I do?",
     answer: "Try refreshing the page, clearing your browser cache, or switching to a different browser. If the problem persists, please contact our support team."
   },
   {
-    id: 19,
+    id: 13 ,
     category: "General",
     question: "How do I contact customer support?",
     answer: [
