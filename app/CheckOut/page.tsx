@@ -684,6 +684,7 @@ const CheckoutContent = () => {
                           amount={calculateTotal()}
                           onSuccess={handlePaymentSuccess}
                           disabled={!isFormValid()}
+                          phoneNumber={formData.phone}
                           className={`w-full bg-[#DB4444] text-white font-medium py-3 px-4 rounded-lg hover:bg-black transition-colors duration-300 text-sm sm:text-base ${!isFormValid() ? 'opacity-50 cursor-not-allowed' : ''}`}
                           receipt={`ORDER_${Date.now()}`}
                         >

@@ -16,6 +16,7 @@ interface PaymentButtonProps {
   className?: string;
   children: React.ReactNode;
   disabled?: boolean;
+  phoneNumber?: string;
 }
 
 declare global {
@@ -34,6 +35,7 @@ export default function PaymentButton({
   className = '',
   children,
   disabled = false,
+  phoneNumber,
 }: PaymentButtonProps) {
   const [loading, setLoading] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
@@ -120,6 +122,8 @@ export default function PaymentButton({
         throw new Error('Invalid order ID received from server');
       }
 
+      const contactNumber = phoneNumber || user.phoneNumbers[0]?.phoneNumber || '';
+
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: amount * 100, // Razorpay expects amount in paise
@@ -147,7 +151,7 @@ export default function PaymentButton({
         prefill: {
           name: `${user.firstName} ${user.lastName}`,
           email: user.emailAddresses[0]?.emailAddress,
-          contact: user.phoneNumbers[0]?.phoneNumber || ''
+          contact: contactNumber
         },
         theme: {
           color: '#DB4444'
