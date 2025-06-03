@@ -286,73 +286,145 @@ const CheckoutContent = () => {
   };
 
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
-    try {
-      // Create order data
-      const orderData = {
-        orderId,
-        paymentId,
-        amount: calculateTotal(),
-        currency: 'INR',
-        status: 'completed',
-        timestamp: new Date().toISOString(),
-        estimatedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
-        items: products.map(p => p._id),
-        trackingId: "Tracking ID will be provided soon", // Will be updated when tracking is available
-        itemStatus: 'processing', // Initial status for the order
-        itemDetails: products.map((product) => ({
-          productId: product._id,
-          size: sizes[product._id] || '',
-          quantity: quantities[product._id] || 1
-        })),
-        shippingAddress: {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          streetAddress: formData.address,
-          apartment: formData.apartment,
-          city: formData.city,
-          phone: formData.phone,
-          email: formData.email,
-          pin: formData.pin
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    const attemptOrderSave = async (): Promise<boolean> => {
+      try {
+        // Create order data
+        const orderData = {
+          orderId,
+          paymentId,
+          amount: calculateTotal(),
+          currency: 'INR',
+          status: 'completed',
+          timestamp: new Date().toISOString(),
+          estimatedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+          items: products.map(p => p._id),
+          trackingId: "Tracking ID will be provided soon", // Will be updated when tracking is available
+          itemStatus: 'processing', // Initial status for the order
+          itemDetails: products.map((product) => ({
+            productId: product._id,
+            size: sizes[product._id] || '',
+            quantity: quantities[product._id] || 1
+          })),
+          shippingAddress: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            streetAddress: formData.address,
+            apartment: formData.apartment,
+            city: formData.city,
+            phone: formData.phone,
+            email: formData.email,
+            pin: formData.pin
+          }
+        };
+
+        // Save order to database with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+        const saveResponse = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!saveResponse.ok) {
+          const errorData = await saveResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to save order');
         }
-      };
 
-      // Save order to database
-      const saveResponse = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData),
-      });
+        const responseData = await saveResponse.json();
+        
+        // Check if it's a duplicate order (which is actually success)
+        if (responseData.isDuplicate) {
+          console.log('Order already exists, treating as success');
+          return true;
+        }
 
-      if (!saveResponse.ok) {
-        const errorData = await saveResponse.json();
-        throw new Error(errorData.message || 'Failed to save order');
+        // Update orders in global context
+        changeGlobalOrders(orderData);
+
+        // Clear cart after successful payment
+        clearGlobalCart();
+
+        return true;
+      } catch (error: any) {
+        console.error(`Order save attempt ${retryCount + 1} failed:`, error);
+        
+        // Don't retry for certain types of errors
+        if (error.name === 'AbortError') {
+          throw new Error('Request timeout - please check your connection');
+        }
+        
+        throw error;
       }
+    };
 
-      // Update orders in global context
-      changeGlobalOrders(orderData);
+    // Try to save the order with retries
+    while (retryCount < maxRetries) {
+      try {
+        const success = await attemptOrderSave();
+        if (success) {
+          // Close Razorpay modal
+          const modal = document.querySelector('.razorpay-checkout-frame');
+          if (modal) {
+            modal.remove();
+          }
+          // Force close any remaining Razorpay elements
+          const overlay = document.querySelector('.razorpay-overlay');
+          if (overlay) {
+            overlay.remove();
+          }
 
-      // Clear cart after successful payment
-      clearGlobalCart();
-
-      // Close Razorpay modal
-      const modal = document.querySelector('.razorpay-checkout-frame');
-      if (modal) {
-        modal.remove();
+          // Show success message and redirect
+          showAlert('Payment successful!', 'success');
+          window.location.href = `/payment-success?orderId=${orderId}&paymentId=${paymentId}`;
+          return;
+        }
+      } catch (error: any) {
+        retryCount++;
+        
+        if (retryCount >= maxRetries) {
+          console.error('All order save attempts failed:', error);
+          
+          // Store order data in localStorage as backup
+          const orderBackup = {
+            orderId,
+            paymentId,
+            timestamp: new Date().toISOString(),
+            amount: calculateTotal(),
+            retryCount,
+            error: error.message
+          };
+          
+          try {
+            localStorage.setItem(`failed_order_${orderId}`, JSON.stringify(orderBackup));
+          } catch (storageError) {
+            console.error('Failed to store order backup:', storageError);
+          }
+          
+          // Show error with detailed information
+          showAlert(
+            `Payment successful but order save failed after ${maxRetries} attempts. Your payment ID is ${paymentId}. Please contact support immediately with this information.`, 
+            'error'
+          );
+          
+          // Still redirect to show payment success but with error context
+          window.location.href = `/payment-success?orderId=${orderId}&paymentId=${paymentId}&error=save_failed`;
+          return;
+        }
+        
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+        console.log(`Retrying order save (attempt ${retryCount + 1}/${maxRetries})...`);
       }
-      // Force close any remaining Razorpay elements
-      const overlay = document.querySelector('.razorpay-overlay');
-      if (overlay) {
-        overlay.remove();
-      }
-
-      // Show success message and redirect
-      showAlert('Payment successful!', 'success');
-      window.location.href = `/payment-success?orderId=${orderId}&paymentId=${paymentId}`;
-    } catch (error: any) {
-      console.error('Error saving order:', error);
-      showAlert(error.message || 'Payment successful but failed to save order. Please contact support.', 'error');
     }
   };
 

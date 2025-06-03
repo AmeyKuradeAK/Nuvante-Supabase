@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { GlobalContextProvider } from "@/context/Global";
 import { AlertProvider } from "@/context/AlertContext";
 import CacheBuster from "@/components/CacheBuster";
+import OrderRecoveryHandler from "@/components/OrderRecoveryHandler";
 
 //? an inline function to connect to mongodb atlas using mongoose.
 (async () => {
@@ -102,6 +103,7 @@ export default function RootLayout({
             <AlertProvider>
               {children}
               <CacheBuster />
+              <OrderRecoveryHandler />
               
               {/* Client-side only cache busting script */}
               <script
