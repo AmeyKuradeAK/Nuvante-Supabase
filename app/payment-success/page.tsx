@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAlert } from "@/context/AlertContext";
 import Image from "next/image";
+import { formatDisplayDate } from '@/utils/dateUtils';
 
 const logo = "/logo.png";
 
@@ -100,7 +101,7 @@ function PaymentSuccessContent() {
                 >
                   <p className="text-sm text-gray-500">Estimated Delivery</p>
                   <p className="font-medium text-green-600 mt-1">
-                    {new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                    {formatDisplayDate(Date.now() + 5 * 24 * 60 * 60 * 1000)}
                   </p>
                 </motion.div>
               </div>

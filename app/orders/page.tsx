@@ -18,6 +18,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { GlobalContext } from "@/context/Global";
 import { Package, Clock, CheckCircle, XCircle, ChevronRight, ChevronDown, MapPin, Phone, Mail } from "lucide-react";
+import { formatDisplayDate } from '@/utils/dateUtils';
 
 const logo = "/logo.png";
 
@@ -106,11 +107,11 @@ const OrderDetailsModal = ({ order, onClose, products }: OrderDetailsModalProps)
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { label: "Order Number", value: order.orderId },
-                  { label: "Date", value: new Date(order.timestamp).toLocaleDateString() },
+                  { label: "Date", value: formatDisplayDate(order.timestamp) },
                   { label: "Order Status", value: formatStatus(order.itemStatus), isHighlighted: true },
                   { label: "Estimated Delivery", value: order.estimatedDeliveryDate ? 
-                    new Date(order.estimatedDeliveryDate).toLocaleDateString() : 
-                    new Date(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+                    formatDisplayDate(order.estimatedDeliveryDate) :
+                    formatDisplayDate(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000),
                     isHighlighted: true
                   },
                   { label: "Total Amount", value: `Rs. ${order.amount}`, isHighlighted: true },
@@ -380,9 +381,9 @@ const OrdersPage = () => {
                           </div>
                           <div>
                             <h3 className="font-medium text-gray-800">Order #{order.orderId.slice(-6)}</h3>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Placed on {new Date(order.timestamp).toLocaleDateString()}
-                            </p>
+                            <div className="text-sm text-gray-500 mt-2">
+                              Placed on {formatDisplayDate(order.timestamp)}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -418,12 +419,13 @@ const OrdersPage = () => {
                               </div>
                               <div className="space-y-2">
                                 <p className="text-sm text-gray-600">Estimated Delivery</p>
-                                <p className="font-medium text-[#DB4444]">
-                                  {order.estimatedDeliveryDate ? 
-                                    new Date(order.estimatedDeliveryDate).toLocaleDateString() : 
-                                    new Date(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString()
+                                <span className="text-sm text-gray-600">
+                                  Estimated delivery: {
+                                    order.estimatedDeliveryDate ? 
+                                      formatDisplayDate(order.estimatedDeliveryDate) :
+                                      formatDisplayDate(new Date(order.timestamp).getTime() + 5 * 24 * 60 * 60 * 1000)
                                   }
-                                </p>
+                                </span>
                               </div>
                             </div>
                             <div className="mt-6 flex justify-end">

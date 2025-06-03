@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import { formatDisplayDate } from '@/utils/dateUtils';
 
 interface MissingOrder {
   paymentId: string;
@@ -528,7 +529,7 @@ export default function TraceOrdersPage() {
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900">Date</p>
-                          <p className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</p>
+                          <p className="text-sm text-gray-600">{formatDisplayDate(order.createdAt)}</p>
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -644,7 +645,7 @@ export default function TraceOrdersPage() {
                       <td className="px-4 py-2 text-sm font-mono">{order.orderId}</td>
                       <td className="px-4 py-2">{order.currency} {order.amount}</td>
                       <td className="px-4 py-2">{order.userEmail || 'N/A'}</td>
-                      <td className="px-4 py-2">{new Date(order.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-2">{formatDisplayDate(order.createdAt)}</td>
                       <td className="px-4 py-2">
                         <span className={`inline-block px-2 py-1 rounded text-xs ${
                           order.inDatabase 
