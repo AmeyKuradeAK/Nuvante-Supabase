@@ -219,8 +219,11 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      // Fetch payment details from Razorpay
-      const payment = await razorpay.payments.fetch(paymentId);
+      // Fetch both payment and order details from Razorpay
+      const [payment, order] = await Promise.all([
+        razorpay.payments.fetch(paymentId),
+        razorpay.orders.fetch(orderId).catch(() => null) // Order might not exist or be accessible
+      ]);
       
       if (!payment) {
         return NextResponse.json({
@@ -260,6 +263,61 @@ export async function POST(req: NextRequest) {
       // Convert payment amount safely
       const paymentAmount = typeof payment.amount === 'string' ? parseInt(payment.amount) : payment.amount;
 
+      // Try to extract product information from order notes or payment notes
+      let productInfo: {
+        items: string[];
+        itemDetails: Array<{
+          productId: string;
+          size: string;
+          quantity: number;
+        }>;
+      } = {
+        items: [],
+        itemDetails: []
+      };
+
+      // Check order notes first, then payment notes
+      const notes = order?.notes || payment.notes || {};
+      
+      // Try to parse product information from notes
+      if (notes.products) {
+        try {
+          const products = typeof notes.products === 'string' ? JSON.parse(notes.products) : notes.products;
+          if (Array.isArray(products)) {
+            productInfo.items = products.map((p: any) => p.productId || p._id || p.id).filter(Boolean);
+            productInfo.itemDetails = products.map((p: any) => ({
+              productId: p.productId || p._id || p.id || '',
+              size: p.size || '',
+              quantity: p.quantity || 1
+            })).filter(item => item.productId);
+          }
+        } catch (e) {
+          console.log('Could not parse product information from notes');
+        }
+      }
+
+      // If no product info found in notes, check for individual product fields
+      if (productInfo.items.length === 0) {
+        const itemKeys = Object.keys(notes).filter(key => key.startsWith('item_') || key.startsWith('product_'));
+        if (itemKeys.length > 0) {
+          itemKeys.forEach(key => {
+            const value = notes[key];
+            if (typeof value === 'string' && value.length > 0) {
+              productInfo.items.push(value);
+              // Try to extract size and quantity from related fields
+              const baseKey = key.replace(/^(item_|product_)/, '');
+              const sizeValue = notes[`size_${baseKey}`] || notes[`${baseKey}_size`] || '';
+              const quantityValue = notes[`quantity_${baseKey}`] || notes[`${baseKey}_quantity`] || '1';
+              productInfo.itemDetails.push({
+                productId: value,
+                size: typeof sizeValue === 'string' ? sizeValue : String(sizeValue),
+                quantity: parseInt(String(quantityValue))
+              });
+            }
+          });
+        }
+      }
+
       // Create order from payment data
       const orderData = {
         orderId: payment.order_id,
@@ -269,19 +327,19 @@ export async function POST(req: NextRequest) {
         status: 'completed',
         timestamp: new Date(payment.created_at * 1000).toISOString(),
         estimatedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-        items: [], // Will need to be filled manually if needed
+        items: productInfo.items.length > 0 ? productInfo.items : [],
         trackingId: "Tracking ID will be provided soon",
         itemStatus: 'processing',
-        itemDetails: [], // Will need to be filled manually if needed
+        itemDetails: productInfo.itemDetails.length > 0 ? productInfo.itemDetails : [],
         shippingAddress: {
-          firstName: payment.notes?.name?.split(' ')[0] || '',
-          lastName: payment.notes?.name?.split(' ').slice(1).join(' ') || '',
-          streetAddress: '',
-          apartment: '',
-          city: '',
-          phone: payment.contact || '',
+          firstName: payment.notes?.firstName || payment.notes?.name?.split(' ')[0] || '',
+          lastName: payment.notes?.lastName || payment.notes?.name?.split(' ').slice(1).join(' ') || '',
+          streetAddress: payment.notes?.streetAddress || payment.notes?.address || '',
+          apartment: payment.notes?.apartment || '',
+          city: payment.notes?.city || '',
+          phone: payment.contact || payment.notes?.phone || '',
           email: payment.email || targetEmail,
-          pin: ''
+          pin: payment.notes?.pin || payment.notes?.pincode || ''
         },
         recoveredFromRazorpay: true,
         recoveredAt: new Date().toISOString(),
@@ -290,7 +348,10 @@ export async function POST(req: NextRequest) {
           bank: payment.bank,
           wallet: payment.wallet,
           vpa: payment.vpa
-        }
+        },
+        razorpayOrderNotes: order?.notes || null,
+        razorpayPaymentNotes: payment.notes || null,
+        productInfoFound: productInfo.items.length > 0
       };
 
       // Add the recovered order
@@ -301,6 +362,8 @@ export async function POST(req: NextRequest) {
         message: "Order recovered successfully from Razorpay",
         orderId: orderId,
         recovered: true,
+        productInfoFound: productInfo.items.length > 0,
+        productDetails: productInfo,
         orderData
       });
 
@@ -316,6 +379,83 @@ export async function POST(req: NextRequest) {
     console.error("Error recovering order:", error);
     return NextResponse.json({
       error: "Failed to recover order",
+      details: error.message
+    }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const user = await currentUser();
+    
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    await connect();
+
+    const { userEmail, orderId, paymentId, productDetails } = await req.json();
+
+    if (!orderId && !paymentId) {
+      return NextResponse.json({
+        error: "Either orderId or paymentId is required"
+      }, { status: 400 });
+    }
+
+    if (!productDetails || !Array.isArray(productDetails.itemDetails)) {
+      return NextResponse.json({
+        error: "Product details with itemDetails array is required"
+      }, { status: 400 });
+    }
+
+    try {
+      // Find the user in database
+      const client = await clientModel.findOne({ email: userEmail });
+      
+      if (!client) {
+        return NextResponse.json({
+          error: "User not found in database"
+        }, { status: 404 });
+      }
+
+      // Find the order
+      const orderIndex = client.orders.findIndex((order: any) => 
+        order.orderId === orderId || order.paymentId === paymentId
+      );
+      
+      if (orderIndex === -1) {
+        return NextResponse.json({
+          error: "Order not found"
+        }, { status: 404 });
+      }
+
+      // Update the order with product details
+      client.orders[orderIndex].items = productDetails.items || [];
+      client.orders[orderIndex].itemDetails = productDetails.itemDetails;
+      client.orders[orderIndex].productDetailsUpdated = true;
+      client.orders[orderIndex].productDetailsUpdatedAt = new Date().toISOString();
+      client.orders[orderIndex].productDetailsUpdatedBy = user.emailAddresses[0]?.emailAddress || 'admin';
+
+      await client.save();
+
+      return NextResponse.json({
+        message: "Product details updated successfully",
+        orderId: orderId || client.orders[orderIndex].orderId,
+        updated: true
+      });
+
+    } catch (error: any) {
+      console.error('Error updating product details:', error);
+      return NextResponse.json({
+        error: "Failed to update product details",
+        details: error.message
+      }, { status: 500 });
+    }
+
+  } catch (error: any) {
+    console.error("Error updating order:", error);
+    return NextResponse.json({
+      error: "Failed to update order",
       details: error.message
     }, { status: 500 });
   }
