@@ -231,4 +231,7 @@ export async function GET(request: Request) {
     console.error("Error retrieving order:", error);
     return NextResponse.json(
       { error: "Failed to retrieve order", details: error.message },
- 
+      { status: 500 }
+    );
+  }
+}
