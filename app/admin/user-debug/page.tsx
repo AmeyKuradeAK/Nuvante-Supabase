@@ -102,6 +102,13 @@ export default function UserDebugPage() {
         >
           {loading ? 'Syncing...' : 'Sync & Repair User Data'}
         </button>
+
+        <a
+          href="/admin/trace-orders"
+          className="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 ml-2 inline-block"
+        >
+          Trace Missing Orders
+        </a>
       </div>
 
       {error && (
