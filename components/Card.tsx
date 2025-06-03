@@ -15,6 +15,10 @@ type propType = {
   status: string;
   soldOut?: boolean;
   isWishlist?: boolean;
+  inventory?: {
+    totalQuantity: number;
+    trackInventory: boolean;
+  };
 };
 
 const heart = "/heart.svg";
@@ -30,6 +34,7 @@ export default function Card({
   status,
   soldOut = false,
   isWishlist = false,
+  inventory,
 }: propType) {
   const context = useContext(GlobalContext);
   if (!context) {
@@ -173,6 +178,15 @@ export default function Card({
           <div className="absolute top-3 left-3">
             <span className="bg-black text-white px-3 py-1 text-xs font-semibold tracking-wider rounded-full">
               NEW
+            </span>
+          </div>
+        )}
+
+        {/* Low Stock Indicator */}
+        {inventory?.trackInventory && inventory.totalQuantity > 0 && inventory.totalQuantity <= 5 && !soldOut && (
+          <div className="absolute top-3 left-3" style={{ top: status === "new" ? '50px' : '12px' }}>
+            <span className="bg-orange-500 text-white px-3 py-1 text-xs font-semibold tracking-wider rounded-full">
+              LOW STOCK
             </span>
           </div>
         )}

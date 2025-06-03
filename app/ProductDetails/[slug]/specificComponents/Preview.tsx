@@ -32,6 +32,17 @@ interface ProductData {
   productImages: string[];
   soldOut?: boolean;
   soldOutSizes?: string[];
+  inventory?: {
+    totalQuantity: number;
+    sizes: {
+      S: number;
+      M: number;
+      L: number;
+      XL: number;
+    };
+    lowStockThreshold: number;
+    trackInventory: boolean;
+  };
 }
 
 const Preview: React.FC = () => {
@@ -298,31 +309,73 @@ const Preview: React.FC = () => {
                   <span className="transition-transform duration-300 group-hover:translate-x-0.5">Size Chart</span>
                 </motion.button>
               </div>
+              
+              {/* Inventory Status - Show if tracking is enabled */}
+              {currentProduct.inventory?.trackInventory && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">Stock Status</span>
+                    <span className="text-sm text-gray-600">
+                      {currentProduct.inventory.totalQuantity} total available
+                    </span>
+                  </div>
+                  {currentProduct.inventory.totalQuantity <= currentProduct.inventory.lowStockThreshold && 
+                   currentProduct.inventory.totalQuantity > 0 && (
+                    <div className="flex items-center gap-2 text-orange-600 text-xs">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.864-.833-2.634 0L4.18 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <span>Low stock - only {currentProduct.inventory.totalQuantity} left!</span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <div className="grid grid-cols-4 gap-2">
                 {["S", "M", "L", "XL"].map((size) => {
                   const isSizeSoldOut = currentProduct.soldOutSizes?.includes(size);
                   const isDisabled = currentProduct.soldOut || isSizeSoldOut;
+                  const sizeStock = currentProduct.inventory?.sizes?.[size as keyof typeof currentProduct.inventory.sizes] || 0;
+                  const isLowStock = currentProduct.inventory?.trackInventory && 
+                                   sizeStock <= (currentProduct.inventory?.lowStockThreshold || 5) && 
+                                   sizeStock > 0;
                   
                   return (
-                    <button
-                      key={size}
-                      disabled={isDisabled}
-                      className={`border-2 py-2 text-center transition-colors relative ${
-                        isDisabled
-                          ? "border-gray-200 text-gray-400 cursor-not-allowed bg-gray-100"
-                          : size === current
-                            ? "bg-black text-white border-black"
-                            : "border-gray-200 hover:border-gray-300"
-                      }`}
-                      onClick={() => !isDisabled && handleSwitch(size)}
-                    >
-                      {size}
-                      {isSizeSoldOut && !currentProduct.soldOut && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
-                          ✕
-                        </span>
+                    <div key={size} className="relative">
+                      <button
+                        disabled={isDisabled}
+                        className={`w-full border-2 py-2 text-center transition-colors relative ${
+                          isDisabled
+                            ? "border-gray-200 text-gray-400 cursor-not-allowed bg-gray-100"
+                            : size === current
+                              ? "bg-black text-white border-black"
+                              : isLowStock
+                                ? "border-orange-300 hover:border-orange-400 bg-orange-50"
+                                : "border-gray-200 hover:border-gray-300"
+                        }`}
+                        onClick={() => !isDisabled && handleSwitch(size)}
+                      >
+                        {size}
+                        {isSizeSoldOut && !currentProduct.soldOut && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
+                            ✕
+                          </span>
+                        )}
+                        {isLowStock && !isDisabled && (
+                          <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs px-1 rounded-full">
+                            !
+                          </span>
+                        )}
+                      </button>
+                      {/* Show stock count for selected size or if tracking inventory */}
+                      {currentProduct.inventory?.trackInventory && (size === current || isLowStock) && !isDisabled && (
+                        <div className="text-center mt-1">
+                          <span className={`text-xs ${isLowStock ? 'text-orange-600' : 'text-gray-500'}`}>
+                            {sizeStock} left
+                          </span>
+                        </div>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -333,6 +386,24 @@ const Preview: React.FC = () => {
                 <p className="text-xs text-red-500 mt-2">
                   Sizes {currentProduct.soldOutSizes.join(", ")} are currently sold out
                 </p>
+              )}
+              
+              {/* Show selected size stock info */}
+              {current && currentProduct.inventory?.trackInventory && (
+                <div className="mt-3 p-2 bg-blue-50 rounded-md">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-blue-700">Size {current} availability:</span>
+                    <span className={`font-medium ${
+                      currentProduct.inventory.sizes[current as keyof typeof currentProduct.inventory.sizes] <= 0
+                        ? 'text-red-600'
+                        : currentProduct.inventory.sizes[current as keyof typeof currentProduct.inventory.sizes] <= currentProduct.inventory.lowStockThreshold
+                          ? 'text-orange-600'
+                          : 'text-green-600'
+                    }`}>
+                      {currentProduct.inventory.sizes[current as keyof typeof currentProduct.inventory.sizes]} in stock
+                    </span>
+                  </div>
+                </div>
               )}
             </div>
 

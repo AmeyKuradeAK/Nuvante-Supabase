@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connect from "@/db";
 import clientModel from "@/models/Clients";
+import Product from "@/models/Product";
 import { currentUser } from "@clerk/nextjs/server";
 
 interface OrderItem {
@@ -146,13 +147,101 @@ export async function POST(request: Request) {
         });
       }
 
+      // INVENTORY VALIDATION AND DEDUCTION
+      const inventoryResults = [];
+      const inventoryErrors = [];
+
+      for (const item of orderData.itemDetails) {
+        const { productId, size, quantity } = item;
+
+        try {
+          const product = await Product.findById(productId);
+          
+          if (!product) {
+            inventoryErrors.push(`Product ${productId} not found`);
+            continue;
+          }
+
+          // Check availability before deducting
+          const availability = product.checkAvailability(size, quantity);
+          
+          if (!availability.available) {
+            inventoryErrors.push(
+              `${product.productName} (Size ${size}): ${availability.message}`
+            );
+            continue;
+          }
+
+          // Deduct inventory
+          const deductionResult = product.reduceInventory(size, quantity, orderData.orderId);
+          
+          if (!deductionResult.success) {
+            inventoryErrors.push(
+              `${product.productName} (Size ${size}): ${deductionResult.message}`
+            );
+            continue;
+          }
+
+          // Save the product with updated inventory
+          await product.save();
+          
+          inventoryResults.push({
+            productId,
+            productName: product.productName,
+            size,
+            quantity,
+            message: 'Inventory deducted successfully'
+          });
+
+          console.log(`Inventory deducted for ${product.productName} (${size}): ${quantity} units`);
+
+        } catch (error: any) {
+          console.error(`Error processing inventory for product ${productId}:`, error);
+          inventoryErrors.push(
+            `Product ${productId}: Error processing inventory - ${error.message}`
+          );
+        }
+      }
+
+      // If there are inventory errors, don't create the order
+      if (inventoryErrors.length > 0) {
+        // Rollback any successful inventory deductions
+        console.log('Rolling back inventory deductions due to errors...');
+        
+        for (const result of inventoryResults) {
+          try {
+            const product = await Product.findById(result.productId);
+            if (product) {
+              product.increaseInventory(result.size, result.quantity, 'Order creation rollback', 'system');
+              await product.save();
+            }
+          } catch (rollbackError) {
+            console.error(`Error rolling back inventory for ${result.productId}:`, rollbackError);
+          }
+        }
+
+        return NextResponse.json({
+          error: "Inventory validation failed",
+          details: inventoryErrors,
+          message: "Some items are no longer available. Please update your cart."
+        }, { status: 400 });
+      }
+
       // Ensure orders array exists
       if (!client.orders) {
         client.orders = [];
       }
 
+      // Add inventory deduction log to order data
+      const orderWithInventoryLog = {
+        ...orderData,
+        inventoryDeducted: true,
+        inventoryLog: inventoryResults,
+        inventoryProcessedAt: new Date().toISOString()
+      };
+
       // Add the new order to the orders array
-      client.orders.push(orderData);
+      client.orders.push(orderWithInventoryLog);
 
       // Clear the cart after successful order
       client.cart = [];
@@ -163,11 +252,14 @@ export async function POST(request: Request) {
       await client.save();
 
       console.log(`Order saved successfully for user: ${global_user_email}, Order ID: ${orderData.orderId}`);
+      console.log(`Inventory deducted for ${inventoryResults.length} items`);
 
       return NextResponse.json({ 
         message: "Order added successfully",
         orderId: orderData.orderId,
-        success: true
+        success: true,
+        inventoryProcessed: true,
+        inventoryResults
       });
       
     } catch (error: any) {

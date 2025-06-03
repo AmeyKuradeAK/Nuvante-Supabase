@@ -23,7 +23,7 @@ export async function POST(request: any) {
       body.id === null || body.id === undefined || !body.id || body.id === "";
 
     if (!full_query && invalid_arguments) {
-      return new NextResponse(JSON.stringify({ error: "Invalid product ID" }), { 
+      return NextResponse.json({ error: "Invalid product ID" }, { 
         status: 400,
         headers: {
           'Content-Type': 'application/json',
@@ -37,14 +37,14 @@ export async function POST(request: any) {
     if (full_query) {
       // Optimize: Only fetch necessary fields for product listing
       data = await productModel.find({}).select(
-        '_id productName thumbnail productPrice cancelledProductPrice latest soldOut type'
+        '_id productName thumbnail productPrice cancelledProductPrice latest soldOut soldOutSizes type inventory.totalQuantity inventory.trackInventory'
       ).lean(); // Use lean() for better performance
     } else {
-      // Fetch specific product with all details
+      // Fetch specific product with all details including inventory
       data = await productModel.findOne({ _id: body.id }).lean();
       
       if (!data) {
-        return new NextResponse(JSON.stringify({ error: "Product not found" }), { 
+        return NextResponse.json({ error: "Product not found" }, { 
           status: 404,
           headers: {
             'Content-Type': 'application/json',
@@ -54,15 +54,14 @@ export async function POST(request: any) {
       }
     }
 
-    const response = new NextResponse(JSON.stringify(data));
-    
-    // Add optimized cache headers
-    response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=120');
-    response.headers.set('Content-Type', 'application/json');
-    
-    return response;
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        'Content-Type': 'application/json'
+      }
+    });
   } catch (error) {
-    return new NextResponse(JSON.stringify({ error: "Internal Server Error" }), { 
+    return NextResponse.json({ error: "Internal Server Error" }, { 
       status: 500,
       headers: {
         'Content-Type': 'application/json',

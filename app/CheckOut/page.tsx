@@ -285,6 +285,34 @@ const CheckoutContent = () => {
     }, 0);
   };
 
+  const validateInventory = async () => {
+    try {
+      const items = products.map((product) => ({
+        productId: product._id,
+        size: sizes[product._id] || '',
+        quantity: quantities[product._id] || 1
+      }));
+
+      const response = await fetch('/api/check-inventory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ items }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to validate inventory');
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error: any) {
+      console.error('Error validating inventory:', error);
+      throw new Error('Unable to validate product availability. Please try again.');
+    }
+  };
+
   const handlePaymentSuccess = async (paymentId: string, orderId: string) => {
     let retryCount = 0;
     const maxRetries = 3;
@@ -688,6 +716,32 @@ const CheckoutContent = () => {
                           className={`w-full bg-[#DB4444] text-white font-medium py-3 px-4 rounded-lg hover:bg-black transition-colors duration-300 text-sm sm:text-base ${!isFormValid() ? 'opacity-50 cursor-not-allowed' : ''}`}
                           receipt={`ORDER_${Date.now()}`}
                           onPrePayment={async (orderId: string) => {
+                            // Validate inventory before payment
+                            try {
+                              showAlert('Checking product availability...', 'info');
+                              const inventoryCheck = await validateInventory();
+                              
+                              if (!inventoryCheck.allAvailable) {
+                                const unavailableItems = inventoryCheck.unavailableItems.map((item: any) => 
+                                  `${item.productName} (Size ${item.size}): ${item.reason}`
+                                ).join('\n');
+                                
+                                showAlert(
+                                  `Some items are no longer available:\n\n${unavailableItems}\n\nPlease update your cart and try again.`,
+                                  'error'
+                                );
+                                
+                                // Throw error to prevent payment
+                                throw new Error('Inventory validation failed');
+                              }
+                              
+                              showAlert('All items available! Processing payment...', 'success');
+                            } catch (error: any) {
+                              console.error('Inventory validation error:', error);
+                              showAlert(error.message || 'Failed to verify product availability', 'error');
+                              throw error; // This will prevent payment from proceeding
+                            }
+
                             // Create pending order before payment
                             try {
                               const pendingOrderData = {
