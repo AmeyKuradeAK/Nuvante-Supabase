@@ -13,6 +13,7 @@ interface PaymentButtonProps {
   notes?: Record<string, string>;
   onSuccess?: (paymentId: string, orderId: string) => void;
   onError?: (error: any) => void;
+  onPrePayment?: (orderId: string) => Promise<void>;
   className?: string;
   children: React.ReactNode;
   disabled?: boolean;
@@ -32,6 +33,7 @@ export default function PaymentButton({
   notes,
   onSuccess,
   onError,
+  onPrePayment,
   className = '',
   children,
   disabled = false,
@@ -120,6 +122,16 @@ export default function PaymentButton({
 
       if (!data.orderId) {
         throw new Error('Invalid order ID received from server');
+      }
+
+      // Call onPrePayment callback if provided
+      if (onPrePayment) {
+        try {
+          await onPrePayment(data.orderId);
+        } catch (prePaymentError) {
+          console.warn('Pre-payment callback failed:', prePaymentError);
+          // Continue with payment even if pre-payment callback fails
+        }
       }
 
       const contactNumber = phoneNumber || user.phoneNumbers[0]?.phoneNumber || '';

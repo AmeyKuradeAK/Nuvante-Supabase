@@ -327,10 +327,10 @@ export async function POST(req: NextRequest) {
         status: 'completed',
         timestamp: new Date(payment.created_at * 1000).toISOString(),
         estimatedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-        items: productInfo.items.length > 0 ? productInfo.items : [],
+        items: productInfo.items.length > 0 ? productInfo.items : (payment.notes?.productIds ? payment.notes.productIds.split(',') : []),
         trackingId: "Tracking ID will be provided soon",
         itemStatus: 'processing',
-        itemDetails: productInfo.itemDetails.length > 0 ? productInfo.itemDetails : [],
+        itemDetails: productInfo.itemDetails.length > 0 ? productInfo.itemDetails : parseItemDetailsFromNotes(payment.notes),
         shippingAddress: {
           firstName: payment.notes?.firstName || payment.notes?.name?.split(' ')[0] || '',
           lastName: payment.notes?.lastName || payment.notes?.name?.split(' ').slice(1).join(' ') || '',
@@ -351,7 +351,8 @@ export async function POST(req: NextRequest) {
         },
         razorpayOrderNotes: order?.notes || null,
         razorpayPaymentNotes: payment.notes || null,
-        productInfoFound: productInfo.items.length > 0
+        productInfoFound: productInfo.items.length > 0 || (payment.notes?.productIds ? true : false),
+        recoverySource: productInfo.items.length > 0 ? 'database_match' : 'razorpay_notes'
       };
 
       // Add the recovered order
@@ -458,5 +459,27 @@ export async function PUT(req: NextRequest) {
       error: "Failed to update order",
       details: error.message
     }, { status: 500 });
+  }
+}
+
+// Helper function to parse item details from Razorpay notes
+function parseItemDetailsFromNotes(notes: any) {
+  if (!notes || !notes.productIds) {
+    return [];
+  }
+
+  try {
+    const productIds = notes.productIds.split(',');
+    const quantities = notes.quantities ? notes.quantities.split(',').map(Number) : [];
+    const sizes = notes.sizes ? notes.sizes.split(',') : [];
+
+    return productIds.map((productId: string, index: number) => ({
+      productId: productId.trim(),
+      size: sizes[index] || '',
+      quantity: quantities[index] || 1
+    }));
+  } catch (error) {
+    console.error('Error parsing item details from notes:', error);
+    return [];
   }
 } 

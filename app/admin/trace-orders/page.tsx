@@ -249,6 +249,45 @@ export default function TraceOrdersPage() {
     }
   };
 
+  const updateRecoveredOrder = async (orderId: string, paymentId: string, userEmail: string, reprocess: boolean) => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await fetch('/api/update-recovered-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId,
+          paymentId,
+          userEmail,
+          reprocessFromRazorpay: reprocess
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update recovered order');
+      }
+      
+      const result = await response.json();
+      
+      if (result.productInfoFound || result.addressInfoFound) {
+        setSuccess(`Order ${orderId} updated successfully! ${result.productInfoFound ? 'Products recovered. ' : ''}${result.addressInfoFound ? 'Address recovered.' : ''}`);
+      } else {
+        setSuccess(`Order ${orderId} reprocessed, but no additional details found in Razorpay notes.`);
+      }
+      
+      await traceOrders();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <h1 className="text-3xl font-bold mb-6">Order Tracing System</h1>
@@ -258,6 +297,72 @@ export default function TraceOrdersPage() {
         <strong>Admin Access:</strong> You can search for any user's orders by entering their email address below.
       </p>
       
+      {/* Recovery Information Panel */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-semibold text-blue-800 mb-4">📋 Order Recovery Information</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-4 rounded-lg border border-blue-200">
+            <h3 className="font-semibold text-green-700 mb-2">✅ Fully Recoverable Orders</h3>
+            <p className="text-sm text-gray-700 mb-2">Orders with complete information:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Product names, quantities, sizes</li>
+              <li>• Complete shipping address</li>
+              <li>• Customer contact details</li>
+              <li>• Payment information</li>
+            </ul>
+            <p className="text-xs text-green-600 mt-2 font-medium">These orders can be recovered completely.</p>
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg border border-blue-200">
+            <h3 className="font-semibold text-yellow-700 mb-2">⚠️ Partially Recoverable</h3>
+            <p className="text-sm text-gray-700 mb-2">Orders with limited data:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Payment information only</li>
+              <li>• Basic customer details</li>
+              <li>• No product specifics</li>
+              <li>• Incomplete address data</li>
+            </ul>
+            <p className="text-xs text-yellow-600 mt-2 font-medium">Manual customer contact required.</p>
+          </div>
+          
+          <div className="bg-white p-4 rounded-lg border border-blue-200">
+            <h3 className="font-semibold text-red-700 mb-2">❌ Non-Recoverable</h3>
+            <p className="text-sm text-gray-700 mb-2">Orders with minimal data:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Payment confirmation only</li>
+              <li>• No product information</li>
+              <li>• No shipping address</li>
+              <li>• Limited customer data</li>
+            </ul>
+            <p className="text-xs text-red-600 mt-2 font-medium">Customer service intervention needed.</p>
+          </div>
+        </div>
+        
+        <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-800 mb-2">🔧 Recovery Process</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h4 className="font-medium text-gray-800 mb-1">Automatic Recovery:</h4>
+              <ul className="text-gray-600 space-y-1">
+                <li>1. System finds payment in Razorpay</li>
+                <li>2. Extracts available product/address data</li>
+                <li>3. Creates order with recovered information</li>
+                <li>4. Marks as "recovered from Razorpay"</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-800 mb-1">Manual Recovery:</h4>
+              <ul className="text-gray-600 space-y-1">
+                <li>1. Contact customer for order details</li>
+                <li>2. Verify payment using Payment ID</li>
+                <li>3. Add products manually via interface</li>
+                <li>4. Complete order with customer confirmation</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Controls */}
       <div className="bg-white border rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Trace Configuration</h2>
@@ -403,41 +508,114 @@ export default function TraceOrdersPage() {
           {traceResult.missingOrders.length > 0 && (
             <div className="bg-white border rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4 text-red-600">Missing Orders (Need Recovery)</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full table-auto">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="px-4 py-2 text-left">Payment ID</th>
-                      <th className="px-4 py-2 text-left">Order ID</th>
-                      <th className="px-4 py-2 text-left">Amount</th>
-                      <th className="px-4 py-2 text-left">User Email</th>
-                      <th className="px-4 py-2 text-left">Date</th>
-                      <th className="px-4 py-2 text-left">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {traceResult.missingOrders.map((order, index) => (
-                      <tr key={index} className="border-t hover:bg-gray-50">
-                        <td className="px-4 py-2 text-sm font-mono">{order.paymentId}</td>
-                        <td className="px-4 py-2 text-sm font-mono">{order.orderId}</td>
-                        <td className="px-4 py-2">{order.currency} {order.amount}</td>
-                        <td className="px-4 py-2">{order.userEmail || 'N/A'}</td>
-                        <td className="px-4 py-2">{new Date(order.createdAt).toLocaleDateString()}</td>
-                        <td className="px-4 py-2">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => recoverOrder(order.paymentId, order.orderId, order.userEmail)}
-                              disabled={loading}
-                              className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 disabled:opacity-50"
-                            >
-                              Recover
-                            </button>
+              <div className="space-y-4">
+                {traceResult.missingOrders.map((order, index) => (
+                  <div key={index} className="border rounded-lg">
+                    {/* Main Order Row */}
+                    <div className="p-4 hover:bg-gray-50">
+                      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Payment ID</p>
+                          <p className="text-sm text-gray-600 font-mono break-all">{order.paymentId}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Amount</p>
+                          <p className="text-sm text-gray-600">{order.currency} {order.amount}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">User Email</p>
+                          <p className="text-sm text-gray-600">{order.userEmail || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">Date</p>
+                          <p className="text-sm text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => recoverOrder(order.paymentId, order.orderId, order.userEmail)}
+                            disabled={loading}
+                            className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 disabled:opacity-50"
+                          >
+                            {loading ? 'Recovering...' : 'Recover'}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Product Information Section */}
+                      <div className="mt-4 border-t pt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Product Information */}
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 mb-2">Product Information</p>
+                            {order.notes?.productNames ? (
+                              <div className="bg-green-50 p-3 rounded-md">
+                                <p className="text-sm text-green-800 font-medium mb-2">✓ Products recoverable:</p>
+                                <div className="space-y-1">
+                                  {order.notes.productNames.split('|').map((name: string, idx: number) => (
+                                    <div key={idx} className="flex justify-between text-sm">
+                                      <span className="text-green-700">{name.trim()}</span>
+                                      <div className="text-green-600 text-xs">
+                                        {order.notes.quantities?.split(',')[idx] && (
+                                          <span>Qty: {order.notes.quantities.split(',')[idx]}</span>
+                                        )}
+                                        {order.notes.sizes?.split(',')[idx] && order.notes.sizes.split(',')[idx].trim() && (
+                                          <span className="ml-2">Size: {order.notes.sizes.split(',')[idx].trim()}</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-green-600 mt-2">
+                                  Total: ₹{order.notes.totalAmount || order.amount} • {order.notes.itemCount || '?'} items
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="bg-red-50 p-3 rounded-md">
+                                <p className="text-sm text-red-800">⚠ No product information available</p>
+                                <p className="text-xs text-red-600 mt-1">Products cannot be recovered for this order</p>
+                              </div>
+                            )}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+
+                          {/* Shipping Address */}
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 mb-2">Shipping Address</p>
+                            {order.notes?.firstName || order.notes?.streetAddress ? (
+                              <div className="bg-green-50 p-3 rounded-md">
+                                <p className="text-sm text-green-800 font-medium mb-2">✓ Address recoverable:</p>
+                                <div className="text-sm text-green-700 space-y-1">
+                                  {order.notes.firstName && (
+                                    <p>{order.notes.firstName} {order.notes.lastName || ''}</p>
+                                  )}
+                                  {order.notes.streetAddress && (
+                                    <p>{order.notes.streetAddress}</p>
+                                  )}
+                                  {order.notes.apartment && (
+                                    <p>{order.notes.apartment}</p>
+                                  )}
+                                  {order.notes.city && (
+                                    <p>{order.notes.city} {order.notes.pin || ''}</p>
+                                  )}
+                                  {order.notes.phone && (
+                                    <p>📞 {order.notes.phone}</p>
+                                  )}
+                                  {order.notes.email && (
+                                    <p>✉️ {order.notes.email}</p>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-red-50 p-3 rounded-md">
+                                <p className="text-sm text-red-800">⚠ No shipping address available</p>
+                                <p className="text-xs text-red-600 mt-1">Address cannot be recovered for this order</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -455,6 +633,7 @@ export default function TraceOrdersPage() {
                     <th className="px-4 py-2 text-left">User Email</th>
                     <th className="px-4 py-2 text-left">Date</th>
                     <th className="px-4 py-2 text-left">Status</th>
+                    <th className="px-4 py-2 text-left">Details Status</th>
                     <th className="px-4 py-2 text-left">Actions</th>
                   </tr>
                 </thead>
@@ -477,13 +656,49 @@ export default function TraceOrdersPage() {
                       </td>
                       <td className="px-4 py-2">
                         {order.inDatabase && (
-                          <button
-                            onClick={() => openProductModal(order.orderId, order.paymentId, order.userEmail || '')}
-                            className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                          >
-                            Add Products
-                          </button>
+                          <div className="flex flex-col gap-1">
+                            {/* Product Info Status */}
+                            <span className={`inline-block px-2 py-1 rounded text-xs ${
+                              order.notes?.productNames || order.notes?.productIds
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {order.notes?.productNames || order.notes?.productIds ? '✓ Products' : '⚠ No Products'}
+                            </span>
+                            {/* Address Info Status */}
+                            <span className={`inline-block px-2 py-1 rounded text-xs ${
+                              order.notes?.streetAddress || order.notes?.firstName
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {order.notes?.streetAddress || order.notes?.firstName ? '✓ Address' : '⚠ No Address'}
+                            </span>
+                          </div>
                         )}
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-col gap-1">
+                          {order.inDatabase && (
+                            <>
+                              <button
+                                onClick={() => openProductModal(order.orderId, order.paymentId, order.userEmail || '')}
+                                className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                              >
+                                Add Products
+                              </button>
+                              {/* Show update button for recovered orders missing details */}
+                              {(!order.notes?.productNames && !order.notes?.streetAddress) && (
+                                <button
+                                  onClick={() => updateRecoveredOrder(order.orderId, order.paymentId, order.userEmail || '', true)}
+                                  disabled={loading}
+                                  className="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600 disabled:opacity-50"
+                                >
+                                  {loading ? 'Updating...' : 'Reprocess'}
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

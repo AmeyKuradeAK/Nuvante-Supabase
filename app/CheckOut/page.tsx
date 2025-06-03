@@ -687,6 +687,68 @@ const CheckoutContent = () => {
                           phoneNumber={formData.phone}
                           className={`w-full bg-[#DB4444] text-white font-medium py-3 px-4 rounded-lg hover:bg-black transition-colors duration-300 text-sm sm:text-base ${!isFormValid() ? 'opacity-50 cursor-not-allowed' : ''}`}
                           receipt={`ORDER_${Date.now()}`}
+                          onPrePayment={async (orderId: string) => {
+                            // Create pending order before payment
+                            try {
+                              const pendingOrderData = {
+                                orderId,
+                                amount: calculateTotal(),
+                                currency: 'INR',
+                                items: products.map(p => p._id),
+                                itemDetails: products.map((product) => ({
+                                  productId: product._id,
+                                  size: sizes[product._id] || '',
+                                  quantity: quantities[product._id] || 1
+                                })),
+                                shippingAddress: {
+                                  firstName: formData.firstName,
+                                  lastName: formData.lastName,
+                                  streetAddress: formData.address,
+                                  apartment: formData.apartment,
+                                  city: formData.city,
+                                  phone: formData.phone,
+                                  email: formData.email,
+                                  pin: formData.pin
+                                }
+                              };
+
+                              const response = await fetch('/api/create-pending-order', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(pendingOrderData)
+                              });
+
+                              if (!response.ok) {
+                                console.warn('Failed to create pending order, continuing with payment...');
+                              }
+                            } catch (error) {
+                              console.warn('Error creating pending order:', error);
+                              // Don't block payment for this error
+                            }
+                          }}
+                          notes={{
+                            // Product Information
+                            productIds: products.map(p => p._id).join(','),
+                            productNames: products.map(p => p.productName).join('|'),
+                            productPrices: products.map(p => p.productPrice).join(','),
+                            quantities: products.map(p => quantities[p._id] || 1).join(','),
+                            sizes: products.map(p => sizes[p._id] || '').join(','),
+                            
+                            // Shipping Address
+                            firstName: formData.firstName,
+                            lastName: formData.lastName,
+                            streetAddress: formData.address,
+                            apartment: formData.apartment,
+                            city: formData.city,
+                            phone: formData.phone,
+                            email: formData.email,
+                            pin: formData.pin,
+                            
+                            // Order metadata
+                            totalAmount: calculateTotal().toString(),
+                            itemCount: products.length.toString(),
+                            orderSource: 'checkout_page'
+                          }}
                         >
                           Pay Rs. {calculateTotal()}
                         </PaymentButton>
