@@ -99,7 +99,7 @@ export default function PaymentButton({
         throw new Error('Please enter a valid amount');
       }
 
-      // Create order on server
+      // Create order on server without notes
       const response = await fetch('/api/create-payment', {
         method: 'POST',
         headers: {
@@ -108,13 +108,7 @@ export default function PaymentButton({
         body: JSON.stringify({
           amount,
           currency,
-          receipt,
-          notes: {
-            ...notes,
-            userId: user.id,
-            email: user.emailAddresses[0]?.emailAddress,
-            name: `${user.firstName} ${user.lastName}`,
-          }
+          receipt
         }),
       });
 
@@ -141,7 +135,7 @@ export default function PaymentButton({
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: data.amount, // Use amount from server response
+        amount: data.amount,
         currency: data.currency,
         name: 'Nuvante',
         description: 'Payment for your order',

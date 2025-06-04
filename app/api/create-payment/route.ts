@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Please sign in to make a payment' }, { status: 401 });
     }
 
-    const { amount, currency = 'INR', receipt, notes } = await request.json();
+    const { amount, currency = 'INR', receipt } = await request.json();
 
     // Basic validation
     if (!amount || amount <= 0) {
@@ -32,12 +32,7 @@ export async function POST(request: Request) {
         const order = await razorpay.orders.create({
           amount: Math.round(amount * 100), // Ensure amount is rounded to avoid decimal issues
           currency,
-          receipt: receipt || `order_${Date.now()}`,
-          notes: {
-            ...notes,
-            userId: user.id,
-            email: user.emailAddresses[0]?.emailAddress
-          },
+          receipt: receipt || `order_${Date.now()}`
         });
 
         return NextResponse.json({
