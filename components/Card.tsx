@@ -186,7 +186,7 @@ export default function Card({
         {inventory?.trackInventory && inventory.totalQuantity > 0 && inventory.totalQuantity <= 5 && !soldOut && (
           <div className="absolute top-3 left-3" style={{ top: status === "new" ? '50px' : '12px' }}>
             <span className="bg-orange-500 text-white px-3 py-1 text-xs font-semibold tracking-wider rounded-full">
-              LOW STOCK
+              LIMITED STOCK
             </span>
           </div>
         )}
