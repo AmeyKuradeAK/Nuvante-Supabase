@@ -82,7 +82,7 @@ export default function PaymentButton({
   const handlePayment = async () => {
     if (loading) return;
     if (!razorpayLoaded) {
-      showAlert('Payment system is still loading. Please wait a moment.', 'warning');
+      showAlert('Please wait while we load the payment system...', 'warning');
       return;
     }
     if (!user) {
@@ -94,6 +94,11 @@ export default function PaymentButton({
     setLoading(true);
 
     try {
+      // Basic validation
+      if (!amount || amount <= 0) {
+        throw new Error('Please enter a valid amount');
+      }
+
       // Create order on server
       const response = await fetch('/api/create-payment', {
         method: 'POST',
@@ -113,15 +118,14 @@ export default function PaymentButton({
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to create payment');
-      }
-
       const data = await response.json();
 
+      if (!response.ok) {
+        throw new Error(data.error || 'Unable to process payment. Please try again.');
+      }
+
       if (!data.orderId) {
-        throw new Error('Invalid order ID received from server');
+        throw new Error('Payment initialization failed. Please try again.');
       }
 
       // Call onPrePayment callback if provided
@@ -129,8 +133,7 @@ export default function PaymentButton({
         try {
           await onPrePayment(data.orderId);
         } catch (prePaymentError) {
-          console.warn('Pre-payment callback failed:', prePaymentError);
-          // Continue with payment even if pre-payment callback fails
+          console.warn('Pre-payment check failed:', prePaymentError);
         }
       }
 
@@ -138,17 +141,16 @@ export default function PaymentButton({
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: amount * 100, // Razorpay expects amount in paise
-        currency,
+        amount: data.amount, // Use amount from server response
+        currency: data.currency,
         name: 'Nuvante',
         description: 'Payment for your order',
         order_id: data.orderId,
         handler: async function (response: any) {
           try {
             if (!response.razorpay_payment_id) {
-              throw new Error('Payment ID not received');
+              throw new Error('Payment verification failed');
             }
-            // Call onSuccess with payment ID and order ID
             if (onSuccess) {
               onSuccess(response.razorpay_payment_id, data.orderId);
             }
@@ -157,7 +159,7 @@ export default function PaymentButton({
             if (onError) {
               onError(error);
             }
-            showAlert('Payment verification failed. Please contact support.', 'error');
+            showAlert('Payment verification failed. Please contact support with your order ID.', 'error');
           }
         },
         prefill: {
