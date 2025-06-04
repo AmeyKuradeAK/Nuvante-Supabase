@@ -165,8 +165,22 @@ export default function PaymentButton({
           color: '#DB4444'
         },
         modal: {
-          ondismiss: function() {
-            showAlert("Payment cancelled", "warning");
+          ondismiss: async function() {
+            try {
+              // Cancel the order when payment is dismissed
+              await fetch('/api/cancel-payment', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  orderId: data.orderId
+                }),
+              });
+              showAlert("Payment cancelled", "warning");
+            } catch (error) {
+              console.error('Error cancelling payment:', error);
+            }
           }
         }
       };
