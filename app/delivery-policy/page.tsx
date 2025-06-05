@@ -181,7 +181,7 @@ export default function Page() {
                 For any delivery-related queries, please contact our customer support:
               </p>
               <div className="space-y-2 text-gray-600">
-                <p>Email: nuvanteindia@gmail.com</p>
+                <p>Email: support@nuvante.in</p>
                 <p>Phone: +91 9899044148</p>
                 <p>Hours: Monday to Friday, 10 AM - 6 PM IST</p>
               </div>

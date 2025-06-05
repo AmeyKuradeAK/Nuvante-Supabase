@@ -27,10 +27,10 @@ export default function Page() {
           If you have any questions, concerns, or require assistance, feel free
           to contact us at: <br></br>Email:{" "}
           <a
-            href="mailto:nuvanteindia@gmail.com"
+            href="mailto:support@nuvante.in"
             className="text-black underline"
           >
-            nuvanteindia@gmail.com
+            support@nuvante.in
           </a>
           <br></br> Phone: 8882587922<br></br> Our customer care team is here to
           assist you.

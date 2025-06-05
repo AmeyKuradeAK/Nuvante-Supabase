@@ -103,7 +103,7 @@ const faqData: FAQItem[] = [
     question: "How do I contact customer support?",
     answer: [
       "You can reach us via:",
-      "• Email: nuvanteindia@gmail.com",
+      "• Email: support@nuvante.in",
       "• Phone: +91 9899044148",
       "• Or visit our Support Center for instant help"
     ]

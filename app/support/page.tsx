@@ -114,7 +114,7 @@ const faqData: FAQItem[] = [
     question: "How do I contact customer support?",
     answer: [
       "You can reach us via:",
-      "• Email: nuvanteindia@gmail.com",
+      "• Email: support@nuvante.in",
       "• Phone: +91 9899044148",
       "• Or visit our Support Center for instant help"
     ]
@@ -397,7 +397,7 @@ const SupportPage = () => {
               <div className="space-y-4">
                 <div className="flex items-center">
                   <Mail className="w-5 h-5 text-[#DB4444] mr-3" />
-                  <span className="text-gray-600">nuvanteindia@gmail.com</span>
+                  <span className="text-gray-600">support@nuvante.in</span>
                 </div>
                 <div className="flex items-center">
                   <Phone className="w-5 h-5 text-[#DB4444] mr-3" />

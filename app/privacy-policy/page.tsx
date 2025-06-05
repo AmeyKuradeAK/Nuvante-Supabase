@@ -163,7 +163,7 @@ export default function Page() {
                 If you have any questions about our Privacy Policy, please contact us:
               </p>
               <div className="space-y-2 text-gray-600">
-                <p>Email: nuvanteindia@gmail.com</p>
+                <p>Email: support@nuvante.in</p>
                 <p>Phone: +91 9899044148</p>
                 <p>Address: New Delhi, India</p>
               </div>

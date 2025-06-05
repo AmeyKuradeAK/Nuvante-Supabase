@@ -84,7 +84,7 @@ export default function Footer() {
         <div className=" flex flex-col gap-3">
           <h3 className="font-semibold text-lg">Support</h3>
           <p className="text-gray-400">New Delhi, India.</p>
-          <p className="text-gray-400">nuvanteindia@gmail.com</p>
+          <p className="text-gray-400">support@nuvante.in</p>
           <p className="text-gray-400">+91 9899044148</p>
         </div>
 
