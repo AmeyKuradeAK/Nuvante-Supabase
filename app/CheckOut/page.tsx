@@ -300,7 +300,8 @@ const CheckoutContent = () => {
 
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
-    return subtotal - couponDiscount;
+    const total = subtotal - couponDiscount;
+    return Math.round(total * 100) / 100; // Fix floating point precision
   };
 
   const validateInventory = async () => {
@@ -717,8 +718,8 @@ const CheckoutContent = () => {
                     </div>
                     {appliedCoupon && couponDiscount > 0 && (
                       <div className="flex justify-between items-start text-green-600">
-                        <span className="text-sm sm:text-base">Coupon Discount ({appliedCoupon})</span>
-                        <span className="font-medium text-sm sm:text-base ml-2">-Rs. {couponDiscount}</span>
+                        <span className="text-sm sm:text-base flex-shrink-0">Coupon Discount ({appliedCoupon})</span>
+                        <span className="font-medium text-sm sm:text-base ml-2 whitespace-nowrap">-Rs. {Math.round(couponDiscount * 100) / 100}</span>
                       </div>
                     )}
                     <div className="border-t border-gray-100 pt-3 sm:pt-4">

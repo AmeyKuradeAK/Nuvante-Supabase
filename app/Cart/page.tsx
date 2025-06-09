@@ -213,7 +213,7 @@ const CartPage = () => {
 
   const cartItems = products.filter(item => GlobalCart && GlobalCart.includes(item._id)) || [];
   const subtotal = calculateSubtotal();
-  const finalTotal = subtotal - couponDiscount;
+  const finalTotal = Math.round((subtotal - couponDiscount) * 100) / 100; // Fix floating point precision
 
   // Coupon handlers
   const handleApplyCoupon = async () => {
@@ -696,8 +696,8 @@ const CartPage = () => {
                         </div>
                         {appliedCoupon && (
                           <div className="flex justify-between text-green-600">
-                            <span>Coupon Discount ({appliedCoupon.code})</span>
-                            <span className="font-medium">-Rs. {couponDiscount}</span>
+                            <span className="flex-shrink-0">Coupon Discount ({appliedCoupon.code})</span>
+                            <span className="font-medium ml-2 whitespace-nowrap">-Rs. {Math.round(couponDiscount * 100) / 100}</span>
                           </div>
                         )}
                         <div className="border-t border-gray-100 pt-4">
