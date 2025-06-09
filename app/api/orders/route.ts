@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connect from "@/db";
 import clientModel from "@/models/Clients";
 import Product from "@/models/Product";
+import couponModel from "@/models/Coupon";
 import { currentUser } from "@clerk/nextjs/server";
 
 interface OrderItem {
@@ -28,6 +29,9 @@ interface OrderItem {
     email: string;
     pin: string;
   };
+  appliedCoupon?: string;
+  couponDiscount?: number;
+  originalAmount?: number;
 }
 
 export async function GET() {
@@ -197,6 +201,41 @@ export async function POST(request: Request) {
         }, { status: 409 });
       }
 
+      // COUPON VALIDATION AND CONSUMPTION
+      let couponUsageResult = null;
+      if (orderData.appliedCoupon && orderData.couponDiscount && orderData.couponDiscount > 0) {
+        try {
+          const couponResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/coupons/use`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              couponCode: orderData.appliedCoupon,
+              orderAmount: orderData.originalAmount || orderData.amount + (orderData.couponDiscount || 0),
+              orderId: orderData.orderId
+            })
+          });
+
+          if (couponResponse.ok) {
+            couponUsageResult = await couponResponse.json();
+          } else {
+            const couponError = await couponResponse.json();
+            return NextResponse.json({
+              error: "Coupon validation failed",
+              message: couponError.message || "Invalid coupon",
+              couponCode: orderData.appliedCoupon
+            }, { status: 400 });
+          }
+        } catch (couponError: any) {
+          return NextResponse.json({
+            error: "Failed to validate coupon",
+            message: couponError.message,
+            couponCode: orderData.appliedCoupon
+          }, { status: 500 });
+        }
+      }
+
       // INVENTORY VALIDATION AND DEDUCTION
       const inventoryResults = [];
       const inventoryErrors = [];
@@ -284,7 +323,13 @@ export async function POST(request: Request) {
         inventoryLog: inventoryResults,
         inventoryProcessedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
-        userEmail: global_user_email
+        userEmail: global_user_email,
+        couponUsed: couponUsageResult ? {
+          code: orderData.appliedCoupon,
+          discount: orderData.couponDiscount,
+          originalAmount: orderData.originalAmount,
+          usageDetails: couponUsageResult
+        } : null
       };
 
       // Add the new order to the orders array

@@ -98,6 +98,10 @@ const CheckoutContent = () => {
     email: '',
     pin: ''
   });
+  
+  // Coupon state
+  const [appliedCoupon, setAppliedCoupon] = useState<string>('');
+  const [couponDiscount, setCouponDiscount] = useState<number>(0);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -174,6 +178,15 @@ const CheckoutContent = () => {
         const productIds = searchParams?.getAll('product') || [];
         const sizes = searchParams?.getAll('size') || [];
         const quantities = searchParams?.getAll('quantity') || [];
+        
+        // Get coupon data from URL
+        const couponCode = searchParams?.get('coupon') || '';
+        const discount = parseFloat(searchParams?.get('discount') || '0');
+        
+        if (couponCode && discount > 0) {
+          setAppliedCoupon(couponCode);
+          setCouponDiscount(discount);
+        }
 
         // Fetch user profile data
         const profileResponse = await axios.get<ProfileResponse>("/api/propagation_client");
@@ -278,11 +291,16 @@ const CheckoutContent = () => {
     fetchCartData();
   }, [user.isSignedIn, showAlert, router, searchParams, GlobalCart]);
 
-  const calculateTotal = () => {
+  const calculateSubtotal = () => {
     return products.reduce((total, item) => {
       const quantity = quantities[item._id] || 1;
       return total + (quantity * item.productPrice);
     }, 0);
+  };
+
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    return subtotal - couponDiscount;
   };
 
   const validateInventory = async () => {
@@ -691,12 +709,18 @@ const CheckoutContent = () => {
                   <div className="space-y-3 sm:space-y-4">
                     <div className="flex justify-between items-start text-gray-600">
                       <span className="text-sm sm:text-base">Subtotal ({products.length} items)</span>
-                      <span className="font-medium text-sm sm:text-base ml-2">Rs. {calculateTotal()}</span>
+                      <span className="font-medium text-sm sm:text-base ml-2">Rs. {calculateSubtotal()}</span>
                     </div>
                     <div className="flex justify-between items-start text-gray-600">
                       <span className="text-sm sm:text-base">Shipping</span>
                       <span className="text-[#DB4444] font-medium text-sm sm:text-base ml-2">Free</span>
                     </div>
+                    {appliedCoupon && couponDiscount > 0 && (
+                      <div className="flex justify-between items-start text-green-600">
+                        <span className="text-sm sm:text-base">Coupon Discount ({appliedCoupon})</span>
+                        <span className="font-medium text-sm sm:text-base ml-2">-Rs. {couponDiscount}</span>
+                      </div>
+                    )}
                     <div className="border-t border-gray-100 pt-3 sm:pt-4">
                       <div className="flex justify-between items-start font-bold text-base sm:text-lg">
                         <span>Total</span>
@@ -801,7 +825,12 @@ const CheckoutContent = () => {
                             // Order metadata
                             totalAmount: calculateTotal().toString(),
                             itemCount: products.length.toString(),
-                            orderSource: 'checkout_page'
+                            orderSource: 'checkout_page',
+                            
+                            // Coupon information
+                            appliedCoupon: appliedCoupon || '',
+                            couponDiscount: couponDiscount.toString(),
+                            originalAmount: calculateSubtotal().toString()
                           }}
                         >
                           Pay Rs. {calculateTotal()}

@@ -47,6 +47,20 @@ interface SizesResponse {
   sizes: { [key: string]: string };
 }
 
+interface CouponValidationResponse {
+  valid: boolean;
+  message: string;
+  coupon?: {
+    code: string;
+    description: string;
+    type: string;
+    value: number;
+    discount: number;
+    remainingUses: number;
+    expirationDate: string;
+  };
+}
+
 const CartPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +69,12 @@ const CartPage = () => {
   const user = useUser();
   const router = useRouter();
   const [selectedSizes, setSelectedSizes] = useState<Record<string, string>>({});
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponDiscount, setCouponDiscount] = useState(0);
 
   const context = useContext(GlobalContext);
   if (!context) {
@@ -193,6 +213,48 @@ const CartPage = () => {
 
   const cartItems = products.filter(item => GlobalCart && GlobalCart.includes(item._id)) || [];
   const subtotal = calculateSubtotal();
+  const finalTotal = subtotal - couponDiscount;
+
+  // Coupon handlers
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      showAlert("Please enter a coupon code", "warning");
+      return;
+    }
+
+    if (subtotal <= 0) {
+      showAlert("Cart is empty", "warning");
+      return;
+    }
+
+    setCouponLoading(true);
+    try {
+      const response = await axios.post<CouponValidationResponse>('/api/coupons/validate', {
+        couponCode: couponCode.trim(),
+        orderAmount: subtotal
+      });
+
+      if (response.data.valid) {
+        setAppliedCoupon(response.data.coupon);
+        setCouponDiscount(response.data.coupon?.discount || 0);
+        showAlert(`Coupon applied! You saved Rs. ${response.data.coupon?.discount || 0}`, "success");
+      } else {
+        showAlert(response.data.message || "Invalid coupon code", "error");
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to apply coupon";
+      showAlert(errorMessage, "error");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+    setCouponCode('');
+    showAlert("Coupon removed", "info");
+  };
 
   const handleSizeSelect = async (productId: string, size: string) => {
     if (!productId || !size) return;
@@ -362,7 +424,13 @@ const CartPage = () => {
       `product=${encodeURIComponent(item._id)}&size=${encodeURIComponent(selectedSizes[item._id])}&quantity=${encodeURIComponent(quantities[item._id] || 1)}`
     ).join('&');
 
-    router.push(`/CheckOut?${queryParams}`);
+    // Add coupon information if applied
+    let checkoutUrl = `/CheckOut?${queryParams}`;
+    if (appliedCoupon) {
+      checkoutUrl += `&coupon=${encodeURIComponent(appliedCoupon.code)}&discount=${encodeURIComponent(couponDiscount)}`;
+    }
+
+    router.push(checkoutUrl);
   };
 
   // Safe render function for product images
@@ -626,10 +694,16 @@ const CartPage = () => {
                           <span>Shipping</span>
                           <span className="text-[#DB4444] font-medium">Free</span>
                         </div>
+                        {appliedCoupon && (
+                          <div className="flex justify-between text-green-600">
+                            <span>Coupon Discount ({appliedCoupon.code})</span>
+                            <span className="font-medium">-Rs. {couponDiscount}</span>
+                          </div>
+                        )}
                         <div className="border-t border-gray-100 pt-4">
                           <div className="flex justify-between font-bold text-lg">
                             <span>Total</span>
-                            <span className="text-[#DB4444]">Rs. {subtotal}</span>
+                            <span className="text-[#DB4444]">Rs. {finalTotal}</span>
                           </div>
                         </div>
                         <div className="pt-4">
@@ -658,24 +732,63 @@ const CartPage = () => {
                     >
                       <h3 className="text-lg font-semibold mb-4 text-gray-800">Apply Coupon</h3>
                       <div className="space-y-4">
-                        <div className="relative">
-                          <input
-                            type="text"
-                            placeholder="Enter coupon code"
-                            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
-                          />
-                          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                            </svg>
+                        {!appliedCoupon ? (
+                          <>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                placeholder="Enter coupon code"
+                                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#DB4444] focus:border-transparent transition-all duration-300"
+                                onKeyPress={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                              />
+                              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                                </svg>
+                              </div>
+                            </div>
+                            <motion.div
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Button 
+                                text={couponLoading ? "Applying..." : "Apply Coupon"} 
+                                width={250} 
+                                onClick={handleApplyCoupon}
+                                disabled={couponLoading || !couponCode.trim()}
+                              />
+                            </motion.div>
+                          </>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                              <div className="flex items-center">
+                                <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <div>
+                                  <span className="font-medium text-green-800">{appliedCoupon.code}</span>
+                                  <p className="text-sm text-green-600">Saved Rs. {couponDiscount}</p>
+                                </div>
+                              </div>
+                              <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={handleRemoveCoupon}
+                                className="text-red-500 hover:text-red-700 p-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </motion.button>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {appliedCoupon.description}
+                            </p>
                           </div>
-                        </div>
-                        <motion.div
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Button text="Apply Coupon" width={250} />
-                        </motion.div>
+                        )}
                       </div>
                     </motion.div>
 
