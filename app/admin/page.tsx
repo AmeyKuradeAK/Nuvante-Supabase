@@ -146,17 +146,18 @@ export default function AdminDashboard() {
   const fetchAdminStats = async () => {
     try {
       // Fetch real stats from your APIs
-      const [couponsRes, inventoryRes, supportRes, productsRes] = await Promise.allSettled([
+      const [couponsRes, inventoryRes, supportRes] = await Promise.allSettled([
         fetch('/api/admin/coupons'),
         fetch('/api/admin/inventory/init?check=all'),
-        fetch('/api/support'),
-        fetch('/api/products')
+        fetch('/api/support')
       ]);
 
       let activeCoupons = 0;
       let inventoryIssues = 0;
       let pendingTickets = 0;
       let totalProducts = 0;
+      let totalOrders = 0;
+      let totalUsers = 0;
 
       // Process coupons data
       if (couponsRes.status === 'fulfilled' && couponsRes.value.ok) {
@@ -169,10 +170,11 @@ export default function AdminDashboard() {
         ).length || 0;
       }
 
-      // Process inventory data
+      // Process inventory data - get actual products count and issues
       if (inventoryRes.status === 'fulfilled' && inventoryRes.value.ok) {
         const inventoryData = await inventoryRes.value.json();
         inventoryIssues = inventoryData.productsNeedingInit || 0;
+        totalProducts = inventoryData.totalProducts || 0;
       }
 
       // Process support tickets data
@@ -183,15 +185,38 @@ export default function AdminDashboard() {
         ).length || 0;
       }
 
-      // Process products data
-      if (productsRes.status === 'fulfilled' && productsRes.value.ok) {
-        const productsData = await productsRes.value.json();
-        totalProducts = productsData.length || 0;
+      // Try to get additional stats via propagation API (for products)
+      try {
+        const productsResponse = await fetch('/api/propagation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ every: true })
+        });
+        
+        if (productsResponse.ok) {
+          const productsData = await productsResponse.json();
+          if (Array.isArray(productsData)) {
+            totalProducts = productsData.length;
+          }
+        }
+      } catch (productsError) {
+        console.log('Could not fetch products via propagation API');
+      }
+
+      // Try to get user and order stats from cleanup API
+      try {
+        const cleanupResponse = await fetch('/api/cleanup-pending-orders');
+        if (cleanupResponse.ok) {
+          const cleanupData = await cleanupResponse.json();
+          // This doesn't give us total orders/users but we can at least show some data
+        }
+      } catch (cleanupError) {
+        console.log('Could not fetch cleanup stats');
       }
 
       setStats({
-        totalOrders: 0, // Would need orders API to get this
-        totalUsers: 0, // Would need users API to get this  
+        totalOrders, // Will be 0 for now - would need a dedicated API
+        totalUsers, // Will be 0 for now - would need a dedicated API  
         totalProducts,
         pendingTickets,
         activeCoupons,
