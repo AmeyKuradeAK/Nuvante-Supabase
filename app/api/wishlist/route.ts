@@ -43,7 +43,7 @@ export async function POST(request: any) {
     const body = await request.json();
     console.log("Request body:", body);
 
-    let existingModel = await clientModel.findOne({ email: global_user_email });
+    const existingModel = await clientModel.findOne({ email: global_user_email });
     console.log("Existing model:", existingModel ? "Found" : "Not found");
 
     // Check if client record exists

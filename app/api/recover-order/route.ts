@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     // Find the user
-    let client = await clientModel.findOne({ email: targetEmail });
+    const client = await clientModel.findOne({ email: targetEmail });
     
     if (!client) {
       return NextResponse.json(

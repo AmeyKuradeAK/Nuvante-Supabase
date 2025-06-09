@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 interface DuplicateReport {
   summary: {
@@ -202,12 +203,12 @@ ${data.duplicateReport?.map(user =>
 
           {/* Quick Access */}
           <div className="mt-6 text-center">
-            <a 
+            <Link 
               href="/" 
               className="text-blue-600 hover:text-blue-800 transition-colors"
             >
               ← Return to Website
-            </a>
+            </Link>
           </div>
         </div>
       </div>

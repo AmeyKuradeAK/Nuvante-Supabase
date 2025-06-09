@@ -10,9 +10,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 const Page = () => {
-  let [data, setData]: any[] = useState([]);
-  let params = useParams();
-  let [loaded, setLoaded] = useState<Boolean>(false);
+  const [data, setData]: any[] = useState([]);
+  const params = useParams();
+  const [loaded, setLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {

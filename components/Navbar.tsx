@@ -29,7 +29,7 @@ const navigation = [
 //* Otherwise standard implementation of a navbar.
 
 export default function Navbar() {
-  const [open, setOpen] = useState<Boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
   const desktopVideoRef = useRef<HTMLVideoElement>(null);
   const mobileVideoRef = useRef<HTMLVideoElement>(null);
   const { showAlert } = useAlert();

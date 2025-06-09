@@ -63,11 +63,11 @@ export async function POST(req: NextRequest) {
       const phoneNumber = primaryPhone?.phone_number || phone_numbers?.[0]?.phone_number;
       
       // Extract names from different possible sources
-      let firstName = first_name || public_metadata?.firstName || unsafe_metadata?.firstName;
-      let lastName = last_name || public_metadata?.lastName || unsafe_metadata?.lastName;
+      const firstName = first_name || public_metadata?.firstName || unsafe_metadata?.firstName;
+      const lastName = last_name || public_metadata?.lastName || unsafe_metadata?.lastName;
       
       // Check if phone is in metadata
-      let mobileNumber = phoneNumber || public_metadata?.phone || unsafe_metadata?.phone;
+      const mobileNumber = phoneNumber || public_metadata?.phone || unsafe_metadata?.phone;
       
       if (!emailAddress) {
         console.error("No email address found for user");
@@ -127,11 +127,11 @@ export async function POST(req: NextRequest) {
       const phoneNumber = primaryPhone?.phone_number || phone_numbers?.[0]?.phone_number;
       
       // Extract names from different possible sources
-      let firstName = first_name || public_metadata?.firstName || unsafe_metadata?.firstName;
-      let lastName = last_name || public_metadata?.lastName || unsafe_metadata?.lastName;
+      const firstName = first_name || public_metadata?.firstName || unsafe_metadata?.firstName;
+      const lastName = last_name || public_metadata?.lastName || unsafe_metadata?.lastName;
       
       // Check if phone is in metadata
-      let mobileNumber = phoneNumber || public_metadata?.phone || unsafe_metadata?.phone;
+      const mobileNumber = phoneNumber || public_metadata?.phone || unsafe_metadata?.phone;
       
       if (!emailAddress) {
         return NextResponse.json({ error: "No email address found" }, { status: 400 });

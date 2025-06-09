@@ -12,6 +12,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import axios from "axios";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAlert } from "@/context/AlertContext";
 import { useUser } from "@clerk/nextjs";
@@ -351,12 +352,12 @@ const OrdersPage = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">No orders yet</h3>
                 <p className="text-gray-600 mb-6">Start shopping to see your orders here</p>
-                <a
+                <Link
                   href="/Products"
                   className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-[#DB4444] hover:bg-[#c13a3a] transition-all duration-300 ease-in-out shadow-sm hover:shadow-md transform hover:scale-105"
                 >
                   Start Shopping
-                </a>
+                </Link>
               </motion.div>
             )}
 

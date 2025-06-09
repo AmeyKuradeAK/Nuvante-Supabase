@@ -83,7 +83,7 @@ export default function RootLayout({
       <html lang="en">
         <head>
           {/* Razorpay Script */}
-          <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+          <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
           
           {/* Cache busting meta tags */}
           <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />

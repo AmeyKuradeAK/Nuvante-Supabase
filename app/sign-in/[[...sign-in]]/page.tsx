@@ -12,9 +12,9 @@ import { motion } from "framer-motion";
 
 const sideImg = "/Side-Image.jpg";
 
-type Props = {};
+type Props = Record<string, never>;
 
-const page = (props: Props) => {
+const Page = (props: Props) => {
   const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -288,4 +288,4 @@ const page = (props: Props) => {
   );
 };
 
-export default page;
+export default Page;

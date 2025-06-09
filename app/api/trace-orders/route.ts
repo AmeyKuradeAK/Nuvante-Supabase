@@ -264,7 +264,7 @@ export async function POST(req: NextRequest) {
       const paymentAmount = typeof payment.amount === 'string' ? parseInt(payment.amount) : payment.amount;
 
       // Try to extract product information from order notes or payment notes
-      let productInfo: {
+      const productInfo: {
         items: string[];
         itemDetails: Array<{
           productId: string;

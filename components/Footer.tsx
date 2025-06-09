@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { useAlert } from "@/context/AlertContext";
 import { useRouter } from "next/navigation";
@@ -92,29 +93,29 @@ export default function Footer() {
           <h3 className="font-semibold text-lg">Account</h3>
           <ul className="text-gray-400 flex flex-col gap-2">
             <li>
-              <a href="/Profile" onClick={handleProfileClick} className="hover:text-white">
+              <Link href="/Profile" onClick={handleProfileClick} className="hover:text-white">
                 My Account
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" onClick={handleLoginClick} className="hover:text-white">
+              <Link href="#" onClick={handleLoginClick} className="hover:text-white">
                 Login / Register
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/Cart" className="hover:text-white">
+              <Link href="/Cart" className="hover:text-white">
                 Cart
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/Wishlist" className="hover:text-white">
+              <Link href="/Wishlist" className="hover:text-white">
                 Wishlist
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/Products" className="hover:text-white">
+              <Link href="/Products" className="hover:text-white">
                 Shop
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -124,39 +125,39 @@ export default function Footer() {
           <h3 className="font-semibold text-lg">Quick Link</h3>
           <ul className="text-gray-400 flex flex-col gap-2">
             <li>
-              <a href="/support" className="hover:text-white">
+              <Link href="/support" className="hover:text-white">
                 Support
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/Contact" className="hover:text-white">
+              <Link href="/Contact" className="hover:text-white">
                 Contact us
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/about" className="hover:text-white">
+              <Link href="/about" className="hover:text-white">
                 About us
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/faq" className="hover:text-white">
+              <Link href="/faq" className="hover:text-white">
                 FAQs
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/privacy-policy" className="hover:text-white">
+              <Link href="/privacy-policy" className="hover:text-white">
                 Privacy Policy
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/delivery-policy" className="hover:text-white">
+              <Link href="/delivery-policy" className="hover:text-white">
                 Shipping Policy
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="/refund-and-cancellation" className="hover:text-white">
+              <Link href="/refund-and-cancellation" className="hover:text-white">
                 Return Policy
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
