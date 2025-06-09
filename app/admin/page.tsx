@@ -21,15 +21,24 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  TrendingUp
+  TrendingUp,
+  UserPlus,
+  Mail
 } from 'lucide-react';
 
-// Authorized admin emails - add emails here who can access admin panel
-const AUTHORIZED_ADMINS = [
-  'admin@nuvante.com',
-  'ameykurade60@gmail.com',
-  // Add more admin emails here as needed
-];
+// Check if user is admin (now uses database + fallback)
+const checkIsAdmin = async (userEmail: string): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/admin/emails');
+    if (response.ok) {
+      const data = await response.json();
+      return data.adminEmails?.some((admin: any) => admin.email === userEmail.toLowerCase()) || false;
+    }
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+  }
+  return false;
+};
 
 interface AdminStats {
   totalOrders: number;
@@ -38,6 +47,13 @@ interface AdminStats {
   pendingTickets: number;
   activeCoupons: number;
   inventoryIssues: number;
+}
+
+interface AdminEmail {
+  email: string;
+  addedBy: string;
+  addedAt: Date;
+  isSystemAdmin: boolean;
 }
 
 const AdminCard = ({ 
@@ -117,30 +133,44 @@ export default function AdminDashboard() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [adminEmails, setAdminEmails] = useState<AdminEmail[]>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [showAdminSection, setShowAdminSection] = useState(false);
 
   useEffect(() => {
-    if (isLoaded) {
-      if (!user) {
-        router.push('/sign-in?redirect_url=/admin');
-        return;
-      }
+    const checkAuth = async () => {
+      if (isLoaded) {
+        if (!user) {
+          router.push('/sign-in?redirect_url=/admin');
+          return;
+        }
 
-      const userEmail = user.emailAddresses[0]?.emailAddress;
-      const authorized = AUTHORIZED_ADMINS.includes(userEmail || '');
-      
-      setIsAuthorized(authorized);
-      
-      if (!authorized) {
-        setTimeout(() => {
-          router.push('/');
-        }, 3000);
-      } else {
-        // Fetch admin stats if authorized
-        fetchAdminStats();
+        const userEmail = user.emailAddresses[0]?.emailAddress;
+        if (!userEmail) {
+          setIsAuthorized(false);
+          setLoading(false);
+          return;
+        }
+
+        const authorized = await checkIsAdmin(userEmail);
+        setIsAuthorized(authorized);
+        
+        if (!authorized) {
+          setTimeout(() => {
+            router.push('/');
+          }, 3000);
+        } else {
+          // Fetch admin stats and admin emails if authorized
+          fetchAdminStats();
+          fetchAdminEmails();
+        }
+        
+        setLoading(false);
       }
-      
-      setLoading(false);
-    }
+    };
+
+    checkAuth();
   }, [isLoaded, user, router]);
 
   const fetchAdminStats = async () => {
@@ -234,6 +264,46 @@ export default function AdminDashboard() {
         activeCoupons: 0,
         inventoryIssues: 0
       });
+    }
+  };
+
+  const fetchAdminEmails = async () => {
+    try {
+      const response = await fetch('/api/admin/emails');
+      if (response.ok) {
+        const data = await response.json();
+        setAdminEmails(data.adminEmails || []);
+      }
+    } catch (error) {
+      console.error('Error fetching admin emails:', error);
+    }
+  };
+
+  const addAdminEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAdminEmail.trim()) return;
+
+    setAddingAdmin(true);
+    try {
+      const response = await fetch('/api/admin/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newAdminEmail.trim() })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(`✅ Successfully added ${data.adminEmail} as admin!`);
+        setNewAdminEmail('');
+        fetchAdminEmails(); // Refresh the list
+      } else {
+        alert(`❌ Error: ${data.error}`);
+      }
+    } catch (error) {
+      alert('❌ Failed to add admin email');
+    } finally {
+      setAddingAdmin(false);
     }
   };
 
@@ -484,6 +554,113 @@ export default function AdminDashboard() {
               
             </div>
           </div>
+        </div>
+
+        {/* Admin Email Management */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-gray-800">Admin Access Management</h2>
+            <button
+              onClick={() => setShowAdminSection(!showAdminSection)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+            >
+              <UserPlus className="w-4 h-4" />
+              {showAdminSection ? 'Hide' : 'Manage Admins'}
+            </button>
+          </div>
+
+          {showAdminSection && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-white rounded-xl shadow-sm border p-6"
+            >
+              {/* Add New Admin Form */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <Mail className="w-5 h-5" />
+                  Add New Admin
+                </h3>
+                <form onSubmit={addAdminEmail} className="flex gap-4">
+                  <input
+                    type="email"
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
+                    placeholder="Enter admin email address"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    disabled={addingAdmin || !newAdminEmail.trim()}
+                    className="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {addingAdmin ? 'Adding...' : 'Add Admin'}
+                  </button>
+                </form>
+                <p className="text-sm text-gray-600 mt-2">
+                  ⚠️ New admins will have full access to the admin panel. Only add trusted emails.
+                </p>
+              </div>
+
+              {/* Current Admin Emails List */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Current Admin Emails ({adminEmails.length})
+                </h3>
+                <div className="space-y-3">
+                  {adminEmails.map((admin, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${admin.isSystemAdmin ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+                        <div>
+                          <div className="font-medium text-gray-900">{admin.email}</div>
+                          <div className="text-sm text-gray-600">
+                            {admin.isSystemAdmin ? 'System Admin' : `Added by ${admin.addedBy}`} • 
+                            {admin.isSystemAdmin ? 'Built-in' : new Date(admin.addedAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {admin.isSystemAdmin ? (
+                          <span className="px-3 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                            Protected
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                            Added
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {adminEmails.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <Shield className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p>No admin emails loaded</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-blue-800">Security Notice</h4>
+                    <ul className="text-blue-700 text-sm mt-1 space-y-1">
+                      <li>• System admins (green dot) cannot be removed and have permanent access</li>
+                      <li>• Added admins (blue dot) have full admin panel access</li>
+                      <li>• Only add emails of trusted team members</li>
+                      <li>• Admin deletion is not available for security reasons</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* Warning Notice */}
