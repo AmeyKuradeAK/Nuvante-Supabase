@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
 import clientModel from "@/models/Clients";
 import connect from "@/db";
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await currentUser();
-    
-    if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
     await connect();
 
     // Find all clients with orders
@@ -96,12 +89,6 @@ export async function POST(req: NextRequest) {
 // GET - Check for duplicates without removing them
 export async function GET(req: NextRequest) {
   try {
-    const user = await currentUser();
-    
-    if (!user) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
     await connect();
 
     const clients = await clientModel.find({ 

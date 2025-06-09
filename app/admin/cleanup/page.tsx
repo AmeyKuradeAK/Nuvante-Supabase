@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useUser } from "@clerk/nextjs";
 
 interface DuplicateReport {
   summary: {
@@ -28,21 +27,10 @@ interface DuplicateReport {
 }
 
 export default function AdminCleanupPage() {
-  const { user, isLoaded } = useUser();
   const [results, setResults] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isError, setIsError] = useState(false);
-
-  // Admin email check - replace with your admin email
-  const adminEmails = [
-    "admin@nuvante.in", 
-    "owner@nuvante.in",
-    "ameykurade@gmail.com",
-    // Add more admin emails here
-  ];
-
-  const isAdmin = isLoaded && user && adminEmails.includes(user.emailAddresses[0]?.emailAddress || "");
 
   const checkDuplicates = async () => {
     setLoading(true);
@@ -81,9 +69,7 @@ ${data.duplicateReport?.map(user =>
 ).join('\n\n') || 'No detailed report available'}`);
     } catch (error: any) {
       setIsError(true);
-      setResults(`❌ Error: ${error.message}
-
-Make sure you're signed in as an admin!`);
+      setResults(`❌ Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -133,44 +119,11 @@ ${data.duplicateReport?.map(user =>
 ).join('\n') || 'No cleanup details available'}`);
     } catch (error: any) {
       setIsError(true);
-      setResults(`❌ Error: ${error.message}
-
-Make sure you're signed in as an admin!`);
+      setResults(`❌ Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
-          <div className="text-6xl mb-4">🚫</div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
-          <p className="text-gray-600">This page is restricted to admin users only.</p>
-          <div className="mt-6">
-            <a 
-              href="/" 
-              className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Go to Homepage
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
@@ -179,14 +132,11 @@ Make sure you're signed in as an admin!`);
           {/* Header */}
           <div className="border-b border-gray-200 pb-6 mb-6">
             <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              🔧 Admin: Duplicate Order Cleanup
+              🔧 Duplicate Order Cleanup Tool
             </h1>
             <p className="text-gray-600">
               Manage and clean up duplicate orders in the database
             </p>
-            <div className="mt-2 text-sm text-green-600">
-              ✅ Logged in as: {user?.emailAddresses[0]?.emailAddress}
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -248,6 +198,16 @@ Make sure you're signed in as an admin!`);
                 </ul>
               </div>
             </div>
+          </div>
+
+          {/* Quick Access */}
+          <div className="mt-6 text-center">
+            <a 
+              href="/" 
+              className="text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              ← Return to Website
+            </a>
           </div>
         </div>
       </div>
