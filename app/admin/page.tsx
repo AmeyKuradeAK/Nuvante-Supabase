@@ -156,8 +156,8 @@ export default function AdminDashboard() {
       let inventoryIssues = 0;
       let pendingTickets = 0;
       let totalProducts = 0;
-      let totalOrders = 0;
-      let totalUsers = 0;
+      const totalOrders = 0; // Will be 0 until we implement order counting API
+      const totalUsers = 0; // Will be 0 until we implement user counting API
 
       // Process coupons data
       if (couponsRes.status === 'fulfilled' && couponsRes.value.ok) {
