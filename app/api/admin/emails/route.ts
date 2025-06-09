@@ -8,6 +8,7 @@ const FALLBACK_ADMINS = [
   'admin@nuvante.com',
   'ameykurade60@gmail.com',
   'support@nuvante.in',
+  'alan.noble777@gmail.com',
 ];
 
 // Helper function to check if user is admin
