@@ -116,6 +116,21 @@ const CouponAdminPage = () => {
     return new Date(dateString) <= new Date();
   };
 
+  const deleteCoupon = async (couponId: string, couponCode: string) => {
+    if (!confirm(`Are you sure you want to delete coupon "${couponCode}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(`/api/admin/coupons/${couponId}`);
+      alert('Coupon deleted successfully!');
+      fetchCoupons(); // Refresh the list
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Error deleting coupon';
+      alert(errorMessage);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -294,6 +309,7 @@ const CouponAdminPage = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usage</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expires</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -345,6 +361,14 @@ const CouponAdminPage = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatDate(coupon.expirationDate)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => deleteCoupon(coupon._id, coupon.code)}
+                          className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
