@@ -145,17 +145,70 @@ export default function AdminDashboard() {
 
   const fetchAdminStats = async () => {
     try {
-      // This would fetch real stats from your APIs
+      // Fetch real stats from your APIs
+      const [couponsRes, inventoryRes, supportRes, productsRes] = await Promise.allSettled([
+        fetch('/api/admin/coupons'),
+        fetch('/api/admin/inventory/init?check=all'),
+        fetch('/api/support'),
+        fetch('/api/products')
+      ]);
+
+      let activeCoupons = 0;
+      let inventoryIssues = 0;
+      let pendingTickets = 0;
+      let totalProducts = 0;
+
+      // Process coupons data
+      if (couponsRes.status === 'fulfilled' && couponsRes.value.ok) {
+        const couponsData = await couponsRes.value.json();
+        const now = new Date();
+        activeCoupons = couponsData.coupons?.filter((coupon: any) => 
+          coupon.isActive && 
+          new Date(coupon.expirationDate) > now &&
+          coupon.usedCount < coupon.totalAvailable
+        ).length || 0;
+      }
+
+      // Process inventory data
+      if (inventoryRes.status === 'fulfilled' && inventoryRes.value.ok) {
+        const inventoryData = await inventoryRes.value.json();
+        inventoryIssues = inventoryData.productsNeedingInit || 0;
+      }
+
+      // Process support tickets data
+      if (supportRes.status === 'fulfilled' && supportRes.value.ok) {
+        const supportData = await supportRes.value.json();
+        pendingTickets = supportData.tickets?.filter((ticket: any) => 
+          ticket.status === 'open' || ticket.status === 'pending'
+        ).length || 0;
+      }
+
+      // Process products data
+      if (productsRes.status === 'fulfilled' && productsRes.value.ok) {
+        const productsData = await productsRes.value.json();
+        totalProducts = productsData.length || 0;
+      }
+
       setStats({
-        totalOrders: 1234,
-        totalUsers: 567,
-        totalProducts: 89,
-        pendingTickets: 12,
-        activeCoupons: 8,
-        inventoryIssues: 3
+        totalOrders: 0, // Would need orders API to get this
+        totalUsers: 0, // Would need users API to get this  
+        totalProducts,
+        pendingTickets,
+        activeCoupons,
+        inventoryIssues
       });
+
     } catch (error) {
       console.error('Error fetching admin stats:', error);
+      // Fallback to zeros on error
+      setStats({
+        totalOrders: 0,
+        totalUsers: 0,
+        totalProducts: 0,
+        pendingTickets: 0,
+        activeCoupons: 0,
+        inventoryIssues: 0
+      });
     }
   };
 
