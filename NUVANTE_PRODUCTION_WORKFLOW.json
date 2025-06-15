@@ -1,0 +1,168 @@
+{
+  "name": "Nuvante Production Email Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nuvante-order-success",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Order Success Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": "true"
+            },
+            {
+              "value1": "={{ $json.orderId }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.customerEmail || $json.email || $json.shippingAddress?.email || $json.user?.email }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "validate-order",
+      "name": "Validate Order Data",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "jsCode": "const data = items[0].json;\n\nfunction formatCurrency(amount) {\n  return new Intl.NumberFormat('en-IN', {\n    style: 'currency',\n    currency: 'INR',\n    minimumFractionDigits: 0\n  }).format(amount || 0);\n}\n\nfunction formatDate(dateString) {\n  try {\n    if (!dateString) return new Date().toLocaleDateString('en-IN');\n    return new Date(dateString).toLocaleDateString('en-IN', {\n      year: 'numeric',\n      month: 'long',\n      day: 'numeric'\n    });\n  } catch {\n    return new Date().toLocaleDateString('en-IN');\n  }\n}\n\nconst customerEmail = data.customerEmail || data.email || data.shippingAddress?.email || data.user?.email;\nconst customerName = data.customerName || data.firstName || data.shippingAddress?.firstName || data.user?.firstName || 'Valued Customer';\nconst customerLastName = data.lastName || data.shippingAddress?.lastName || data.user?.lastName || '';\nconst customerFullName = `${customerName} ${customerLastName}`.trim();\nconst customerPhone = data.phone || data.shippingAddress?.phone || data.user?.phone || 'Not provided';\n\nlet itemsTableHtml = `\n<table style=\"width: 100%; border-collapse: collapse; margin: 15px 0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);\">\n  <thead>\n    <tr style=\"background: linear-gradient(135deg, #DB4444 0%, #c73e3e 100%); color: white;\">\n      <th style=\"padding: 15px; text-align: left; font-weight: 600;\">Product</th>\n      <th style=\"padding: 15px; text-align: center; font-weight: 600;\">Size</th>\n      <th style=\"padding: 15px; text-align: center; font-weight: 600;\">Quantity</th>\n      <th style=\"padding: 15px; text-align: center; font-weight: 600;\">Price</th>\n    </tr>\n  </thead>\n  <tbody>\n`;\n\nlet itemsList = '';\nlet totalItems = 0;\n\nif (data.items || data.itemDetails || data.products) {\n  const items = data.items || data.itemDetails || data.products;\n  \n  if (Array.isArray(items)) {\n    items.forEach((item, index) => {\n      const bgColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';\n      const productName = item.name || item.productId || item.product || item.title || `Product ${index + 1}`;\n      const size = item.size || item.variant || 'N/A';\n      const quantity = item.quantity || item.qty || 1;\n      const price = item.price || item.amount || 0;\n      \n      totalItems += quantity;\n      \n      itemsTableHtml += `\n      <tr style=\"background-color: ${bgColor}; transition: background-color 0.2s;\">\n        <td style=\"padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: 500;\">${productName}</td>\n        <td style=\"padding: 15px; border-bottom: 1px solid #dee2e6; text-align: center;\">${size}</td>\n        <td style=\"padding: 15px; border-bottom: 1px solid #dee2e6; text-align: center; font-weight: 600;\">${quantity}</td>\n        <td style=\"padding: 15px; border-bottom: 1px solid #dee2e6; text-align: center; font-weight: 600;\">${formatCurrency(price)}</td>\n      </tr>`;\n      \n      itemsList += `${productName} (${size}) x${quantity}`;\n      if (index < items.length - 1) itemsList += ', ';\n    });\n  }\n} else {\n  itemsTableHtml += `\n  <tr>\n    <td colspan=\"4\" style=\"padding: 20px; text-align: center; color: #6c757d; font-style: italic;\">No item details available</td>\n  </tr>`;\n  itemsList = 'Items information not available';\n  totalItems = data.totalItems || data.itemCount || 1;\n}\n\nitemsTableHtml += `</tbody></table>`;\n\nconst shippingAddress = data.shippingAddress || data.address || {};\nconst customerCity = shippingAddress.city || data.city || 'Not provided';\nconst shippingHtml = `\n<div style=\"background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 12px; border-left: 5px solid #DB4444; margin: 20px 0;\">\n  <h4 style=\"margin: 0 0 15px 0; color: #495057; font-size: 18px;\">📍 Shipping Address</h4>\n  <div style=\"background-color: white; padding: 15px; border-radius: 8px; line-height: 1.8; color: #495057;\">\n    <strong style=\"color: #DB4444; font-size: 16px;\">${customerFullName}</strong><br>\n    ${shippingAddress.streetAddress || shippingAddress.address || shippingAddress.line1 || 'Address not provided'}<br>\n    ${shippingAddress.apartment || shippingAddress.line2 ? (shippingAddress.apartment || shippingAddress.line2) + '<br>' : ''}\n    ${customerCity} - ${shippingAddress.pin || shippingAddress.pincode || shippingAddress.postalCode || 'PIN'}<br>\n    <strong>📞 ${customerPhone}</strong>\n  </div>\n</div>`;\n\nlet couponHtml = '';\nif (data.couponCode || data.appliedCoupon || data.discountCode) {\n  const couponCode = data.couponCode || data.appliedCoupon || data.discountCode;\n  const discount = data.discount || data.couponDiscount || data.discountAmount || 0;\n  couponHtml = `\n  <div style=\"background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%); border: 2px solid #17a2b8; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: center;\">\n    <h4 style=\"margin: 0 0 10px 0; color: #0c5460; font-size: 18px;\">🎉 Congratulations! Discount Applied</h4>\n    <p style=\"margin: 5px 0; color: #0c5460; font-size: 16px;\"><strong>Coupon Code:</strong> ${couponCode}</p>\n    <p style=\"margin: 5px 0; color: #0c5460; font-size: 16px;\"><strong>You Saved:</strong> ${formatCurrency(discount)}</p>\n  </div>`;\n}\n\nconst orderDate = formatDate(data.createdAt || data.timestamp || data.orderDate || data.date);\nconst deliveryDate = formatDate(data.estimatedDelivery || data.deliveryDate || data.expectedDelivery);\nconst paymentId = data.paymentId || data.razorpayPaymentId || data.transactionId || data.payment?.id || 'Processing';\n\nreturn {\n  ...data,\n  customerEmail,\n  customerName,\n  customerFullName,\n  customerPhone,\n  customerCity,\n  paymentId,\n  orderDate,\n  deliveryDate,\n  formattedAmount: formatCurrency(data.amount || data.total || data.totalAmount || 0),\n  itemsTableHtml,\n  couponHtml,\n  shippingHtml,\n  itemsList,\n  itemCount: totalItems,\n  hasDiscount: !!(data.couponCode || data.appliedCoupon || data.discountCode),\n  processedAt: new Date().toISOString()\n};"
+      },
+      "id": "process-order-data",
+      "name": "Process Order Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 240]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_FROM_EMAIL }}",
+        "toEmail": "={{ $json.customerEmail }}",
+        "subject": "🎉 Order Confirmed #{{ $json.orderId }} - Thank you for choosing Nuvante!",
+        "emailFormat": "html",
+        "html": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Order Confirmation - Nuvante</title>\n    <style>\n        * { margin: 0; padding: 0; box-sizing: border-box; }\n        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; }\n        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; }\n        .header { background: linear-gradient(135deg, #DB4444 0%, #c73e3e 100%); color: white; padding: 40px 20px; text-align: center; }\n        .header h1 { font-size: 32px; margin-bottom: 10px; font-weight: 700; }\n        .content { padding: 40px 30px; }\n        .greeting { font-size: 24px; color: #333; margin-bottom: 20px; font-weight: 600; }\n        .intro-text { font-size: 16px; color: #555; margin-bottom: 30px; line-height: 1.8; }\n        .order-summary { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #DB4444; }\n        .order-summary h3 { color: #DB4444; margin-bottom: 20px; font-size: 20px; font-weight: 600; }\n        .order-detail { display: flex; justify-content: space-between; margin: 12px 0; padding: 8px 0; border-bottom: 1px solid #dee2e6; }\n        .order-detail strong { color: #495057; font-weight: 600; }\n        .total-amount { background: linear-gradient(135deg, #DB4444 0%, #c73e3e 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0; }\n        .total-amount .amount { font-size: 32px; font-weight: bold; }\n        .footer { background: linear-gradient(135deg, #343a40 0%, #495057 100%); color: white; padding: 30px 20px; text-align: center; }\n        .footer a { color: #DB4444; text-decoration: none; font-weight: 600; }\n    </style>\n</head>\n<body>\n    <div class=\"email-container\">\n        <div class=\"header\">\n            <h1>🎉 Order Confirmed!</h1>\n            <p>Thank you for shopping with Nuvante</p>\n        </div>\n        \n        <div class=\"content\">\n            <div class=\"greeting\">Hello {{ $json.customerName }}! 👋</div>\n            \n            <p class=\"intro-text\">\n                We're absolutely thrilled to confirm that your order has been successfully placed! Get ready for an amazing shopping experience with premium quality products delivered right to your doorstep. 🚀\n            </p>\n            \n            <div class=\"order-summary\">\n                <h3>📋 Your Order Summary</h3>\n                <div class=\"order-detail\">\n                    <strong>Order ID:</strong>\n                    <span>{{ $json.orderId }}</span>\n                </div>\n                <div class=\"order-detail\">\n                    <strong>Payment ID:</strong>\n                    <span>{{ $json.paymentId }}</span>\n                </div>\n                <div class=\"order-detail\">\n                    <strong>Order Date:</strong>\n                    <span>{{ $json.orderDate }}</span>\n                </div>\n                <div class=\"order-detail\">\n                    <strong>Total Items:</strong>\n                    <span>{{ $json.itemCount }} item(s)</span>\n                </div>\n            </div>\n            \n            <h4 style=\"color: #495057; margin: 25px 0 15px 0;\">🛍️ Your Items</h4>\n            {{{ $json.itemsTableHtml }}}\n            \n            <div class=\"total-amount\">\n                <div class=\"label\">Total Amount Paid</div>\n                <div class=\"amount\">{{ $json.formattedAmount }}</div>\n            </div>\n            \n            {{{ $json.couponHtml }}}\n            {{{ $json.shippingHtml }}}\n        </div>\n        \n        <div class=\"footer\">\n            <p>📧 Email: <a href=\"mailto:{{ $env.SUPPORT_EMAIL }}\">{{ $env.SUPPORT_EMAIL }}</a></p>\n            <p>🌐 Website: <a href=\"{{ $env.WEBSITE_URL }}\">{{ $env.WEBSITE_URL }}</a></p>\n            <p style=\"margin-top: 15px; font-size: 12px;\">© 2024 Nuvante. All rights reserved.</p>\n        </div>\n    </div>\n</body>\n</html>"
+      },
+      "id": "send-customer-email",
+      "name": "Send Customer Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 180],
+      "credentials": {
+        "smtp": {
+          "id": "nuvante-smtp",
+          "name": "Nuvante SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_FROM_EMAIL }}",
+        "toEmail": "={{ $env.ADMIN_EMAIL }}",
+        "subject": "🔔 NEW ORDER #{{ $json.orderId }} ({{ $json.formattedAmount }}) from {{ $json.customerFullName }}",
+        "emailFormat": "html",
+        "html": "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>New Order Alert</title>\n    <style>\n        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }\n        .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 0 15px rgba(0,0,0,0.1); }\n        .header { background: linear-gradient(135deg, #DB4444, #c73e3e); color: white; padding: 25px; text-align: center; }\n        .content { padding: 30px; }\n        .amount { background: #DB4444; color: white; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0; }\n        .amount .value { font-size: 28px; font-weight: bold; }\n        .info-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #DB4444; }\n        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }\n        .info-item { background: white; padding: 15px; border-radius: 5px; }\n        .info-item strong { color: #495057; display: block; margin-bottom: 5px; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>📦 NEW ORDER RECEIVED</h1>\n            <p>Immediate action required</p>\n        </div>\n        \n        <div class=\"content\">\n            <div class=\"amount\">\n                <div>Order Value</div>\n                <div class=\"value\">{{ $json.formattedAmount }}</div>\n                <div>Order #{{ $json.orderId }}</div>\n            </div>\n            \n            <div class=\"info-section\">\n                <h3>📋 Order Details</h3>\n                <div class=\"info-grid\">\n                    <div class=\"info-item\">\n                        <strong>Order ID</strong>\n                        {{ $json.orderId }}\n                    </div>\n                    <div class=\"info-item\">\n                        <strong>Payment ID</strong>\n                        {{ $json.paymentId }}\n                    </div>\n                    <div class=\"info-item\">\n                        <strong>Order Date</strong>\n                        {{ $json.orderDate }}\n                    </div>\n                    <div class=\"info-item\">\n                        <strong>Items</strong>\n                        {{ $json.itemCount }} item(s)\n                    </div>\n                </div>\n            </div>\n            \n            <div class=\"info-section\">\n                <h3>👤 Customer Information</h3>\n                <div class=\"info-grid\">\n                    <div class=\"info-item\">\n                        <strong>Name</strong>\n                        {{ $json.customerFullName }}\n                    </div>\n                    <div class=\"info-item\">\n                        <strong>Email</strong>\n                        {{ $json.customerEmail }}\n                    </div>\n                    <div class=\"info-item\">\n                        <strong>Phone</strong>\n                        {{ $json.customerPhone }}\n                    </div>\n                    <div class=\"info-item\">\n                        <strong>City</strong>\n                        {{ $json.customerCity }}\n                    </div>\n                </div>\n            </div>\n            \n            <div class=\"info-section\">\n                <h3>🛍️ Items Ordered</h3>\n                <div style=\"background: white; padding: 15px; border-radius: 5px;\">\n                    {{ $json.itemsList }}\n                </div>\n            </div>\n            \n            <div class=\"info-section\">\n                <h3>📍 Shipping Address</h3>\n                {{{ $json.shippingHtml }}}\n            </div>\n            \n            <div style=\"text-align: center; margin: 25px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;\">\n                <strong>⏰ Order Received:</strong> {{ $now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) }} IST<br>\n                <strong>📧 Customer Notification:</strong> Sent automatically\n            </div>\n        </div>\n    </div>\n</body>\n</html>"
+      },
+      "id": "send-admin-email",
+      "name": "Send Admin Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 320],
+      "credentials": {
+        "smtp": {
+          "id": "nuvante-smtp",
+          "name": "Nuvante SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "jsCode": "const data = items[0].json;\n\nconst logEntry = {\n  orderId: data.orderId,\n  customerEmail: data.customerEmail,\n  customerName: data.customerFullName,\n  orderAmount: data.formattedAmount,\n  timestamp: new Date().toISOString(),\n  emailsSent: {\n    customer: true,\n    admin: true\n  },\n  status: 'completed'\n};\n\nconsole.log('Email automation completed:', JSON.stringify(logEntry, null, 2));\n\nreturn {\n  ...data,\n  emailLog: logEntry,\n  message: 'Email automation completed successfully'\n};"
+      },
+      "id": "log-activity",
+      "name": "Log Email Activity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 250]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Order email automation completed successfully!\",\n  \"orderId\": \"{{ $json.orderId }}\",\n  \"customerEmail\": \"{{ $json.customerEmail }}\",\n  \"customerName\": \"{{ $json.customerFullName }}\",\n  \"orderAmount\": \"{{ $json.formattedAmount }}\",\n  \"emailsSent\": {\n    \"customer\": true,\n    \"admin\": true\n  },\n  \"timestamp\": \"{{ $now.toISOString() }}\",\n  \"webhookUrl\": \"POST /webhook/nuvante-order-success\"\n}"
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 250]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"Order validation failed\",\n  \"message\": \"Invalid order data. Please ensure success=true, orderId exists, and customer email is provided.\",\n  \"requiredFields\": {\n    \"success\": \"Must be true\",\n    \"orderId\": \"Must not be empty\",\n    \"customerEmail\": \"Must provide customerEmail, email, shippingAddress.email, or user.email\"\n  },\n  \"timestamp\": \"{{ $now.toISOString() }}\"\n}",
+        "responseStatusCode": 400
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 400]
+    }
+  ],
+  "connections": {
+    "Order Success Webhook": {
+      "main": [[{"node": "Validate Order Data", "type": "main", "index": 0}]]
+    },
+    "Validate Order Data": {
+      "main": [
+        [{"node": "Process Order Data", "type": "main", "index": 0}],
+        [{"node": "Error Response", "type": "main", "index": 0}]
+      ]
+    },
+    "Process Order Data": {
+      "main": [[
+        {"node": "Send Customer Email", "type": "main", "index": 0},
+        {"node": "Send Admin Email", "type": "main", "index": 0}
+      ]]
+    },
+    "Send Customer Email": {
+      "main": [[{"node": "Log Email Activity", "type": "main", "index": 0}]]
+    }, 
+    "Send Admin Email": {
+      "main": [[{"node": "Log Email Activity", "type": "main", "index": 0}]]
+    },
+    "Log Email Activity": {
+      "main": [[{"node": "Success Response", "type": "main", "index": 0}]]
+    }
+  },
+  "createdAt": "2024-12-19T15:30:00.000Z",
+  "updatedAt": "2024-12-19T15:30:00.000Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {"id": "nuvante-production", "name": "nuvante-production"},
+    {"id": "email-automation", "name": "email-automation"}
+  ],
+  "triggerCount": 1,
+  "versionId": "1"
+} 

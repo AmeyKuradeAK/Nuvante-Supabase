@@ -1,0 +1,166 @@
+{
+  "name": "Nuvante Production Email Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nuvante-order-success",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "Order Success Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.success }}",
+              "value2": "true"
+            },
+            {
+              "value1": "={{ $json.orderId }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.customerEmail || $json.email || $json.shippingAddress?.email || $json.user?.email }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "validate-order",
+      "name": "Validate Order Data",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "jsCode": "const data = items[0].json;\n\nfunction formatCurrency(amount) {\n  return new Intl.NumberFormat('en-IN', {\n    style: 'currency',\n    currency: 'INR',\n    minimumFractionDigits: 0\n  }).format(amount || 0);\n}\n\nfunction formatDate(dateString) {\n  try {\n    if (!dateString) return new Date().toLocaleDateString('en-IN');\n    return new Date(dateString).toLocaleDateString('en-IN', {\n      year: 'numeric', month: 'long', day: 'numeric'\n    });\n  } catch { return new Date().toLocaleDateString('en-IN'); }\n}\n\nconst customerEmail = data.customerEmail || data.email || data.shippingAddress?.email || data.user?.email;\nconst customerName = data.customerName || data.firstName || data.shippingAddress?.firstName || data.user?.firstName || 'Valued Customer';\nconst customerLastName = data.lastName || data.shippingAddress?.lastName || data.user?.lastName || '';\nconst customerFullName = `${customerName} ${customerLastName}`.trim();\nconst customerPhone = data.phone || data.shippingAddress?.phone || data.user?.phone || 'Not provided';\n\nlet itemsTableHtml = `<table style=\"width: 100%; border-collapse: collapse; margin: 15px 0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);\"><thead><tr style=\"background: linear-gradient(135deg, #DB4444 0%, #c73e3e 100%); color: white;\"><th style=\"padding: 15px; text-align: left; font-weight: 600;\">Product</th><th style=\"padding: 15px; text-align: center; font-weight: 600;\">Size</th><th style=\"padding: 15px; text-align: center; font-weight: 600;\">Quantity</th><th style=\"padding: 15px; text-align: center; font-weight: 600;\">Price</th></tr></thead><tbody>`;\n\nlet itemsList = '';\nlet totalItems = 0;\n\nif (data.items || data.itemDetails || data.products) {\n  const items = data.items || data.itemDetails || data.products;\n  if (Array.isArray(items)) {\n    items.forEach((item, index) => {\n      const bgColor = index % 2 === 0 ? '#ffffff' : '#f8f9fa';\n      const productName = item.name || item.productId || item.product || item.title || `Product ${index + 1}`;\n      const size = item.size || item.variant || 'N/A';\n      const quantity = item.quantity || item.qty || 1;\n      const price = item.price || item.amount || 0;\n      totalItems += quantity;\n      itemsTableHtml += `<tr style=\"background-color: ${bgColor};\"><td style=\"padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: 500;\">${productName}</td><td style=\"padding: 15px; border-bottom: 1px solid #dee2e6; text-align: center;\">${size}</td><td style=\"padding: 15px; border-bottom: 1px solid #dee2e6; text-align: center; font-weight: 600;\">${quantity}</td><td style=\"padding: 15px; border-bottom: 1px solid #dee2e6; text-align: center; font-weight: 600;\">${formatCurrency(price)}</td></tr>`;\n      itemsList += `${productName} (${size}) x${quantity}`;\n      if (index < items.length - 1) itemsList += ', ';\n    });\n  }\n} else {\n  itemsTableHtml += `<tr><td colspan=\"4\" style=\"padding: 20px; text-align: center; color: #6c757d; font-style: italic;\">No item details available</td></tr>`;\n  itemsList = 'Items information not available';\n  totalItems = data.totalItems || data.itemCount || 1;\n}\nitemsTableHtml += `</tbody></table>`;\n\nconst shippingAddress = data.shippingAddress || data.address || {};\nconst customerCity = shippingAddress.city || data.city || 'Not provided';\nconst shippingHtml = `<div style=\"background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 20px; border-radius: 12px; border-left: 5px solid #DB4444; margin: 20px 0;\"><h4 style=\"margin: 0 0 15px 0; color: #495057; font-size: 18px;\">📍 Shipping Address</h4><div style=\"background-color: white; padding: 15px; border-radius: 8px; line-height: 1.8; color: #495057;\"><strong style=\"color: #DB4444; font-size: 16px;\">${customerFullName}</strong><br>${shippingAddress.streetAddress || shippingAddress.address || shippingAddress.line1 || 'Address not provided'}<br>${shippingAddress.apartment || shippingAddress.line2 ? (shippingAddress.apartment || shippingAddress.line2) + '<br>' : ''}${customerCity} - ${shippingAddress.pin || shippingAddress.pincode || shippingAddress.postalCode || 'PIN'}<br><strong>📞 ${customerPhone}</strong></div></div>`;\n\nlet couponHtml = '';\nif (data.couponCode || data.appliedCoupon || data.discountCode) {\n  const couponCode = data.couponCode || data.appliedCoupon || data.discountCode;\n  const discount = data.discount || data.couponDiscount || data.discountAmount || 0;\n  couponHtml = `<div style=\"background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%); border: 2px solid #17a2b8; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: center;\"><h4 style=\"margin: 0 0 10px 0; color: #0c5460; font-size: 18px;\">🎉 Congratulations! Discount Applied</h4><p style=\"margin: 5px 0; color: #0c5460; font-size: 16px;\"><strong>Coupon Code:</strong> ${couponCode}</p><p style=\"margin: 5px 0; color: #0c5460; font-size: 16px;\"><strong>You Saved:</strong> ${formatCurrency(discount)}</p></div>`;\n}\n\nconst orderDate = formatDate(data.createdAt || data.timestamp || data.orderDate || data.date);\nconst deliveryDate = formatDate(data.estimatedDelivery || data.deliveryDate || data.expectedDelivery);\nconst paymentId = data.paymentId || data.razorpayPaymentId || data.transactionId || data.payment?.id || 'Processing';\n\nreturn {\n  ...data,\n  customerEmail, customerName, customerFullName, customerPhone, customerCity,\n  paymentId, orderDate, deliveryDate,\n  formattedAmount: formatCurrency(data.amount || data.total || data.totalAmount || 0),\n  itemsTableHtml, couponHtml, shippingHtml, itemsList,\n  itemCount: totalItems,\n  hasDiscount: !!(data.couponCode || data.appliedCoupon || data.discountCode),\n  processedAt: new Date().toISOString()\n};"
+      },
+      "id": "process-order-data",
+      "name": "Process Order Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 240]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_FROM_EMAIL }}",
+        "toEmail": "={{ $json.customerEmail }}",
+        "subject": "🎉 Order Confirmed #{{ $json.orderId }} - Thank you for choosing Nuvante!",
+        "emailFormat": "html",
+        "html": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Order Confirmation - Nuvante</title><style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; } .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; } .header { background: linear-gradient(135deg, #DB4444 0%, #c73e3e 100%); color: white; padding: 40px 20px; text-align: center; } .header h1 { font-size: 32px; margin-bottom: 10px; font-weight: 700; } .content { padding: 40px 30px; } .greeting { font-size: 24px; color: #333; margin-bottom: 20px; font-weight: 600; } .intro-text { font-size: 16px; color: #555; margin-bottom: 30px; line-height: 1.8; } .order-summary { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #DB4444; } .order-summary h3 { color: #DB4444; margin-bottom: 20px; font-size: 20px; font-weight: 600; } .order-detail { display: flex; justify-content: space-between; margin: 12px 0; padding: 8px 0; border-bottom: 1px solid #dee2e6; } .order-detail strong { color: #495057; font-weight: 600; } .total-amount { background: linear-gradient(135deg, #DB4444 0%, #c73e3e 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0; } .total-amount .amount { font-size: 32px; font-weight: bold; } .footer { background: linear-gradient(135deg, #343a40 0%, #495057 100%); color: white; padding: 30px 20px; text-align: center; } .footer a { color: #DB4444; text-decoration: none; font-weight: 600; }</style></head><body><div class=\"email-container\"><div class=\"header\"><h1>🎉 Order Confirmed!</h1><p>Thank you for shopping with Nuvante</p></div><div class=\"content\"><div class=\"greeting\">Hello {{ $json.customerName }}! 👋</div><p class=\"intro-text\">We're absolutely thrilled to confirm that your order has been successfully placed! Get ready for an amazing shopping experience with premium quality products delivered right to your doorstep. 🚀</p><div class=\"order-summary\"><h3>📋 Your Order Summary</h3><div class=\"order-detail\"><strong>Order ID:</strong><span>{{ $json.orderId }}</span></div><div class=\"order-detail\"><strong>Payment ID:</strong><span>{{ $json.paymentId }}</span></div><div class=\"order-detail\"><strong>Order Date:</strong><span>{{ $json.orderDate }}</span></div><div class=\"order-detail\"><strong>Total Items:</strong><span>{{ $json.itemCount }} item(s)</span></div></div><h4 style=\"color: #495057; margin: 25px 0 15px 0;\">🛍️ Your Items</h4>{{{ $json.itemsTableHtml }}}<div class=\"total-amount\"><div class=\"label\">Total Amount Paid</div><div class=\"amount\">{{ $json.formattedAmount }}</div></div>{{{ $json.couponHtml }}}{{{ $json.shippingHtml }}}</div><div class=\"footer\"><p>📧 Email: <a href=\"mailto:{{ $env.SUPPORT_EMAIL }}\">{{ $env.SUPPORT_EMAIL }}</a></p><p>🌐 Website: <a href=\"{{ $env.WEBSITE_URL }}\">{{ $env.WEBSITE_URL }}</a></p><p style=\"margin-top: 15px; font-size: 12px;\">© 2024 Nuvante. All rights reserved.</p></div></div></body></html>"
+      },
+      "id": "send-customer-email",
+      "name": "Send Customer Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 180],
+      "credentials": {
+        "smtp": {
+          "id": "nuvante-smtp",
+          "name": "Nuvante SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_FROM_EMAIL }}",
+        "toEmail": "={{ $env.ADMIN_EMAIL }}",
+        "subject": "🔔 NEW ORDER #{{ $json.orderId }} ({{ $json.formattedAmount }}) from {{ $json.customerFullName }}",
+        "emailFormat": "html",
+        "html": "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>New Order Alert</title><style>body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; } .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 0 15px rgba(0,0,0,0.1); } .header { background: linear-gradient(135deg, #DB4444, #c73e3e); color: white; padding: 25px; text-align: center; } .content { padding: 30px; } .amount { background: #DB4444; color: white; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0; } .amount .value { font-size: 28px; font-weight: bold; } .info-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #DB4444; } .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; } .info-item { background: white; padding: 15px; border-radius: 5px; } .info-item strong { color: #495057; display: block; margin-bottom: 5px; }</style></head><body><div class=\"container\"><div class=\"header\"><h1>📦 NEW ORDER RECEIVED</h1><p>Immediate action required</p></div><div class=\"content\"><div class=\"amount\"><div>Order Value</div><div class=\"value\">{{ $json.formattedAmount }}</div><div>Order #{{ $json.orderId }}</div></div><div class=\"info-section\"><h3>📋 Order Details</h3><div class=\"info-grid\"><div class=\"info-item\"><strong>Order ID</strong>{{ $json.orderId }}</div><div class=\"info-item\"><strong>Payment ID</strong>{{ $json.paymentId }}</div><div class=\"info-item\"><strong>Order Date</strong>{{ $json.orderDate }}</div><div class=\"info-item\"><strong>Items</strong>{{ $json.itemCount }} item(s)</div></div></div><div class=\"info-section\"><h3>👤 Customer Information</h3><div class=\"info-grid\"><div class=\"info-item\"><strong>Name</strong>{{ $json.customerFullName }}</div><div class=\"info-item\"><strong>Email</strong>{{ $json.customerEmail }}</div><div class=\"info-item\"><strong>Phone</strong>{{ $json.customerPhone }}</div><div class=\"info-item\"><strong>City</strong>{{ $json.customerCity }}</div></div></div><div class=\"info-section\"><h3>🛍️ Items Ordered</h3><div style=\"background: white; padding: 15px; border-radius: 5px;\">{{ $json.itemsList }}</div></div><div class=\"info-section\"><h3>📍 Shipping Address</h3>{{{ $json.shippingHtml }}}</div><div style=\"text-align: center; margin: 25px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;\"><strong>⏰ Order Received:</strong> {{ $now.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) }} IST<br><strong>📧 Customer Notification:</strong> Sent automatically</div></div></div></body></html>"
+      },
+      "id": "send-admin-email",
+      "name": "Send Admin Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [900, 320],
+      "credentials": {
+        "smtp": {
+          "id": "nuvante-smtp",
+          "name": "Nuvante SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "passThrough",
+        "jsCode": "const data = items[0].json;\nconst logEntry = {\n  orderId: data.orderId,\n  customerEmail: data.customerEmail,\n  customerName: data.customerFullName,\n  orderAmount: data.formattedAmount,\n  timestamp: new Date().toISOString(),\n  emailsSent: { customer: true, admin: true },\n  status: 'completed'\n};\nconsole.log('Email automation completed:', JSON.stringify(logEntry, null, 2));\nreturn { ...data, emailLog: logEntry, message: 'Email automation completed successfully' };"
+      },
+      "id": "log-activity",
+      "name": "Log Email Activity",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 250]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Order email automation completed successfully!\",\n  \"orderId\": \"{{ $json.orderId }}\",\n  \"customerEmail\": \"{{ $json.customerEmail }}\",\n  \"customerName\": \"{{ $json.customerFullName }}\",\n  \"orderAmount\": \"{{ $json.formattedAmount }}\",\n  \"emailsSent\": { \"customer\": true, \"admin\": true },\n  \"timestamp\": \"{{ $now.toISOString() }}\",\n  \"webhookUrl\": \"POST /webhook/nuvante-order-success\"\n}"
+      },
+      "id": "success-response",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 250]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"Order validation failed\",\n  \"message\": \"Invalid order data. Please ensure success=true, orderId exists, and customer email is provided.\",\n  \"requiredFields\": {\n    \"success\": \"Must be true\",\n    \"orderId\": \"Must not be empty\",\n    \"customerEmail\": \"Must provide customerEmail, email, shippingAddress.email, or user.email\"\n  },\n  \"timestamp\": \"{{ $now.toISOString() }}\"\n}",
+        "responseStatusCode": 400
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 400]
+    }
+  ],
+  "connections": {
+    "Order Success Webhook": {
+      "main": [[{"node": "Validate Order Data", "type": "main", "index": 0}]]
+    },
+    "Validate Order Data": {
+      "main": [
+        [{"node": "Process Order Data", "type": "main", "index": 0}],
+        [{"node": "Error Response", "type": "main", "index": 0}]
+      ]
+    },
+    "Process Order Data": {
+      "main": [[
+        {"node": "Send Customer Email", "type": "main", "index": 0},
+        {"node": "Send Admin Email", "type": "main", "index": 0}
+      ]]
+    },
+    "Send Customer Email": {
+      "main": [[{"node": "Log Email Activity", "type": "main", "index": 0}]]
+    }, 
+    "Send Admin Email": {
+      "main": [[{"node": "Log Email Activity", "type": "main", "index": 0}]]
+    },
+    "Log Email Activity": {
+      "main": [[{"node": "Success Response", "type": "main", "index": 0}]]
+    }
+  },
+  "createdAt": "2024-12-19T15:30:00.000Z",
+  "updatedAt": "2024-12-19T15:30:00.000Z",
+  "settings": { "executionOrder": "v1" },
+  "staticData": null,
+  "tags": [
+    {"id": "nuvante-production", "name": "nuvante-production"},
+    {"id": "email-automation", "name": "email-automation"}
+  ],
+  "triggerCount": 1,
+  "versionId": "1"
+} 

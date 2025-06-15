@@ -343,6 +343,45 @@ export async function POST(request: Request) {
       // Save with error handling - use atomic operation
       const savedClient = await client.save();
 
+      // 🚀 TRIGGER N8N EMAIL AUTOMATION
+      try {
+        const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL || 'https://your-n8n-instance.com/webhook/nuvante-order-webhook';
+        
+        // Send order data to n8n for email automation
+        const webhookResponse = await fetch(n8nWebhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            success: true,
+            orderId: orderData.orderId,
+            paymentId: orderData.paymentId,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            timestamp: orderWithMetadata.createdAt,
+            estimatedDeliveryDate: orderData.estimatedDeliveryDate,
+            itemDetails: orderData.itemDetails,
+            items: orderData.items,
+            shippingAddress: orderData.shippingAddress,
+            appliedCoupon: orderData.appliedCoupon,
+            couponDiscount: orderData.couponDiscount,
+            originalAmount: orderData.originalAmount,
+            userEmail: global_user_email,
+            source: 'nuvante-orders-api'
+          }),
+        });
+
+        if (!webhookResponse.ok) {
+          console.warn('N8N webhook failed:', await webhookResponse.text());
+        } else {
+          console.log('✅ N8N email automation triggered successfully');
+        }
+      } catch (webhookError) {
+        // Don't fail the order if email automation fails
+        console.warn('N8N webhook error (non-critical):', webhookError);
+      }
+
       return NextResponse.json({ 
         message: "Order added successfully",
         orderId: orderData.orderId,
