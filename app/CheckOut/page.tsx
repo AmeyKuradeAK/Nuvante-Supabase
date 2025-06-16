@@ -19,6 +19,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
+// EmailAutomation moved to server-side API route
 
 interface CartData {
   cart: string[];
@@ -416,6 +417,60 @@ const CheckoutContent = () => {
 
         // Clear cart after successful payment
         clearGlobalCart();
+
+        // Send order confirmation email via API
+        try {
+          console.log('📧 Sending order confirmation email...');
+          
+          // Format order items for email
+          const formattedItems = products.map((product) => {
+            const quantity = quantities[product._id] || 1;
+            const size = sizes[product._id] || '';
+            const price = product.productPrice || 'Price not available';
+            return `• ${product.productName}\n  Size: ${size} | Qty: ${quantity} | Price: ${price}`;
+          }).join('\n\n');
+
+          // Prepare email data
+          const emailData = {
+            orderId,
+            customerEmail: formData.email,
+            customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+            orderTotal: `₹${calculateTotal()}`,
+            orderItems: formattedItems,
+            shippingAddress: `${formData.firstName} ${formData.lastName}\n${formData.address}\n${formData.apartment ? formData.apartment + '\n' : ''}${formData.city}, ${formData.pin}\nPhone: ${formData.phone}`,
+            paymentMethod: 'Online Payment',
+            products: products.map(product => ({
+              productId: product._id,
+              name: product.productName,
+              size: sizes[product._id] || '',
+              quantity: quantities[product._id] || 1,
+              price: product.productPrice
+            }))
+          };
+
+          // Call email API
+          const emailResponse = await fetch('/api/send-order-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailData),
+          });
+
+          if (emailResponse.ok) {
+            const emailResult = await emailResponse.json();
+            if (emailResult.success) {
+              console.log('✅ Order confirmation email sent successfully');
+            } else {
+              console.error('❌ Order confirmation email failed:', emailResult.error);
+            }
+          } else {
+            console.error('❌ Email API call failed:', emailResponse.statusText);
+          }
+        } catch (emailError) {
+          console.error('❌ Email automation error:', emailError);
+          // Don't fail the entire order for email issues
+        }
 
         return true;
       } catch (error: any) {

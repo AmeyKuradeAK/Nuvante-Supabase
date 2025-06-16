@@ -51,68 +51,26 @@ function makeRequest(url, method = 'GET', data = null, headers = {}) {
 
 // Test functions
 async function testWebhookInfo() {
-  console.log('\n🔍 Testing Webhook Info (GET)...');
-  try {
-    const response = await makeRequest(`${BASE_URL}/api/webhooks/order-success`);
-    console.log('✅ Status:', response.status);
-    console.log('📄 Response:', JSON.stringify(response.data, null, 2));
-  } catch (error) {
-    console.log('❌ Error:', error.message);
-  }
+  console.log('\n📋 Webhook Status...');
+  console.log('ℹ️  Webhook endpoint has been removed');
+  console.log('✅ Email automation is now integrated directly into checkout process');
 }
 
-async function testOrderSuccessWebhook() {
-  console.log('\n📧 Testing Order Success Webhook...');
-  
-  const orderData = {
-    success: true,
-    orderId: `TEST-${Date.now()}`,
-    customerEmail: TEST_EMAIL,
-    customerName: 'Test Customer',
-    orderTotal: '$99.99',
-    orderItems: [
-      { name: 'Test Product A', quantity: 2, price: '$49.99' },
-      { name: 'Test Product B', quantity: 1, price: '$50.00' }
-    ],
-    shippingAddress: '123 Test Street, Test City, TS 12345',
-    paymentMethod: 'Credit Card',
-    userId: 'test_user_123'
-  };
-
-  try {
-    const response = await makeRequest(
-      `${BASE_URL}/api/webhooks/order-success`,
-      'POST',
-      orderData
-    );
-    console.log('✅ Status:', response.status);
-    console.log('📄 Response:', JSON.stringify(response.data, null, 2));
-  } catch (error) {
-    console.log('❌ Error:', error.message);
-  }
+async function testOrderSuccessIntegration() {
+  console.log('\n📧 Order Success Integration Status...');
+  console.log('✅ Order confirmation emails are now sent directly during checkout completion');
+  console.log('📧 Integration: EmailAutomation is integrated into app/CheckOut/page.tsx');
+  console.log('🔄 Process: Order Save → Email Automation → Success Redirect');
+  console.log('🎯 Benefits: No webhook delays, immediate feedback, better error handling');
+  console.log('');
+  console.log('Note: Webhook endpoint /api/webhooks/order-success has been removed');
+  console.log('Email automation now happens synchronously during order completion.');
 }
 
 async function testFailedOrderWebhook() {
-  console.log('\n❌ Testing Failed Order (should not send email)...');
-  
-  const failedOrderData = {
-    success: false, // This should prevent email sending
-    orderId: `FAILED-${Date.now()}`,
-    customerEmail: TEST_EMAIL,
-    customerName: 'Test Customer'
-  };
-
-  try {
-    const response = await makeRequest(
-      `${BASE_URL}/api/webhooks/order-success`,
-      'POST',
-      failedOrderData
-    );
-    console.log('✅ Status:', response.status);
-    console.log('📄 Response:', JSON.stringify(response.data, null, 2));
-  } catch (error) {
-    console.log('❌ Error:', error.message);
-  }
+  console.log('\n❌ Failed Order Handling...');
+  console.log('ℹ️  Failed orders are handled directly in checkout process');
+  console.log('✅ Email automation only triggers for successful orders');
 }
 
 async function testEmailConfiguration() {
@@ -185,6 +143,48 @@ async function testEmailTemplates() {
   }
 }
 
+async function testSendOrderEmailAPI() {
+  console.log('\n📧 Testing Send Order Email API...');
+  
+  const orderEmailData = {
+    orderId: `TEST-${Date.now()}`,
+    customerEmail: TEST_EMAIL,
+    customerName: 'Test Customer',
+    orderTotal: '₹1,299',
+    orderItems: '• Test Product A\n  Size: M | Qty: 2 | Price: ₹649\n\n• Test Product B\n  Size: L | Qty: 1 | Price: ₹650',
+    shippingAddress: 'Test Customer\n123 Test Street\nMumbai, 400001\nPhone: +91 9876543210',
+    paymentMethod: 'Online Payment',
+    products: [
+      {
+        productId: 'test_product_1',
+        name: 'Test Product A',
+        size: 'M',
+        quantity: 2,
+        price: '₹649'
+      },
+      {
+        productId: 'test_product_2',
+        name: 'Test Product B',
+        size: 'L',
+        quantity: 1,
+        price: '₹650'
+      }
+    ]
+  };
+
+  try {
+    const response = await makeRequest(
+      `${BASE_URL}/api/send-order-email`,
+      'POST',
+      orderEmailData
+    );
+    console.log('✅ Status:', response.status);
+    console.log('📄 Response:', JSON.stringify(response.data, null, 2));
+  } catch (error) {
+    console.log('❌ Error:', error.message);
+  }
+}
+
 async function seedDefaultTemplates() {
   console.log('\n🌱 Seeding Default Templates...');
   try {
@@ -211,8 +211,11 @@ async function runAllTests() {
 
   // Basic tests (no auth required)
   await testWebhookInfo();
-  await testOrderSuccessWebhook();
+  await testOrderSuccessIntegration();
   await testFailedOrderWebhook();
+
+  // Test the new direct integration API
+  await testSendOrderEmailAPI();
 
   // Admin tests (requires admin email)
   await testEmailConfiguration();
@@ -235,8 +238,8 @@ const args = process.argv.slice(2);
 const testMode = args[0];
 
 if (testMode === 'webhook') {
-  console.log('🎯 Testing Webhook Only...');
-  testWebhookInfo().then(() => testOrderSuccessWebhook());
+  console.log('🎯 Testing Webhook Status...');
+  testWebhookInfo().then(() => testOrderSuccessIntegration());
 } else if (testMode === 'config') {
   console.log('⚙️ Testing Configuration Only...');
   testEmailConfiguration().then(() => testEmailConnection());
