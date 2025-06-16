@@ -207,7 +207,7 @@ const getStunningTemplate = (content: string) => `
     <div class="email-wrapper">
         <div class="email-container">
             <div class="header">
-                <img src="https://nuvante.com/logo-white.png" alt="Nuvante Logo" class="logo">
+                <img src="https://nuvante.in/logo-white.png" alt="Nuvante Logo" class="logo">
                 <h1>Nuvante</h1>
                 <p>Fashion That Speaks Your Style</p>
             </div>
@@ -216,7 +216,7 @@ const getStunningTemplate = (content: string) => `
             </div>
             <div class="footer">
                 <p><strong>Nuvante - Premium Fashion</strong></p>
-                <p>📧 <a href="mailto:support@nuvante.in">support@nuvante.in</a> | 🌐 <a href="https://nuvante.com">nuvante.com</a></p>
+                <p>📧 <a href="mailto:support@nuvante.in">support@nuvante.in</a> | 🌐 <a href="https://nuvante.in">nuvante.in</a></p>
                 <p>&copy; {{current_year}} Nuvante. All rights reserved.</p>
             </div>
         </div>
@@ -318,7 +318,7 @@ Track: {{website_url}}/orders/{{order_id}}
       { name: 'product_price', description: 'Product price', example: '1499' },
       { name: 'product_cards_html', description: 'HTML for product cards', example: '<div>Product cards</div>' },
       { name: 'order_items_text', description: 'Plain text product list', example: '- Cotton Shirt (Size: M, Qty: 2) - ₹1499' },
-      { name: 'website_url', description: 'Website URL', example: 'https://nuvante.com' },
+      { name: 'website_url', description: 'Website URL', example: 'https://nuvante.in' },
       { name: 'support_email', description: 'Support email', example: 'support@nuvante.in' },
       { name: 'current_year', description: 'Current year', example: '2024' }
     ],
@@ -367,7 +367,7 @@ Start shopping: {{website_url}}
 © {{current_year}} Nuvante. All rights reserved.`,
     variables: [
       { name: 'customer_name', description: 'Customer full name', example: 'John Doe' },
-      { name: 'website_url', description: 'Website URL', example: 'https://nuvante.com' },
+      { name: 'website_url', description: 'Website URL', example: 'https://nuvante.in' },
       { name: 'current_year', description: 'Current year', example: '2024' }
     ],
     createdBy: 'system',
