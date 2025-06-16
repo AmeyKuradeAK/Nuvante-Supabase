@@ -82,10 +82,14 @@ export async function POST(request: NextRequest) {
         variables: {
           customer_name: 'Test User',
           order_id: 'TEST-' + Date.now(),
-          total_amount: '$99.99',
-          order_items: 'Test Product (Qty: 1) - $99.99',
-          shipping_address: '123 Test Street, Test City, TS 12345',
-          payment_method: 'Test Payment'
+          total_amount: '₹1,299',
+          order_items: '• Nuvante Classic T-Shirt\n  Size: M | Qty: 1 | Price: ₹899\n\n• Nuvante Premium Jeans\n  Size: L | Qty: 1 | Price: ₹1,599',
+          order_items_count: 2,
+          shipping_address: 'Test User\n123 Test Street, Apartment 4B\nMumbai, Maharashtra 400001\nPhone: +91 9876543210',
+          payment_method: 'Online Payment (UPI/Card)',
+          order_date: new Date().toLocaleDateString('en-IN'),
+          order_time: new Date().toLocaleTimeString('en-IN'),
+          estimated_delivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN')
         },
         metadata: {
           testEmail: true,

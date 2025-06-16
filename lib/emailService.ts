@@ -188,7 +188,7 @@ class EmailService {
         return { success: true };
       }
 
-      // Send real email
+      // Send real email with anti-spam headers
       const mailOptions = {
         from: {
           name: process.env.EMAIL_FROM_NAME || 'Nuvante',
@@ -199,8 +199,14 @@ class EmailService {
         html: htmlContent,
         text: plainTextContent,
         headers: {
-          'X-Mailer': 'Nuvante Email System',
-          'X-Priority': '3'
+          'X-Mailer': 'Nuvante Email System v2.0',
+          'X-Priority': '3', // Normal priority
+          'X-MSMail-Priority': 'Normal',
+          'Importance': 'Normal',
+          'List-Unsubscribe': `<mailto:${process.env.EMAIL_FROM || 'noreply@nuvante.com'}?subject=Unsubscribe>`,
+          'Message-ID': `<${Date.now()}.${Math.random().toString(36).substr(2, 9)}@nuvante.com>`,
+          'X-Entity-ID': 'nuvante-email-system',
+          'Content-Type': 'text/html; charset=UTF-8'
         }
       };
 
