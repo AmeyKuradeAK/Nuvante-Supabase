@@ -1953,6 +1953,30 @@ export default function EmailAutomationPage() {
                 onClick={async () => {
                   try {
                     const userEmail = user?.emailAddresses[0]?.emailAddress;
+                    const response = await fetch('/api/admin/email-config', { 
+                      headers: {
+                        'x-user-email': userEmail || '',
+                      }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                      alert(`🔧 EMAIL CONFIGURATION STATUS\n\n${result.diagnosis}\n\n📋 RECOMMENDATION:\n${result.recommendation}\n\n🔍 MISSING VARIABLES:\n${result.configuration.missingVariables.length > 0 ? result.configuration.missingVariables.join(', ') : 'None'}\n\n✅ PRESENT VARIABLES:\n${result.configuration.presentVariables.join(', ')}\n\n🧪 CONNECTION TEST: ${result.configuration.connectionTest.success ? 'PASSED' : 'FAILED' + (result.configuration.connectionTest.error ? ' - ' + result.configuration.connectionTest.error : '')}`);
+                    } else {
+                      alert(`❌ Error checking email config: ${result.error}`);
+                    }
+                  } catch (error) {
+                    alert('❌ Failed to check email configuration');
+                  }
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                🚨 Check Email Config
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const userEmail = user?.emailAddresses[0]?.emailAddress;
                     const response = await fetch('/api/admin/test-emails', { 
                       method: 'POST',
                       headers: {
