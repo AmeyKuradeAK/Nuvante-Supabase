@@ -318,16 +318,13 @@ Track: {{website_url}}/orders/{{order_id}}
       <p>Hi <strong>{{customer_name}}</strong>,</p>
       <p>Welcome to <strong>Nuvante</strong>! We're thrilled to have you join our fashion community. ✨</p>
       
-      <div class="highlight-box">
-        <h3 style="margin-bottom: 15px; color: #667eea;">🎁 Special Welcome Gift!</h3>
-        <p style="font-size: 18px; text-align: center; margin-bottom: 15px;">
-          <strong>Get 15% OFF your first order!</strong>
-        </p>
-        <div style="text-align: center; background: #667eea; color: white; padding: 15px; border-radius: 10px; font-size: 20px; font-weight: 700;">
-          WELCOME15
-        </div>
-        <p style="text-align: center; margin-top: 10px;">Valid for 7 days! 🛒</p>
-      </div>
+             <div class="highlight-box">
+         <h3 style="margin-bottom: 15px; color: #667eea;">🎉 Welcome to Premium Fashion!</h3>
+         <p>✨ <strong>Discover Latest Trends:</strong> Browse our exclusive collection</p>
+         <p>🚚 <strong>Free Shipping:</strong> On orders above ₹999</p>
+         <p>💝 <strong>Quality Guarantee:</strong> Premium fashion, always</p>
+         <p>🔔 <strong>Stay Updated:</strong> Be first to know about new arrivals</p>
+       </div>
 
       <div style="text-align: center;">
         <a href="{{website_url}}" class="btn">🛒 Start Shopping Now</a>
@@ -337,11 +334,15 @@ Track: {{website_url}}/orders/{{order_id}}
         Happy shopping! 💜✨
       </p>
     `),
-    plainTextContent: `🌟 Welcome to Nuvante!
+         plainTextContent: `🌟 Welcome to Nuvante!
 
 Hi {{customer_name}},
 
-Welcome! Get 15% OFF with code: WELCOME15
+Welcome to premium fashion! 
+
+✨ Discover Latest Trends
+🚚 Free Shipping on orders above ₹999
+💝 Quality Guarantee
 
 Start shopping: {{website_url}}
 
