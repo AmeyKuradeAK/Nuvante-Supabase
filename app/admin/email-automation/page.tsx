@@ -1730,6 +1730,7 @@ export default function EmailAutomationPage() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [logs, setLogs] = useState<EmailLog[]>([]);
   const [stats, setStats] = useState<EmailStats | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
   
   // UI states
   const [activeTab, setActiveTab] = useState<'templates' | 'logs' | 'stats'>('templates');
@@ -1774,29 +1775,47 @@ export default function EmailAutomationPage() {
 
   const fetchData = async () => {
     try {
+      setAnalyticsLoading(true);
       const userEmail = user?.emailAddresses[0]?.emailAddress;
       const headers = {
         'x-user-email': userEmail || '',
       };
 
-      // Fetch templates, logs, and stats in parallel
-      const [templatesRes, logsRes] = await Promise.all([
+      // Fetch templates, logs, and comprehensive analytics in parallel
+      const [templatesRes, logsRes, analyticsRes] = await Promise.all([
         fetch('/api/admin/email-templates', { headers }),
-        fetch('/api/admin/email-logs?includeStats=true&limit=20', { headers })
+        fetch('/api/admin/email-logs?limit=20', { headers }),
+        fetch('/api/admin/analytics', { headers })
       ]);
 
       if (templatesRes.ok) {
         const templatesData = await templatesRes.json();
         setTemplates(templatesData.templates || []);
+        console.log('✅ Templates loaded:', templatesData.templates?.length || 0);
       }
 
       if (logsRes.ok) {
         const logsData = await logsRes.json();
         setLogs(logsData.logs || []);
-        setStats(logsData.stats || null);
+        console.log('✅ Email logs loaded:', logsData.logs?.length || 0);
+      }
+
+      if (analyticsRes.ok) {
+        const analyticsData = await analyticsRes.json();
+        setStats(analyticsData.overallStats || null);
+        console.log('✅ Analytics data loaded:', {
+          totalEmails: analyticsData.overallStats?.total || 0,
+          sent: analyticsData.overallStats?.sent || 0,
+          failed: analyticsData.overallStats?.failed || 0,
+          pending: analyticsData.overallStats?.pending || 0
+        });
+      } else {
+        console.error('❌ Failed to load analytics:', await analyticsRes.text());
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('❌ Error fetching data:', error);
+    } finally {
+      setAnalyticsLoading(false);
     }
   };
 
@@ -1930,6 +1949,32 @@ export default function EmailAutomationPage() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const userEmail = user?.emailAddresses[0]?.emailAddress;
+                    const response = await fetch('/api/admin/test-emails', { 
+                      method: 'POST',
+                      headers: {
+                        'x-user-email': userEmail || '',
+                      }
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                      alert(`✅ ${result.message}\n\nGenerated ${result.count} sample emails:\n• ${result.breakdown.sent} sent\n• ${result.breakdown.failed} failed\n• ${result.breakdown.pending} pending\n\n${result.note}`);
+                      fetchData(); // Refresh all data
+                    } else {
+                      alert(`❌ Error: ${result.error}`);
+                    }
+                  } catch (error) {
+                    alert('❌ Failed to generate test data');
+                  }
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Generate Test Analytics Data
+              </button>
               <button
                 onClick={async () => {
                   try {
@@ -2157,7 +2202,7 @@ export default function EmailAutomationPage() {
         {activeTab === 'stats' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">📊 Advanced Email Analytics</h2>
+              <h2 className="text-2xl font-bold text-gray-900">📊 Real-Time Email Analytics</h2>
               <div className="flex gap-2">
                 <select className="px-3 py-2 border border-gray-300 rounded-md text-sm">
                   <option>Last 7 days</option>
@@ -2165,11 +2210,26 @@ export default function EmailAutomationPage() {
                   <option>Last 90 days</option>
                   <option>All time</option>
                 </select>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
-                  📥 Export Report
+                <button 
+                  onClick={fetchData}
+                  disabled={analyticsLoading}
+                  className={`px-4 py-2 rounded-md text-sm ${
+                    analyticsLoading 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  } text-white`}
+                >
+                  {analyticsLoading ? '🔄 Loading...' : '🔄 Refresh Data'}
                 </button>
               </div>
             </div>
+
+            {analyticsLoading && (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p className="text-gray-500">Loading real analytics data...</p>
+              </div>
+            )}
 
             {/* Key Performance Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -2178,7 +2238,7 @@ export default function EmailAutomationPage() {
                   <div>
                     <p className="text-green-100 text-sm font-medium">Delivery Rate</p>
                     <p className="text-3xl font-bold">{stats ? ((stats.sent / Math.max(stats.total, 1)) * 100).toFixed(1) : '0'}%</p>
-                    <p className="text-green-100 text-xs mt-1">+2.3% from last week</p>
+                    <p className="text-green-100 text-xs mt-1">{stats ? `${stats.sent} of ${stats.total} delivered` : 'No data yet'}</p>
                   </div>
                   <div className="bg-white/20 rounded-full p-3">
                     <CheckCircle className="w-8 h-8" />
@@ -2189,12 +2249,12 @@ export default function EmailAutomationPage() {
               <div className="bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100 text-sm font-medium">Open Rate</p>
-                    <p className="text-3xl font-bold">68.4%</p>
-                    <p className="text-blue-100 text-xs mt-1">Industry avg: 21.3%</p>
+                    <p className="text-blue-100 text-sm font-medium">Total Sent</p>
+                    <p className="text-3xl font-bold">{stats?.sent || 0}</p>
+                    <p className="text-blue-100 text-xs mt-1">{stats?.total ? 'Total emails processed' : 'No emails sent yet'}</p>
                   </div>
                   <div className="bg-white/20 rounded-full p-3">
-                    <Eye className="w-8 h-8" />
+                    <Mail className="w-8 h-8" />
                   </div>
                 </div>
               </div>
@@ -2202,12 +2262,12 @@ export default function EmailAutomationPage() {
               <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm font-medium">Click Rate</p>
-                    <p className="text-3xl font-bold">24.7%</p>
-                    <p className="text-purple-100 text-xs mt-1">+5.8% from last month</p>
+                    <p className="text-purple-100 text-sm font-medium">Failed Emails</p>
+                    <p className="text-3xl font-bold">{stats?.failed || 0}</p>
+                    <p className="text-purple-100 text-xs mt-1">{stats ? `${((stats.failed / Math.max(stats.total, 1)) * 100).toFixed(1)}% failure rate` : 'No failures'}</p>
                   </div>
                   <div className="bg-white/20 rounded-full p-3">
-                    <MousePointer className="w-8 h-8" />
+                    <XCircle className="w-8 h-8" />
                   </div>
                 </div>
               </div>
@@ -2215,12 +2275,12 @@ export default function EmailAutomationPage() {
               <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-xl p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-orange-100 text-sm font-medium">Revenue Impact</p>
-                    <p className="text-3xl font-bold">₹{stats ? (stats.sent * 847).toLocaleString() : '0'}</p>
-                    <p className="text-orange-100 text-xs mt-1">Avg ₹847 per email</p>
+                    <p className="text-orange-100 text-sm font-medium">Pending Emails</p>
+                    <p className="text-3xl font-bold">{stats?.pending || 0}</p>
+                    <p className="text-orange-100 text-xs mt-1">{stats?.pending ? 'Emails in queue' : 'All processed'}</p>
                   </div>
                   <div className="bg-white/20 rounded-full p-3">
-                    <TrendingUp className="w-8 h-8" />
+                    <Clock className="w-8 h-8" />
                   </div>
                 </div>
               </div>
@@ -2229,270 +2289,214 @@ export default function EmailAutomationPage() {
             {/* Email Performance Chart */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">📈 Email Performance Trends</h3>
+                <h3 className="text-lg font-semibold text-gray-900">📈 Email Performance Overview</h3>
                 <div className="flex gap-2 text-sm">
                   <div className="flex items-center gap-1">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-gray-600">Delivered</span>
+                    <span className="text-gray-600">Delivered ({stats?.sent || 0})</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="text-gray-600">Opened</span>
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="text-gray-600">Failed ({stats?.failed || 0})</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                    <span className="text-gray-600">Clicked</span>
+                    <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                    <span className="text-gray-600">Pending ({stats?.pending || 0})</span>
                   </div>
                 </div>
               </div>
-              <div className="h-80 bg-gray-50 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Interactive charts loading...</p>
-                  <p className="text-xs text-gray-400 mt-1">Chart.js integration recommended</p>
+              {stats && stats.total > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-700 font-medium">Email Status Distribution</span>
+                    <span className="text-gray-500 text-sm">{stats.total} total emails</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-4">
+                    <div className="flex h-4 rounded-full overflow-hidden">
+                      {stats.sent > 0 && (
+                        <div 
+                          className="bg-green-500 h-full" 
+                          style={{width: `${(stats.sent / stats.total) * 100}%`}}
+                          title={`${stats.sent} sent (${((stats.sent / stats.total) * 100).toFixed(1)}%)`}
+                        ></div>
+                      )}
+                      {stats.failed > 0 && (
+                        <div 
+                          className="bg-red-500 h-full" 
+                          style={{width: `${(stats.failed / stats.total) * 100}%`}}
+                          title={`${stats.failed} failed (${((stats.failed / stats.total) * 100).toFixed(1)}%)`}
+                        ></div>
+                      )}
+                      {stats.pending > 0 && (
+                        <div 
+                          className="bg-orange-500 h-full" 
+                          style={{width: `${(stats.pending / stats.total) * 100}%`}}
+                          title={`${stats.pending} pending (${((stats.pending / stats.total) * 100).toFixed(1)}%)`}
+                        ></div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600">{((stats.sent / stats.total) * 100).toFixed(1)}%</div>
+                      <div className="text-sm text-green-700">Success Rate</div>
+                    </div>
+                    <div className="bg-red-50 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-red-600">{((stats.failed / stats.total) * 100).toFixed(1)}%</div>
+                      <div className="text-sm text-red-700">Failure Rate</div>
+                    </div>
+                    <div className="bg-orange-50 p-3 rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600">{((stats.pending / stats.total) * 100).toFixed(1)}%</div>
+                      <div className="text-sm text-orange-700">Pending Rate</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="h-32 bg-gray-50 rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <Mail className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">No email data available yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Send some emails to see analytics</p>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Template Performance & Device Analytics */}
+            {/* Template Performance & Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Template Performance */}
+              {/* Template Performance from Real Data */}
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">🎨 Template Performance</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="font-medium text-gray-900">Order Confirmation</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-gray-900">94.2% delivery</div>
-                      <div className="text-xs text-gray-500">2,847 sent</div>
-                    </div>
+                {templates.length > 0 ? (
+                  <div className="space-y-4">
+                    {templates.map((template, index) => {
+                      const templateLogs = logs.filter(log => 
+                        log.templateId === template._id || 
+                        (log.templateId && typeof log.templateId === 'object' && log.templateId._id === template._id)
+                      );
+                      const sentCount = templateLogs.filter(log => log.status === 'sent').length;
+                      const totalCount = templateLogs.length;
+                      const deliveryRate = totalCount > 0 ? ((sentCount / totalCount) * 100).toFixed(1) : '0';
+                      
+                      const colors = ['bg-green-50', 'bg-blue-50', 'bg-purple-50', 'bg-yellow-50', 'bg-pink-50'];
+                      const dotColors = ['bg-green-500', 'bg-blue-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500'];
+                      
+                      return (
+                        <div key={template._id} className={`flex items-center justify-between p-3 ${colors[index % colors.length]} rounded-lg`}>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 ${dotColors[index % dotColors.length]} rounded-full`}></div>
+                            <span className="font-medium text-gray-900">{template.name}</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-semibold text-gray-900">{deliveryRate}% delivery</div>
+                            <div className="text-xs text-gray-500">{totalCount} sent</div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="font-medium text-gray-900">Welcome Email</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-gray-900">89.7% delivery</div>
-                      <div className="text-xs text-gray-500">1,234 sent</div>
-                    </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Edit className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">No templates created yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Create templates to see performance data</p>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                      <span className="font-medium text-gray-900">Order Shipped</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-gray-900">96.8% delivery</div>
-                      <div className="text-xs text-gray-500">1,856 sent</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                      <span className="font-medium text-gray-900">Newsletter</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-semibold text-gray-900">82.3% delivery</div>
-                      <div className="text-xs text-gray-500">5,642 sent</div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
 
-              {/* Device & Client Analytics */}
+              {/* Recent Activity from Real Logs */}
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 Device & Client Analytics</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700">📱 Mobile</span>
-                      <span className="text-sm font-semibold text-gray-900">67.3%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full" style={{width: '67.3%'}}></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700">💻 Desktop</span>
-                      <span className="text-sm font-semibold text-gray-900">24.8%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" style={{width: '24.8%'}}></div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-gray-700">📧 Webmail</span>
-                      <span className="text-sm font-semibold text-gray-900">7.9%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full" style={{width: '7.9%'}}></div>
-                    </div>
-                  </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">🔄 Recent Activity</h3>
+                {logs.length > 0 ? (
+                  <div className="space-y-4">
+                    {logs.slice(0, 5).map((log) => {
+                      const getActivityIcon = (status: string) => {
+                        switch (status) {
+                          case 'sent': return 'bg-green-500';
+                          case 'failed': return 'bg-red-500';
+                          case 'pending': return 'bg-orange-500 animate-pulse';
+                          default: return 'bg-gray-500';
+                        }
+                      };
 
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Top Email Clients</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">📧 Gmail</span>
-                        <span className="font-medium">42.1%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">📱 Apple Mail</span>
-                        <span className="font-medium">28.6%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">📩 Outlook</span>
-                        <span className="font-medium">15.3%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">🌐 Yahoo Mail</span>
-                        <span className="font-medium">8.7%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">⚡ Others</span>
-                        <span className="font-medium">5.3%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                      const getActivityText = (log: any) => {
+                        const templateName = log.templateId?.name || 'Email';
+                        switch (log.status) {
+                          case 'sent': return `${templateName} sent successfully`;
+                          case 'failed': return `${templateName} delivery failed`;
+                          case 'pending': return `${templateName} queued for sending`;
+                          default: return `${templateName} processed`;
+                        }
+                      };
 
-            {/* Engagement Heatmap & Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Engagement Heatmap */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">🔥 Engagement Heatmap</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-xs text-gray-500 mb-2">
-                    <span>Time of Day</span>
-                    <span>Engagement Rate</span>
+                      return (
+                        <div key={log._id} className="flex items-start gap-3">
+                          <div className={`w-2 h-2 ${getActivityIcon(log.status)} rounded-full mt-2`}></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{getActivityText(log)}</p>
+                            <p className="text-xs text-gray-500">
+                              {log.recipientEmail} • {new Date(log.createdAt).toLocaleDateString()} {new Date(log.createdAt).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  {[
-                    {time: '6 AM', rate: 45, color: 'bg-yellow-400'},
-                    {time: '9 AM', rate: 89, color: 'bg-green-500'},
-                    {time: '12 PM', rate: 67, color: 'bg-blue-500'},
-                    {time: '3 PM', rate: 92, color: 'bg-emerald-500'},
-                    {time: '6 PM', rate: 78, color: 'bg-purple-500'},
-                    {time: '9 PM', rate: 34, color: 'bg-orange-400'},
-                  ].map((slot) => (
-                    <div key={slot.time} className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-gray-700 w-12">{slot.time}</span>
-                      <div className="flex-1 bg-gray-200 rounded-full h-3">
-                        <div 
-                          className={`${slot.color} h-3 rounded-full transition-all duration-500`}
-                          style={{width: `${slot.rate}%`}}
-                        ></div>
-                      </div>
-                      <span className="text-sm font-semibold text-gray-900 w-10">{slot.rate}%</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>💡 Insight:</strong> Peak engagement at 3 PM. Consider scheduling campaigns around this time.
-                  </p>
-                </div>
-              </div>
-
-              {/* Recent Activity Feed */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">🔄 Real-time Activity</h3>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2 animate-pulse"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Order confirmation sent</p>
-                      <p className="text-xs text-gray-500">customer@example.com • 2 minutes ago</p>
-                    </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">No recent activity</p>
+                    <p className="text-xs text-gray-400 mt-1">Email activity will appear here</p>
                   </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Welcome email opened</p>
-                      <p className="text-xs text-gray-500">newuser@example.com • 5 minutes ago</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Template updated</p>
-                      <p className="text-xs text-gray-500">Order Confirmation • 12 minutes ago</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Bulk email campaign completed</p>
-                      <p className="text-xs text-gray-500">Newsletter • 1 hour ago</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Email delivery failed</p>
-                      <p className="text-xs text-gray-500">invalid@domain.com • 2 hours ago</p>
-                    </div>
-                  </div>
-                </div>
+                )}
                 
-                <div className="mt-4">
-                  <button className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium">
-                    View Full Activity Log →
-                  </button>
-                </div>
+                {logs.length > 5 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <button 
+                      onClick={() => setActiveTab('logs')}
+                      className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      View All Activity ({logs.length} total) →
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Action Items & Recommendations */}
+            {/* Quick Actions & Status */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
               <div className="flex items-center gap-3 mb-4">
-                <Lightbulb className="w-6 h-6" />
-                <h3 className="text-lg font-semibold">🚀 AI-Powered Recommendations</h3>
+                <TrendingUp className="w-6 h-6" />
+                <h3 className="text-lg font-semibold">📊 System Status & Quick Actions</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-white/10 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="font-medium">Optimize Send Times</span>
+                    <CheckCircle className="w-4 h-4" />
+                    <span className="font-medium">Email System</span>
                   </div>
                   <p className="text-sm text-blue-100">
-                    Send welcome emails at 3 PM for 15% higher engagement
+                    {stats && stats.total > 0 ? `${stats.total} emails processed` : 'Ready to send emails'}
                   </p>
                 </div>
                 
                 <div className="bg-white/10 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Target className="w-4 h-4" />
-                    <span className="font-medium">Subject Line A/B Test</span>
+                    <Edit className="w-4 h-4" />
+                    <span className="font-medium">Templates</span>
                   </div>
                   <p className="text-sm text-blue-100">
-                    Test emoji vs text-only subjects for order confirmations
+                    {templates.length} template{templates.length !== 1 ? 's' : ''} configured
                   </p>
                 </div>
                 
                 <div className="bg-white/10 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Zap className="w-4 h-4" />
-                    <span className="font-medium">Mobile Optimization</span>
+                    <BarChart3 className="w-4 h-4" />
+                    <span className="font-medium">Success Rate</span>
                   </div>
                   <p className="text-sm text-blue-100">
-                    67% open on mobile - optimize CTA button sizing
+                    {stats && stats.total > 0 ? `${((stats.sent / stats.total) * 100).toFixed(1)}% delivery rate` : 'No data yet'}
                   </p>
                 </div>
               </div>
