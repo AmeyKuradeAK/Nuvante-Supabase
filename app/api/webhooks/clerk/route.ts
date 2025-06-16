@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
 import clientModel from "@/models/Clients";
 import connect from "@/db";
+import EmailService from "@/lib/emailService";
 
 // This is the webhook secret from your Clerk dashboard
 const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
@@ -98,9 +99,45 @@ export async function POST(req: NextRequest) {
 
       const savedClient = await newClient.save();
 
+      // 🎉 AUTOMATICALLY SEND WELCOME EMAIL 🎉
+      console.log('🎉 Sending automated welcome email to new user:', emailAddress);
+      
+      try {
+        const emailService = EmailService.getInstance();
+        const welcomeEmailResult = await emailService.sendEmail({
+          templateName: 'welcome',
+          recipientEmail: emailAddress,
+          recipientName: `${firstName || 'Valued'} ${lastName || 'Customer'}`,
+          variables: {
+            customer_name: `${firstName || 'Valued'} ${lastName || 'Customer'}`,
+            website_url: process.env.NEXT_PUBLIC_SITE_URL || 'https://nuvante.com',
+            current_year: new Date().getFullYear().toString()
+          },
+          userId: savedClient._id.toString(),
+          metadata: {
+            trigger: 'user_signup',
+            clerkId: id,
+            timestamp: new Date().toISOString()
+          }
+        });
+
+        if (welcomeEmailResult.success) {
+          console.log('✅ Welcome email sent successfully!', { 
+            logId: welcomeEmailResult.logId, 
+            email: emailAddress 
+          });
+        } else {
+          console.error('❌ Failed to send welcome email:', welcomeEmailResult.error);
+        }
+      } catch (emailError: any) {
+        console.error('❌ Welcome email error:', emailError.message);
+        // Don't fail the user creation if email fails
+      }
+
       return NextResponse.json({ 
-        message: "User profile created successfully",
-        userId: savedClient._id 
+        message: "✅ User profile created and welcome email sent!",
+        userId: savedClient._id,
+        welcomeEmailSent: true
       }, { status: 200 });
 
     } catch (error: any) {
