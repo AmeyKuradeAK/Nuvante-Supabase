@@ -301,11 +301,29 @@ Track: {{website_url}}/orders/{{order_id}}
 
 © {{current_year}} Nuvante. All rights reserved.`,
     variables: [
-      'customer_name', 'order_id', 'order_date', 'order_total', 'order_subtotal', 'shipping_cost',
-      'payment_method', 'shipping_address', 'customer_phone', 'tracking_number', 'shipping_carrier',
-      'product_name', 'product_size', 'product_qty', 'product_price', 
-      'product_cards_html', 'order_items_text', 'website_url', 'support_email', 'current_year'
+      { name: 'customer_name', description: 'Customer full name', example: 'John Doe' },
+      { name: 'order_id', description: 'Order ID/number', example: 'ORD-12345' },
+      { name: 'order_date', description: 'Date when order was placed', example: '15/12/2024' },
+      { name: 'order_total', description: 'Total order amount', example: '2999' },
+      { name: 'order_subtotal', description: 'Subtotal before shipping', example: '2949' },
+      { name: 'shipping_cost', description: 'Shipping charges', example: '50' },
+      { name: 'payment_method', description: 'Payment method used', example: 'Online Payment' },
+      { name: 'shipping_address', description: 'Delivery address', example: '123 Street, City' },
+      { name: 'customer_phone', description: 'Customer phone number', example: '+91 9876543210' },
+      { name: 'tracking_number', description: 'Shipment tracking number', example: 'TRK123456' },
+      { name: 'shipping_carrier', description: 'Shipping company', example: 'BlueDart' },
+      { name: 'product_name', description: 'Primary product name', example: 'Cotton Shirt' },
+      { name: 'product_size', description: 'Product size', example: 'M' },
+      { name: 'product_qty', description: 'Product quantity', example: '2' },
+      { name: 'product_price', description: 'Product price', example: '1499' },
+      { name: 'product_cards_html', description: 'HTML for product cards', example: '<div>Product cards</div>' },
+      { name: 'order_items_text', description: 'Plain text product list', example: '- Cotton Shirt (Size: M, Qty: 2) - ₹1499' },
+      { name: 'website_url', description: 'Website URL', example: 'https://nuvante.com' },
+      { name: 'support_email', description: 'Support email', example: 'support@nuvante.in' },
+      { name: 'current_year', description: 'Current year', example: '2024' }
     ],
+    createdBy: 'system',
+    lastEditedBy: 'system',
     isActive: true
   },
   {
@@ -318,13 +336,13 @@ Track: {{website_url}}/orders/{{order_id}}
       <p>Hi <strong>{{customer_name}}</strong>,</p>
       <p>Welcome to <strong>Nuvante</strong>! We're thrilled to have you join our fashion community. ✨</p>
       
-             <div class="highlight-box">
-         <h3 style="margin-bottom: 15px; color: #667eea;">🎉 Welcome to Premium Fashion!</h3>
-         <p>✨ <strong>Discover Latest Trends:</strong> Browse our exclusive collection</p>
-         <p>🚚 <strong>Free Shipping:</strong> On orders above ₹999</p>
-         <p>💝 <strong>Quality Guarantee:</strong> Premium fashion, always</p>
-         <p>🔔 <strong>Stay Updated:</strong> Be first to know about new arrivals</p>
-       </div>
+      <div class="highlight-box">
+        <h3 style="margin-bottom: 15px; color: #667eea;">🎉 Welcome to Premium Fashion!</h3>
+        <p>✨ <strong>Discover Latest Trends:</strong> Browse our exclusive collection</p>
+        <p>🚚 <strong>Free Shipping:</strong> On orders above ₹999</p>
+        <p>💝 <strong>Quality Guarantee:</strong> Premium fashion, always</p>
+        <p>🔔 <strong>Stay Updated:</strong> Be first to know about new arrivals</p>
+      </div>
 
       <div style="text-align: center;">
         <a href="{{website_url}}" class="btn">🛒 Start Shopping Now</a>
@@ -334,7 +352,7 @@ Track: {{website_url}}/orders/{{order_id}}
         Happy shopping! 💜✨
       </p>
     `),
-         plainTextContent: `🌟 Welcome to Nuvante!
+    plainTextContent: `🌟 Welcome to Nuvante!
 
 Hi {{customer_name}},
 
@@ -347,7 +365,13 @@ Welcome to premium fashion!
 Start shopping: {{website_url}}
 
 © {{current_year}} Nuvante. All rights reserved.`,
-    variables: ['customer_name', 'website_url', 'current_year'],
+    variables: [
+      { name: 'customer_name', description: 'Customer full name', example: 'John Doe' },
+      { name: 'website_url', description: 'Website URL', example: 'https://nuvante.com' },
+      { name: 'current_year', description: 'Current year', example: '2024' }
+    ],
+    createdBy: 'system',
+    lastEditedBy: 'system',
     isActive: true
   }
 ];
