@@ -1,241 +1,205 @@
 import EmailService from './emailService';
 
-interface AutomationTriggerOptions {
-  event: 'order_confirmation' | 'order_shipped' | 'order_delivered' | 'welcome' | 'password_reset';
-  recipientEmail: string;
-  recipientName?: string;
-  variables?: Record<string, any>;
-  orderId?: string;
+interface EmailVariables {
+  [key: string]: string | number | boolean;
+}
+
+interface OrderConfirmationData {
+  orderId: string;
+  customerEmail: string;
+  customerName?: string;
+  orderTotal?: string;
+  orderItems?: any;
+  shippingAddress?: any;
+  paymentMethod?: string;
   userId?: string;
-  metadata?: any;
 }
 
 class EmailAutomation {
-  private static instance: EmailAutomation;
   private emailService: EmailService;
-  
-  private constructor() {
+
+  constructor() {
     this.emailService = EmailService.getInstance();
   }
-  
-  static getInstance(): EmailAutomation {
-    if (!EmailAutomation.instance) {
-      EmailAutomation.instance = new EmailAutomation();
-    }
-    return EmailAutomation.instance;
-  }
 
-  // Main automation trigger method
-  async trigger(options: AutomationTriggerOptions): Promise<{ success: boolean; error?: string; logId?: string }> {
+  // Send order confirmation email with enhanced product details
+  async sendOrderConfirmation(
+    customerEmail: string,
+    customerName: string,
+    variables: EmailVariables,
+    orderId?: string,
+    userId?: string
+  ) {
     try {
-      console.log(`🤖 Email automation triggered for: ${options.event}`);
-      
-      // Map events to template names
-      const templateMap: Record<string, string> = {
-        'order_confirmation': 'Order Confirmation',
-        'order_shipped': 'Order Shipped',
-        'order_delivered': 'Order Delivered',
-        'welcome': 'Welcome Email',
-        'password_reset': 'Password Reset'
-      };
-
-      const templateName = templateMap[options.event];
-      if (!templateName) {
-        throw new Error(`No template mapping found for event: ${options.event}`);
-      }
-
-      // Send email using the service
       const result = await this.emailService.sendEmail({
-        templateName,
-        recipientEmail: options.recipientEmail,
-        recipientName: options.recipientName,
-        variables: options.variables,
-        orderId: options.orderId,
-        userId: options.userId,
+        templateName: 'Order Confirmation',
+        recipientEmail: customerEmail,
+        recipientName: customerName,
+        variables,
+        orderId,
+        userId,
         metadata: {
-          ...options.metadata,
-          automationEvent: options.event,
-          triggeredAt: new Date().toISOString()
+          source: 'webhook',
+          emailType: 'order_confirmation',
+          timestamp: new Date().toISOString()
         }
       });
 
-      console.log(`📧 Email automation result for ${options.event}:`, result);
+      console.log('✅ Order confirmation email sent:', {
+        success: result.success,
+        email: customerEmail,
+        orderId,
+        error: result.error
+      });
+
       return result;
-      
     } catch (error: any) {
-      console.error('Email automation error:', error);
+      console.error('❌ Order confirmation email failed:', error);
       return {
         success: false,
-        error: error.message || 'Unknown automation error'
+        error: error.message || 'Unknown error'
       };
     }
   }
 
-  // Specific automation methods for common events
-  async sendOrderConfirmation(orderData: {
-    orderId: string;
-    customerEmail: string;
-    customerName?: string;
-    orderTotal?: string;
-    orderItems?: Array<{ name: string; quantity: number; price: string }>;
-    shippingAddress?: string;
-    paymentMethod?: string;
-    userId?: string;
-  }): Promise<{ success: boolean; error?: string; logId?: string }> {
-    return this.trigger({
-      event: 'order_confirmation',
-      recipientEmail: orderData.customerEmail,
-      recipientName: orderData.customerName,
-      orderId: orderData.orderId,
-      userId: orderData.userId,
-      variables: {
-        customer_name: orderData.customerName || 'Valued Customer',
-        order_id: orderData.orderId,
-        total_amount: orderData.orderTotal || 'N/A',
-        order_items: orderData.orderItems?.map(item => 
-          `${item.name} (Qty: ${item.quantity}) - ${item.price}`
-        ).join('\n') || 'Order details processing...',
-        shipping_address: orderData.shippingAddress || 'Address on file',
-        payment_method: orderData.paymentMethod || 'Payment processed'
-      },
-      metadata: {
-        orderValue: orderData.orderTotal,
-        itemCount: orderData.orderItems?.length || 0
-      }
-    });
+  // Legacy method for backward compatibility
+  async sendOrderConfirmationLegacy(orderData: OrderConfirmationData) {
+    console.log('⚠️  Using legacy order confirmation method. Consider updating to new format.');
+    
+    const variables: EmailVariables = {
+      customer_name: orderData.customerName || 'Valued Customer',
+      order_id: orderData.orderId,
+      total_amount: orderData.orderTotal || 'Amount not specified',
+      payment_method: orderData.paymentMethod || 'Payment method not specified',
+      shipping_address: typeof orderData.shippingAddress === 'string' 
+        ? orderData.shippingAddress 
+        : 'Shipping address not provided',
+      order_items: Array.isArray(orderData.orderItems)
+        ? orderData.orderItems.map(item => `${item.name} (Qty: ${item.quantity}) - ${item.price}`).join('\n')
+        : orderData.orderItems || 'Order items not specified'
+    };
+
+    return this.sendOrderConfirmation(
+      orderData.customerEmail,
+      orderData.customerName || 'Valued Customer',
+      variables,
+      orderData.orderId,
+      orderData.userId
+    );
   }
 
-  async sendWelcomeEmail(userData: {
-    email: string;
-    name?: string;
-    userId?: string;
-  }): Promise<{ success: boolean; error?: string; logId?: string }> {
-    return this.trigger({
-      event: 'welcome',
-      recipientEmail: userData.email,
-      recipientName: userData.name,
-      userId: userData.userId,
-      variables: {
-        customer_name: userData.name || 'New User',
-        welcome_message: 'Welcome to Nuvante! We\'re excited to have you on board.',
-        getting_started_url: `${process.env.NEXT_PUBLIC_SITE_URL}/welcome`
-      }
-    });
-  }
+  // Send welcome email
+  async sendWelcomeEmail(customerEmail: string, customerName: string, variables: EmailVariables = {}) {
+    try {
+      const welcomeVariables = {
+        customer_name: customerName,
+        welcome_message: 'Thank you for joining Nuvante! We\'re excited to have you as part of our community.',
+        getting_started_url: `${process.env.NEXT_PUBLIC_SITE_URL}/welcome`,
+        ...variables
+      };
 
-  async sendPasswordResetEmail(userData: {
-    email: string;
-    name?: string;
-    resetToken: string;
-    userId?: string;
-  }): Promise<{ success: boolean; error?: string; logId?: string }> {
-    return this.trigger({
-      event: 'password_reset',
-      recipientEmail: userData.email,
-      recipientName: userData.name,
-      userId: userData.userId,
-      variables: {
-        customer_name: userData.name || 'User',
-        reset_link: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password?token=${userData.resetToken}`,
-        reset_token: userData.resetToken,
-        expiry_time: '24 hours'
-      }
-    });
-  }
-
-  async sendOrderShippedEmail(orderData: {
-    orderId: string;
-    customerEmail: string;
-    customerName?: string;
-    trackingNumber?: string;
-    carrierName?: string;
-    estimatedDelivery?: string;
-    userId?: string;
-  }): Promise<{ success: boolean; error?: string; logId?: string }> {
-    return this.trigger({
-      event: 'order_shipped',
-      recipientEmail: orderData.customerEmail,
-      recipientName: orderData.customerName,
-      orderId: orderData.orderId,
-      userId: orderData.userId,
-      variables: {
-        customer_name: orderData.customerName || 'Valued Customer',
-        order_id: orderData.orderId,
-        tracking_number: orderData.trackingNumber || 'Tracking info will be available soon',
-        carrier_name: orderData.carrierName || 'Our shipping partner',
-        estimated_delivery: orderData.estimatedDelivery || '3-5 business days',
-        tracking_url: orderData.trackingNumber ? 
-          `https://track.example.com/${orderData.trackingNumber}` : '#'
-      }
-    });
-  }
-
-  async sendOrderDeliveredEmail(orderData: {
-    orderId: string;
-    customerEmail: string;
-    customerName?: string;
-    deliveredAt?: string;
-    userId?: string;
-  }): Promise<{ success: boolean; error?: string; logId?: string }> {
-    return this.trigger({
-      event: 'order_delivered',
-      recipientEmail: orderData.customerEmail,
-      recipientName: orderData.customerName,
-      orderId: orderData.orderId,
-      userId: orderData.userId,
-      variables: {
-        customer_name: orderData.customerName || 'Valued Customer',
-        order_id: orderData.orderId,
-        delivered_at: orderData.deliveredAt || new Date().toLocaleDateString(),
-        feedback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/feedback?order=${orderData.orderId}`,
-        support_url: `${process.env.NEXT_PUBLIC_SITE_URL}/support`
-      }
-    });
-  }
-
-  // Bulk automation for multiple recipients
-  async sendBulkAutomation(
-    event: AutomationTriggerOptions['event'],
-    recipients: Array<{
-      email: string;
-      name?: string;
-      variables?: Record<string, any>;
-      orderId?: string;
-      userId?: string;
-    }>
-  ): Promise<{ success: number; failed: number; results: Array<{ email: string; success: boolean; error?: string }> }> {
-    const results = [];
-    let successCount = 0;
-    let failedCount = 0;
-
-    for (const recipient of recipients) {
-      const result = await this.trigger({
-        event,
-        recipientEmail: recipient.email,
-        recipientName: recipient.name,
-        variables: recipient.variables,
-        orderId: recipient.orderId,
-        userId: recipient.userId
+      const result = await this.emailService.sendEmail({
+        templateName: 'Welcome Email',
+        recipientEmail: customerEmail,
+        recipientName: customerName,
+        variables: welcomeVariables,
+        metadata: {
+          emailType: 'welcome',
+          timestamp: new Date().toISOString()
+        }
       });
 
-      if (result.success) {
-        successCount++;
-      } else {
-        failedCount++;
-      }
-
-      results.push({
-        email: recipient.email,
+      console.log('✅ Welcome email sent:', {
         success: result.success,
+        email: customerEmail,
         error: result.error
       });
-    }
 
-    return {
-      success: successCount,
-      failed: failedCount,
-      results
-    };
+      return result;
+    } catch (error: any) {
+      console.error('❌ Welcome email failed:', error);
+      return {
+        success: false,
+        error: error.message || 'Unknown error'
+      };
+    }
+  }
+
+  // Send shipping notification
+  async sendShippingNotification(
+    customerEmail: string, 
+    customerName: string, 
+    variables: EmailVariables
+  ) {
+    try {
+      const result = await this.emailService.sendEmail({
+        templateName: 'Order Shipped',
+        recipientEmail: customerEmail,
+        recipientName: customerName,
+        variables,
+        orderId: variables.order_id as string,
+        metadata: {
+          emailType: 'shipping_notification',
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      console.log('✅ Shipping notification sent:', {
+        success: result.success,
+        email: customerEmail,
+        orderId: variables.order_id,
+        error: result.error
+      });
+
+      return result;
+    } catch (error: any) {
+      console.error('❌ Shipping notification failed:', error);
+      return {
+        success: false,
+        error: error.message || 'Unknown error'
+      };
+    }
+  }
+
+  // Send delivery confirmation
+  async sendDeliveryConfirmation(
+    customerEmail: string, 
+    customerName: string, 
+    variables: EmailVariables
+  ) {
+    try {
+      const result = await this.emailService.sendEmail({
+        templateName: 'Order Delivered',
+        recipientEmail: customerEmail,
+        recipientName: customerName,
+        variables,
+        orderId: variables.order_id as string,
+        metadata: {
+          emailType: 'delivery_confirmation',
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      console.log('✅ Delivery confirmation sent:', {
+        success: result.success,
+        email: customerEmail,
+        orderId: variables.order_id,
+        error: result.error
+      });
+
+      return result;
+    } catch (error: any) {
+      console.error('❌ Delivery confirmation failed:', error);
+      return {
+        success: false,
+        error: error.message || 'Unknown error'
+      };
+    }
+  }
+
+  // Static method for backward compatibility
+  static getInstance(): EmailAutomation {
+    return new EmailAutomation();
   }
 }
 

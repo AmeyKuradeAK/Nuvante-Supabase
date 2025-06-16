@@ -198,9 +198,111 @@ const TemplateModal = ({
     isActive: true,
     variables: [] as Array<{ name: string; description: string; example: string }>
   });
-  const [templateMode, setTemplateMode] = useState<'simple' | 'advanced'>('simple');
+  const [templateMode, setTemplateMode] = useState<'simple' | 'advanced' | 'preset'>('preset');
+  const [selectedPreset, setSelectedPreset] = useState<string>('order_confirmation');
   const [saving, setSaving] = useState(false);
   const [newVariable, setNewVariable] = useState({ name: '', description: '', example: '' });
+
+  // Preset templates with automatic product details
+  const presetTemplates = {
+    order_confirmation: {
+      name: 'Order Confirmation',
+      subject: 'Order Confirmed - {{order_id}} 🎉',
+      templateType: 'order_confirmation',
+      plainTextContent: `Hello {{customer_name}},
+
+🎉 Thank you for your order! We're excited to get your items to you.
+
+📋 ORDER DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Order ID: {{order_id}}
+Order Date: {{order_date}} at {{order_time}}
+Total Amount: {{total_amount}}
+Payment Method: {{payment_method}}
+Estimated Delivery: {{estimated_delivery}}
+
+🛍️ WHAT YOU ORDERED ({{order_items_count}} items)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{order_items}}
+
+🚚 SHIPPING TO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{shipping_address}}
+
+📦 Track your order: {{website_url}}/orders/{{order_id}}
+📞 Need help? Contact: {{support_email}}
+
+Thank you for choosing {{website_name}}!
+© {{current_year}} {{website_name}}. All rights reserved.`,
+      variables: [
+        { name: 'customer_name', description: 'Customer full name (auto-filled)', example: 'John Doe' },
+        { name: 'order_id', description: 'Order identifier (auto-filled)', example: 'ORD-123456' },
+        { name: 'order_date', description: 'Order date (auto-filled)', example: '15/06/2024' },
+        { name: 'order_time', description: 'Order time (auto-filled)', example: '2:30 PM' },
+        { name: 'total_amount', description: 'Order total (auto-filled)', example: '₹1,299' },
+        { name: 'payment_method', description: 'Payment method (auto-filled)', example: 'Credit Card' },
+        { name: 'estimated_delivery', description: 'Delivery date (auto-calculated)', example: '20/06/2024' },
+        { name: 'order_items', description: 'Product details (AUTO-FETCHED from database)', example: '• Nuvante Classic T-Shirt\n  Size: M | Qty: 2 | Price: ₹599\n  Subtotal: ₹1,198' },
+        { name: 'order_items_count', description: 'Number of items (auto-calculated)', example: '3' },
+        { name: 'shipping_address', description: 'Formatted address (auto-filled)', example: 'John Doe\n123 Main Street\nMumbai 400001\nPhone: +91 9876543210' }
+      ]
+    },
+    welcome: {
+      name: 'Welcome Email',
+      subject: 'Welcome to {{website_name}}! 🎉',
+      templateType: 'welcome',
+      plainTextContent: `Hello {{customer_name}}! 👋
+
+🎉 Welcome to {{website_name}}!
+
+Thank you for joining our fashion community. We're excited to have you here!
+
+What you can do next:
+🛍️ Browse our latest collection
+👤 Complete your profile for personalized recommendations  
+📧 Subscribe to our newsletter for exclusive deals
+📱 Follow us on social media for updates
+
+🚀 Get started: {{getting_started_url}}
+🛒 Shop now: {{website_url}}
+
+Questions? Contact us at {{support_email}}
+
+Welcome aboard!
+© {{current_year}} {{website_name}}`,
+      variables: [
+        { name: 'customer_name', description: 'Customer full name', example: 'John Doe' },
+        { name: 'welcome_message', description: 'Personal welcome message', example: 'Welcome to our fashion community!' },
+        { name: 'getting_started_url', description: 'Getting started page URL', example: '/welcome' }
+      ]
+    },
+    order_shipped: {
+      name: 'Order Shipped',
+      subject: 'Your Order is On the Way! 📦 - {{order_id}}',
+      templateType: 'order_shipped',
+      plainTextContent: `Hello {{customer_name}}!
+
+📦 Great news! Your order has been shipped and is on its way to you.
+
+📍 TRACKING INFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tracking ID: {{tracking_id}}
+Order ID: {{order_id}}
+Estimated Delivery: {{estimated_delivery}}
+
+🔍 Track your package: {{tracking_url}}
+
+Thank you for shopping with {{website_name}}!
+© {{current_year}} {{website_name}}`,
+      variables: [
+        { name: 'customer_name', description: 'Customer full name', example: 'John Doe' },
+        { name: 'order_id', description: 'Order identifier', example: 'ORD-123456' },
+        { name: 'tracking_id', description: 'Shipment tracking ID', example: 'TRK-789012' },
+        { name: 'estimated_delivery', description: 'Expected delivery date', example: '25/06/2024' },
+        { name: 'tracking_url', description: 'Tracking URL', example: 'https://track.shipper.com/TRK-789012' }
+      ]
+    }
+  };
 
   useEffect(() => {
     if (template) {
@@ -213,21 +315,35 @@ const TemplateModal = ({
         isActive: template.isActive,
         variables: template.variables || []
       });
-      // Determine mode based on HTML content complexity
       setTemplateMode(template.htmlContent.includes('<html>') ? 'advanced' : 'simple');
     } else {
-      setFormData({
-        name: '',
-        subject: '',
-        htmlContent: '',
-        plainTextContent: '',
-        templateType: 'custom',
-        isActive: true,
-        variables: []
-      });
-      setTemplateMode('simple');
+      // Load preset template
+      if (templateMode === 'preset' && selectedPreset) {
+        const preset = presetTemplates[selectedPreset as keyof typeof presetTemplates];
+        if (preset) {
+          setFormData({
+            name: preset.name,
+            subject: preset.subject,
+            htmlContent: '',
+            plainTextContent: preset.plainTextContent,
+            templateType: preset.templateType,
+            isActive: true,
+            variables: preset.variables
+          });
+        }
+      } else {
+        setFormData({
+          name: '',
+          subject: '',
+          htmlContent: '',
+          plainTextContent: '',
+          templateType: 'custom',
+          isActive: true,
+          variables: []
+        });
+      }
     }
-  }, [template, isOpen]);
+  }, [template, isOpen, templateMode, selectedPreset]);
 
   const generateSimpleHtml = (content: string) => {
     return `<!DOCTYPE html>
@@ -291,8 +407,8 @@ const TemplateModal = ({
         </div>
         
         <div class="footer">
-            <p>Need help? Contact us at {{support_email}}</p>
-            <p>© {{current_year}} {{website_name}}. All rights reserved.</p>
+            <p>Need help? Contact us at {'{'}{'{'} support_email {'}'}{'}'}  </p>
+            <p>© {'{'}{'{'} current_year {'}'}{'}'}   {'{'}{'{'} website_name {'}'}{'}'}  . All rights reserved.</p>
         </div>
     </div>
 </body>
@@ -323,7 +439,7 @@ const TemplateModal = ({
     try {
       const submitData = {
         ...formData,
-        htmlContent: templateMode === 'simple' 
+        htmlContent: (templateMode === 'simple' || templateMode === 'preset')
           ? generateSimpleHtml(formData.plainTextContent)
           : formData.htmlContent
       };
@@ -363,10 +479,10 @@ const TemplateModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">
-            {template ? 'Edit Template' : 'Create New Template'}
+            {template ? 'Edit Template' : 'Create New Email Template'}
           </h2>
           <button
             onClick={onClose}
@@ -379,37 +495,104 @@ const TemplateModal = ({
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <div className="flex-1 overflow-y-auto p-6">
             {/* Template Mode Selection */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Template Type
-              </label>
-              <div className="flex space-x-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="simple"
-                    checked={templateMode === 'simple'}
-                    onChange={(e) => setTemplateMode(e.target.value as 'simple' | 'advanced')}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">
-                    📝 <strong>Simple</strong> - Clean, professional emails with automatic styling
-                  </span>
+            {!template && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  How do you want to create your email?
                 </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="advanced"
-                    checked={templateMode === 'advanced'}
-                    onChange={(e) => setTemplateMode(e.target.value as 'simple' | 'advanced')}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">
-                    🎨 <strong>Advanced</strong> - Full HTML control with custom styling
-                  </span>
-                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <label className="flex flex-col items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      value="preset"
+                      checked={templateMode === 'preset'}
+                      onChange={(e) => setTemplateMode(e.target.value as any)}
+                      className="mb-2"
+                    />
+                    <span className="text-2xl mb-2">🎯</span>
+                    <span className="text-sm font-medium text-center">
+                      <strong>Smart Templates</strong><br/>
+                      Pre-built with automatic product details
+                    </span>
+                  </label>
+                  <label className="flex flex-col items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      value="simple"
+                      checked={templateMode === 'simple'}
+                      onChange={(e) => setTemplateMode(e.target.value as any)}
+                      className="mb-2"
+                    />
+                    <span className="text-2xl mb-2">📝</span>
+                    <span className="text-sm font-medium text-center">
+                      <strong>Simple</strong><br/>
+                      Write content, auto-style
+                    </span>
+                  </label>
+                  <label className="flex flex-col items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      value="advanced"
+                      checked={templateMode === 'advanced'}
+                      onChange={(e) => setTemplateMode(e.target.value as any)}
+                      className="mb-2"
+                    />
+                    <span className="text-2xl mb-2">🎨</span>
+                    <span className="text-sm font-medium text-center">
+                      <strong>Advanced</strong><br/>
+                      Full HTML control
+                    </span>
+                  </label>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Preset Template Selection */}
+            {templateMode === 'preset' && !template && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choose a Smart Template
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {Object.entries(presetTemplates).map(([key, preset]) => (
+                    <label key={key} className="flex flex-col p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="radio"
+                        value={key}
+                        checked={selectedPreset === key}
+                        onChange={(e) => setSelectedPreset(e.target.value)}
+                        className="mb-2"
+                      />
+                      <span className="font-medium">{preset.name}</span>
+                      <span className="text-xs text-gray-500 mt-1">
+                        {key === 'order_confirmation' && '✨ Auto-fetches product details from your database'}
+                        {key === 'welcome' && '🎉 Perfect for new customer onboarding'}
+                        {key === 'order_shipped' && '📦 Keeps customers updated on deliveries'}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Automatic Features Notice */}
+            {templateMode === 'preset' && selectedPreset === 'order_confirmation' && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-medium text-blue-900 mb-2">🚀 Automatic Product Details</h4>
+                <div className="text-sm text-blue-800">
+                  <p className="mb-2">This template automatically:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Fetches product names, prices, and images from your database</li>
+                    <li>Calculates order totals and subtotals</li>
+                    <li>Formats shipping addresses professionally</li>
+                    <li>Shows order dates, times, and delivery estimates</li>
+                  </ul>
+                  <p className="mt-2 font-medium">
+                    You don't need to manually add product IDs - everything is automatic! 🎯
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -459,12 +642,12 @@ const TemplateModal = ({
                 placeholder="e.g., Order Confirmation - {{order_id}}"
               />
               <p className="text-xs text-gray-500 mt-1">
-                                 Use {'{'}{'{'} variable_name {'}'}{'}'}  for dynamic content
+                Use {'{'}{'{'} variable_name {'}'}{'}'}  for dynamic content
               </p>
             </div>
 
             {/* Content Based on Mode */}
-            {templateMode === 'simple' ? (
+            {(templateMode === 'simple' || templateMode === 'preset') ? (
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Content *
@@ -476,7 +659,7 @@ const TemplateModal = ({
                     ...prev, 
                     plainTextContent: e.target.value 
                   }))}
-                  rows={12}
+                  rows={16}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                   placeholder="Hello {{customer_name}},
 
@@ -484,6 +667,7 @@ Thank you for your order! Here are the details:
 
 Order ID: {{order_id}}
 Total: {{total_amount}}
+Items: {{order_items}}
 
 We'll process your order shortly.
 
@@ -491,7 +675,10 @@ Best regards,
 The Nuvante Team"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Write your email content here. HTML will be generated automatically with professional styling.
+                  {templateMode === 'preset' 
+                    ? '✨ This template automatically fills in product details, addresses, and order information'
+                    : 'Write your email content here. HTML will be generated automatically with professional styling.'
+                  }
                 </p>
               </div>
             ) : (
@@ -551,48 +738,12 @@ The Nuvante Team"
                 Template Variables
               </label>
               
-              {/* Add Variable */}
-              <div className="bg-gray-50 p-4 rounded-md mb-4">
-                <h4 className="text-sm font-medium mb-2">Add New Variable</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <input
-                    type="text"
-                    placeholder="Variable name (e.g., customer_name)"
-                    value={newVariable.name}
-                    onChange={(e) => setNewVariable(prev => ({ ...prev, name: e.target.value }))}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Description"
-                    value={newVariable.description}
-                    onChange={(e) => setNewVariable(prev => ({ ...prev, description: e.target.value }))}
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                  />
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      placeholder="Example value"
-                      value={newVariable.example}
-                      onChange={(e) => setNewVariable(prev => ({ ...prev, example: e.target.value }))}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={addVariable}
-                      className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Variable List */}
+              {/* Variables List */}
               {formData.variables.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2 mb-4">
+                  <h4 className="text-sm font-medium text-gray-700">Available Variables:</h4>
                   {formData.variables.map((variable, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-md">
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md">
                       <div className="flex-1">
                         <span className="font-mono text-sm text-blue-600">{`{{${variable.name}}}`}</span>
                         <span className="ml-2 text-sm text-gray-600">- {variable.description}</span>
@@ -602,29 +753,70 @@ The Nuvante Team"
                           </span>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => removeVariable(index)}
-                        className="text-red-500 hover:text-red-700 text-sm"
-                      >
-                        Remove
-                      </button>
+                      {templateMode !== 'preset' && (
+                        <button
+                          type="button"
+                          onClick={() => removeVariable(index)}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
 
+              {/* Add Variable */}
+              {templateMode !== 'preset' && (
+                <div className="bg-gray-50 p-4 rounded-md mb-4">
+                  <h4 className="text-sm font-medium mb-2">Add Custom Variable</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    <input
+                      type="text"
+                      placeholder="Variable name (e.g., customer_name)"
+                      value={newVariable.name}
+                      onChange={(e) => setNewVariable(prev => ({ ...prev, name: e.target.value }))}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Description"
+                      value={newVariable.description}
+                      onChange={(e) => setNewVariable(prev => ({ ...prev, description: e.target.value }))}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        placeholder="Example value"
+                        value={newVariable.example}
+                        onChange={(e) => setNewVariable(prev => ({ ...prev, example: e.target.value }))}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={addVariable}
+                        className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* System Variables Info */}
-                             <div className="mt-4 p-3 bg-blue-50 rounded-md">
-                 <h5 className="text-sm font-medium text-blue-900 mb-2">Available System Variables:</h5>
-                 <div className="text-xs text-blue-700 space-x-4">
-                   <span>{'{'}{'{'} current_year {'}'}{'}'}  </span>
-                   <span>{'{'}{'{'} current_date {'}'}{'}'}  </span>
-                   <span>{'{'}{'{'} website_name {'}'}{'}'}  </span>
-                   <span>{'{'}{'{'} website_url {'}'}{'}'}  </span>
-                   <span>{'{'}{'{'} support_email {'}'}{'}'}  </span>
-                 </div>
-               </div>
+              <div className="mt-4 p-3 bg-blue-50 rounded-md">
+                <h5 className="text-sm font-medium text-blue-900 mb-2">✨ Always Available System Variables:</h5>
+                <div className="text-xs text-blue-700 grid grid-cols-2 md:grid-cols-3 gap-x-4">
+                  <span>{'{'}{'{'} current_year {'}'}{'}'}  </span>
+                  <span>{'{'}{'{'} current_date {'}'}{'}'}  </span>
+                  <span>{'{'}{'{'} website_name {'}'}{'}'}  </span>
+                  <span>{'{'}{'{'} website_url {'}'}{'}'}  </span>
+                  <span>{'{'}{'{'} support_email {'}'}{'}'}  </span>
+                </div>
+              </div>
             </div>
 
             {/* Active Status */}
