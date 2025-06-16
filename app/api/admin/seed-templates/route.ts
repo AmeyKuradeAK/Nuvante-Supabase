@@ -39,167 +39,473 @@ const defaultTemplates = [
     templateType: 'order_confirmation',
     htmlContent: `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Order Confirmation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+    <title>Order Confirmation - {{order_id}}</title>
+    
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            line-height: 1.6; 
-            color: #333; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            padding: 20px; 
-            background-color: #f8f9fa;
+        /* Reset and base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        
+        /* Professional fonts */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f6f9fc;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            color: #1a1a1a;
+            line-height: 1.6;
         }
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        
+        /* Email container */
+        .email-wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f6f9fc;
+            padding: 40px 0;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
             overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);
         }
-        .header { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; 
-            padding: 30px; 
-            text-align: center; 
+        
+        /* Header with logo */
+        .header {
+            background: linear-gradient(135deg, #DB4444 0%, #c73e3e 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
         }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
-        .header p { margin: 10px 0 0 0; opacity: 0.9; }
-        .content { padding: 30px; }
-        .order-info { 
-            background: #f8f9fa; 
-            padding: 20px; 
-            border-radius: 8px; 
-            margin: 20px 0; 
-            border-left: 4px solid #667eea;
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="60" cy="70" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+            pointer-events: none;
         }
-        .order-info h3 { margin: 0 0 15px 0; color: #667eea; }
-        .order-detail { margin: 8px 0; display: flex; justify-content: space-between; }
-        .order-detail strong { color: #333; }
-        .items-section { margin: 25px 0; }
-        .items-title { 
-            color: #667eea; 
-            font-size: 18px; 
-            font-weight: 600; 
-            margin-bottom: 15px; 
-            border-bottom: 2px solid #e9ecef; 
-            padding-bottom: 10px;
+        
+        .logo {
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
         }
-        .item-list { 
-            background: #f8f9fa; 
-            padding: 20px; 
-            border-radius: 8px; 
-            white-space: pre-line; 
-            font-family: 'Segoe UI', sans-serif;
-            line-height: 1.8;
+        
+        .logo img {
+            max-width: 180px;
+            height: auto;
+            filter: brightness(0) invert(1);
         }
-        .shipping-section {
-            margin: 25px 0;
-            padding: 20px;
-            background: #e3f2fd;
-            border-radius: 8px;
-            border-left: 4px solid #2196f3;
+        
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
         }
-        .shipping-section h3 { margin: 0 0 15px 0; color: #1976d2; }
-        .shipping-address { white-space: pre-line; line-height: 1.6; }
-        .button { 
-            display: inline-block; 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            color: white; 
-            padding: 14px 28px; 
-            text-decoration: none; 
-            border-radius: 8px; 
-            margin: 20px 0; 
+        
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
             font-weight: 600;
+            font-size: 14px;
+            margin-top: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Content sections */
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+        }
+        
+        .intro-text {
+            font-size: 16px;
+            color: #525252;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        
+        /* Order summary card */
+        .order-summary {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+            position: relative;
+        }
+        
+        .order-summary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #DB4444, #c73e3e);
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .order-summary h3 {
+            color: #0f172a;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .order-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .order-detail:last-child {
+            border-bottom: none;
+        }
+        
+        .order-detail .label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .order-detail .value {
+            color: #0f172a;
+            font-weight: 600;
+        }
+        
+        /* Items section */
+        .items-section {
+            margin: 32px 0;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .items-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            white-space: pre-line;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', monospace;
+            line-height: 1.8;
+            color: #374151;
+        }
+        
+        /* Total amount highlight */
+        .total-highlight {
+            background: linear-gradient(135deg, #DB4444 0%, #c73e3e 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 24px 0;
+            box-shadow: 0 10px 25px rgba(219, 68, 68, 0.2);
+        }
+        
+        .total-highlight .label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .total-highlight .amount {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        /* Shipping section */
+        .shipping-section {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 1px solid #93c5fd;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        
+        .shipping-section h3 {
+            color: #1e40af;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .shipping-address {
+            color: #1e3a8a;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+        
+        /* CTA Button */
+        .cta-section {
+            text-align: center;
+            margin: 32px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #DB4444 0%, #c73e3e 100%);
+            color: white;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(219, 68, 68, 0.3);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(219, 68, 68, 0.4);
+        }
+        
+        /* Help section */
+        .help-section {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1px solid #86efac;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        
+        .help-section h4 {
+            color: #065f46;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .help-section p {
+            color: #047857;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: white;
+            padding: 40px 30px;
             text-align: center;
         }
-        .footer { 
-            text-align: center; 
-            margin-top: 30px; 
-            padding-top: 20px; 
-            border-top: 1px solid #e9ecef; 
-            color: #666; 
+        
+        .footer-content {
+            margin-bottom: 24px;
         }
-        .footer p { margin: 5px 0; }
-        .highlight { background: #fff3cd; padding: 2px 6px; border-radius: 4px; }
-        .success-badge { 
-            display: inline-block; 
-            background: #d4edda; 
-            color: #155724; 
-            padding: 8px 12px; 
-            border-radius: 20px; 
-            font-size: 14px; 
-            font-weight: 600; 
-            margin: 10px 0;
+        
+        .footer h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: white;
+        }
+        
+        .footer p {
+            color: rgba(255,255,255,0.8);
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .footer a {
+            color: #DB4444;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer-legal {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 24px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .email-wrapper { padding: 20px 0; }
+            .email-container { margin: 0 20px; }
+            .header, .content, .footer { padding-left: 20px; padding-right: 20px; }
+            .header h1 { font-size: 28px; }
+            .greeting { font-size: 20px; }
+            .order-detail { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .total-highlight .amount { font-size: 28px; }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .email-container { background: #ffffff; }
+            /* Keep light theme for better compatibility */
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🎉 Order Confirmed!</h1>
-            <p>Thank you for shopping with us, {{customer_name}}!</p>
-            <div class="success-badge">✅ Payment Successful</div>
-        </div>
-        
-        <div class="content">
-            <div class="order-info">
-                <h3>📋 Order Details</h3>
-                <div class="order-detail">
-                    <span>Order ID:</span>
-                    <strong>{{order_id}}</strong>
+    <table role="presentation" class="email-wrapper" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td align="center">
+                <div class="email-container">
+                    <!-- Header with Logo -->
+                    <div class="header">
+                        <div class="logo">
+                            <img src="https://cdn.jsdelivr.net/gh/nuvante/brand-assets@main/logo-white.png" alt="{{website_name}}" style="max-width: 180px; height: auto;">
+                        </div>
+                        <h1>🎉 Order Confirmed!</h1>
+                        <p>Thank you for choosing {{website_name}}, {{customer_name}}!</p>
+                        <div class="status-badge">✅ Payment Successful</div>
+                    </div>
+                    
+                    <!-- Main Content -->
+                    <div class="content">
+                        <div class="greeting">Hello {{customer_name}}! 👋</div>
+                        
+                        <div class="intro-text">
+                            We're absolutely thrilled to confirm that your order has been successfully placed! Our team is already preparing your premium items with the utmost care and attention to detail.
+                        </div>
+                        
+                        <!-- Order Summary -->
+                        <div class="order-summary">
+                            <h3>📋 Order Summary</h3>
+                            <div class="order-detail">
+                                <span class="label">Order ID</span>
+                                <span class="value">{{order_id}}</span>
+                            </div>
+                            <div class="order-detail">
+                                <span class="label">Order Date</span>
+                                <span class="value">{{order_date}} at {{order_time}}</span>
+                            </div>
+                            <div class="order-detail">
+                                <span class="label">Payment Method</span>
+                                <span class="value">{{payment_method}}</span>
+                            </div>
+                            <div class="order-detail">
+                                <span class="label">Estimated Delivery</span>
+                                <span class="value">{{estimated_delivery}}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Items Section -->
+                        <div class="items-section">
+                            <div class="section-title">🛍️ Your Items ({{order_items_count}} items)</div>
+                            <div class="items-container">{{order_items}}</div>
+                        </div>
+                        
+                        <!-- Total Amount -->
+                        <div class="total-highlight">
+                            <div class="label">Total Amount Paid</div>
+                            <div class="amount">{{total_amount}}</div>
+                        </div>
+                        
+                        <!-- Shipping Information -->
+                        <div class="shipping-section">
+                            <h3>🚚 Shipping Information</h3>
+                            <div class="shipping-address">{{shipping_address}}</div>
+                        </div>
+                        
+                        <!-- CTA Button -->
+                        <div class="cta-section">
+                            <a href="{{website_url}}/orders/{{order_id}}" class="cta-button">
+                                📦 Track Your Order
+                            </a>
+                        </div>
+                        
+                        <!-- Help Section -->
+                        <div class="help-section">
+                            <h4>💬 Need Assistance?</h4>
+                            <p>Our dedicated support team is available 24/7 to help you with any questions. Reach out to us at <strong>{{support_email}}</strong> or visit our comprehensive help center.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="footer">
+                        <div class="footer-content">
+                            <h3>Thank you for choosing {{website_name}}!</h3>
+                            <p>We'll keep you updated every step of the way.</p>
+                            <p>📧 <a href="mailto:{{support_email}}">{{support_email}}</a></p>
+                            <p>🌐 <a href="{{website_url}}">{{website_url}}</a></p>
+                        </div>
+                        
+                        <div class="footer-legal">
+                            <p>© {{current_year}} {{website_name}}. All rights reserved.</p>
+                            <p>This email was sent because you placed an order with us.</p>
+                            <p>If you have any questions, please don't hesitate to contact our support team.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="order-detail">
-                    <span>Order Date:</span>
-                    <strong>{{order_date}} at {{order_time}}</strong>
-                </div>
-                <div class="order-detail">
-                    <span>Total Amount:</span>
-                    <strong class="highlight">{{total_amount}}</strong>
-                </div>
-                <div class="order-detail">
-                    <span>Payment Method:</span>
-                    <strong>{{payment_method}}</strong>
-                </div>
-                <div class="order-detail">
-                    <span>Estimated Delivery:</span>
-                    <strong>{{estimated_delivery}}</strong>
-                </div>
-            </div>
-            
-            <div class="items-section">
-                <div class="items-title">🛍️ Items Ordered ({{order_items_count}} items)</div>
-                <div class="item-list">{{order_items}}</div>
-            </div>
-            
-            <div class="shipping-section">
-                <h3>🚚 Shipping Information</h3>
-                <div class="shipping-address">{{shipping_address}}</div>
-            </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{{website_url}}/orders/{{order_id}}" class="button">
-                    📦 Track Your Order
-                </a>
-            </div>
-            
-            <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <h4 style="margin: 0 0 10px 0; color: #2e7d32;">📞 Need Help?</h4>
-                <p style="margin: 0;">Our support team is here to help! Contact us at <strong>{{support_email}}</strong> or visit our help center.</p>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>Thank you for choosing {{website_name}}!</p>
-            <p>We'll send you updates when your order ships.</p>
-            <p style="font-size: 12px; margin-top: 15px;">
-                © {{current_year}} {{website_name}}. All rights reserved.
-            </p>
-        </div>
-    </div>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`,
     plainTextContent: `🎉 ORDER CONFIRMED!
@@ -427,81 +733,582 @@ Thank you for choosing {{website_name}}!
     templateType: 'order_shipped',
     htmlContent: `
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Order Shipped</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+    <title>Order Shipped - {{order_id}}</title>
+    
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-            line-height: 1.6; 
-            color: #333; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            padding: 20px; 
-            background-color: #f8f9fa;
+        /* Reset and base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        
+        /* Professional fonts */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f6f9fc;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            color: #1a1a1a;
+            line-height: 1.6;
         }
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        
+        /* Email container */
+        .email-wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f6f9fc;
+            padding: 40px 0;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.02);
+        }
+        
+        /* Header with shipping animation */
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
             overflow: hidden;
         }
-        .header { 
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
-            color: white; 
-            padding: 30px; 
-            text-align: center; 
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><path d="M20,50 Q60,20 100,50 T180,50" stroke="rgba(255,255,255,0.2)" stroke-width="2" fill="none"/><circle cx="20" cy="50" r="3" fill="rgba(255,255,255,0.3)"/><circle cx="180" cy="50" r="3" fill="rgba(255,255,255,0.3)"/></svg>') center;
+            animation: float 3s ease-in-out infinite;
+            pointer-events: none;
         }
-        .tracking-box {
-            background: #e8f5e8;
-            padding: 25px;
-            border-radius: 8px;
-            margin: 25px 0;
-            border-left: 5px solid #28a745;
-            text-align: center;
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
         }
-        .tracking-id {
+        
+        .logo {
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo img {
+            max-width: 180px;
+            height: auto;
+            filter: brightness(0) invert(1);
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 18px;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Content sections */
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
             font-size: 24px;
             font-weight: 600;
-            color: #155724;
-            margin: 10px 0;
+            color: #1a1a1a;
+            margin-bottom: 16px;
         }
-        .button { 
-            display: inline-block; 
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
-            color: white; 
-            padding: 15px 30px; 
-            text-decoration: none; 
-            border-radius: 8px; 
-            margin: 15px 0; 
+        
+        .intro-text {
+            font-size: 16px;
+            color: #525252;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        
+        /* Tracking highlight */
+        .tracking-hero {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 2px solid #10b981;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            margin: 32px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tracking-hero::before {
+            content: '📦';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 60px;
+            opacity: 0.1;
+            transform: rotate(15deg);
+        }
+        
+        .tracking-hero h3 {
+            color: #065f46;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .tracking-id {
+            background: white;
+            border: 2px dashed #10b981;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: #065f46;
+            letter-spacing: 2px;
+            margin: 16px 0;
+            word-break: break-all;
+        }
+        
+        .tracking-instructions {
+            color: #047857;
+            font-size: 14px;
+            margin-top: 12px;
+        }
+        
+        /* Order summary card */
+        .order-summary {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+            position: relative;
+        }
+        
+        .order-summary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #10b981, #059669);
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .order-summary h3 {
+            color: #0f172a;
+            font-size: 20px;
             font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .order-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .order-detail:last-child {
+            border-bottom: none;
+        }
+        
+        .order-detail .label {
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        .order-detail .value {
+            color: #0f172a;
+            font-weight: 600;
+        }
+        
+        /* Progress timeline */
+        .progress-timeline {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        
+        .progress-step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .progress-step::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 30px;
+            width: 2px;
+            height: 20px;
+            background: #e2e8f0;
+        }
+        
+        .progress-step:last-child::before {
+            display: none;
+        }
+        
+        .progress-step.completed::before {
+            background: #10b981;
+        }
+        
+        .progress-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
+            font-size: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .progress-step.completed .progress-icon {
+            background: #10b981;
+            color: white;
+        }
+        
+        .progress-step.current .progress-icon {
+            background: #fbbf24;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        .progress-step.pending .progress-icon {
+            background: #e2e8f0;
+            color: #9ca3af;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .progress-content h4 {
+            color: #0f172a;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .progress-content p {
+            color: #64748b;
+            font-size: 14px;
+            margin: 0;
+        }
+        
+        .progress-step.completed .progress-content h4 {
+            color: #059669;
+        }
+        
+        .progress-step.current .progress-content h4 {
+            color: #d97706;
+        }
+        
+        /* CTA Button */
+        .cta-section {
+            text-align: center;
+            margin: 32px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        /* Delivery info */
+        .delivery-info {
+            background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        
+        .delivery-info h4 {
+            color: #92400e;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .delivery-info p {
+            color: #b45309;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .footer-content {
+            margin-bottom: 24px;
+        }
+        
+        .footer h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: white;
+        }
+        
+        .footer p {
+            color: rgba(255,255,255,0.8);
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer-legal {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 24px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .email-wrapper { padding: 20px 0; }
+            .email-container { margin: 0 20px; }
+            .header, .content, .footer { padding-left: 20px; padding-right: 20px; }
+            .header h1 { font-size: 28px; }
+            .greeting { font-size: 20px; }
+            .order-detail { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .tracking-hero { padding: 24px 20px; }
+            .tracking-id { font-size: 16px; letter-spacing: 1px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📦 Your Order is On the Way!</h1>
-            <p>Great news {{customer_name}}! Your order has shipped.</p>
-        </div>
-        
-        <div style="padding: 30px;">
-            <div class="tracking-box">
-                <h3 style="margin: 0; color: #155724;">📍 Tracking Information</h3>
-                <div class="tracking-id">{{tracking_id}}</div>
-                <p style="margin: 10px 0 0 0;">Use this tracking ID to monitor your shipment</p>
-            </div>
-            
-            <p><strong>Order ID:</strong> {{order_id}}</p>
-            <p><strong>Estimated Delivery:</strong> {{estimated_delivery}}</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{{tracking_url}}" class="button">🔍 Track Package</a>
-            </div>
-        </div>
-    </div>
+    <table role="presentation" class="email-wrapper" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td align="center">
+                <div class="email-container">
+                    <!-- Header with Logo -->
+                    <div class="header">
+                        <div class="logo">
+                            <img src="https://cdn.jsdelivr.net/gh/nuvante/brand-assets@main/logo-white.png" alt="{{website_name}}" style="max-width: 180px; height: auto;">
+                        </div>
+                        <h1>📦 Your Order is On the Way!</h1>
+                        <p>Great news {{customer_name}}! Your package has shipped.</p>
+                        <div class="status-badge">🚛 In Transit</div>
+                    </div>
+                    
+                    <!-- Main Content -->
+                    <div class="content">
+                        <div class="greeting">Exciting Update! 🎉</div>
+                        
+                        <div class="intro-text">
+                            Your {{website_name}} order is now on its way to you! We've carefully packaged your items and handed them over to our trusted shipping partner for safe delivery.
+                        </div>
+                        
+                        <!-- Tracking Hero Section -->
+                        <div class="tracking-hero">
+                            <h3>📍 Track Your Package</h3>
+                            <div class="tracking-id">{{tracking_id}}</div>
+                            <div class="tracking-instructions">
+                                Use this tracking number to monitor your shipment's progress in real-time
+                            </div>
+                        </div>
+                        
+                        <!-- Order Summary -->
+                        <div class="order-summary">
+                            <h3>📋 Shipment Details</h3>
+                            <div class="order-detail">
+                                <span class="label">Order ID</span>
+                                <span class="value">{{order_id}}</span>
+                            </div>
+                            <div class="order-detail">
+                                <span class="label">Tracking Number</span>
+                                <span class="value">{{tracking_id}}</span>
+                            </div>
+                            <div class="order-detail">
+                                <span class="label">Shipping Method</span>
+                                <span class="value">{{shipping_method}}</span>
+                            </div>
+                            <div class="order-detail">
+                                <span class="label">Estimated Delivery</span>
+                                <span class="value">{{estimated_delivery}}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Timeline -->
+                        <div class="progress-timeline">
+                            <h3 style="color: #0f172a; margin-bottom: 20px; font-size: 18px;">📈 Shipping Progress</h3>
+                            
+                            <div class="progress-step completed">
+                                <div class="progress-icon">✓</div>
+                                <div class="progress-content">
+                                    <h4>Order Confirmed</h4>
+                                    <p>Your order was received and confirmed</p>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-step completed">
+                                <div class="progress-icon">✓</div>
+                                <div class="progress-content">
+                                    <h4>Items Prepared</h4>
+                                    <p>Your items were carefully packaged</p>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-step current">
+                                <div class="progress-icon">🚛</div>
+                                <div class="progress-content">
+                                    <h4>In Transit</h4>
+                                    <p>Your package is on its way to you</p>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-step pending">
+                                <div class="progress-icon">📦</div>
+                                <div class="progress-content">
+                                    <h4>Out for Delivery</h4>
+                                    <p>Package will be delivered soon</p>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-step pending">
+                                <div class="progress-icon">✨</div>
+                                <div class="progress-content">
+                                    <h4>Delivered</h4>
+                                    <p>Package successfully delivered</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- CTA Button -->
+                        <div class="cta-section">
+                            <a href="{{tracking_url}}" class="cta-button">
+                                🔍 Track Your Package
+                            </a>
+                        </div>
+                        
+                        <!-- Delivery Information -->
+                        <div class="delivery-info">
+                            <h4>🏠 Delivery Information</h4>
+                            <p><strong>Estimated Delivery:</strong> {{estimated_delivery}}</p>
+                            <p><strong>Delivery Address:</strong> {{shipping_address}}</p>
+                            <p>📱 You'll receive SMS updates when your package is out for delivery and when it's delivered.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div class="footer">
+                        <div class="footer-content">
+                            <h3>We're here to help! 🤝</h3>
+                            <p>Questions about your shipment? Our support team is ready to assist.</p>
+                            <p>📧 <a href="mailto:{{support_email}}">{{support_email}}</a></p>
+                            <p>🌐 <a href="{{website_url}}">{{website_url}}</a></p>
+                        </div>
+                        
+                        <div class="footer-legal">
+                            <p>© {{current_year}} {{website_name}}. All rights reserved.</p>
+                            <p>This shipping notification was sent because your order is in transit.</p>
+                            <p>For tracking updates, visit the link above or contact our support team.</p>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>`,
     plainTextContent: `📦 YOUR ORDER IS ON THE WAY!
