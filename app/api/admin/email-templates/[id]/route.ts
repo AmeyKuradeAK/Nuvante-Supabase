@@ -22,7 +22,7 @@ async function checkAdminStatus(userEmail: string): Promise<boolean> {
 // GET - Get specific email template
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -39,7 +39,8 @@ export async function GET(
 
     await connect();
     
-    const template = await EmailTemplate.findById(params.id);
+    const { id } = await params;
+    const template = await EmailTemplate.findById(id);
     if (!template) {
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
@@ -61,7 +62,7 @@ export async function GET(
 // PUT - Update email template
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -89,7 +90,8 @@ export async function PUT(
 
     await connect();
 
-    const template = await EmailTemplate.findById(params.id);
+    const { id } = await params;
+    const template = await EmailTemplate.findById(id);
     if (!template) {
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
@@ -98,7 +100,7 @@ export async function PUT(
     if (name && name !== template.name) {
       const existingTemplate = await EmailTemplate.findOne({ 
         name, 
-        _id: { $ne: params.id } 
+        _id: { $ne: id } 
       });
       if (existingTemplate) {
         return NextResponse.json({ 
@@ -118,7 +120,7 @@ export async function PUT(
     if (isActive !== undefined) updates.isActive = isActive;
 
     const updatedTemplate = await EmailTemplate.findByIdAndUpdate(
-      params.id,
+      id,
       updates,
       { new: true, runValidators: true }
     );
@@ -141,7 +143,7 @@ export async function PUT(
 // DELETE - Delete email template
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -158,7 +160,8 @@ export async function DELETE(
 
     await connect();
 
-    const template = await EmailTemplate.findByIdAndDelete(params.id);
+    const { id } = await params;
+    const template = await EmailTemplate.findByIdAndDelete(id);
     if (!template) {
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }

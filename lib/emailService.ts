@@ -68,20 +68,8 @@ class EmailService {
           break;
 
         case 'ses':
-          // Amazon SES (requires aws-sdk)
-          const AWS = require('@aws-sdk/client-ses');
-          this.transporter = nodemailer.createTransport({
-            SES: {
-              ses: new AWS.SES({
-                region: process.env.AWS_REGION || 'us-east-1',
-                credentials: {
-                  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-                }
-              }),
-              aws: AWS
-            }
-          });
+          // Amazon SES (not configured - requires @aws-sdk/client-ses package)
+          throw new Error('Amazon SES not configured. Please use SMTP provider instead.');
           break;
 
         case 'mailgun':
