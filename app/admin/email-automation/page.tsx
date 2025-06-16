@@ -203,103 +203,637 @@ const TemplateModal = ({
   const [saving, setSaving] = useState(false);
   const [newVariable, setNewVariable] = useState({ name: '', description: '', example: '' });
 
-  // Preset templates with automatic product details
+  // Professional HTML preset templates with Nuvante branding
   const presetTemplates = {
     order_confirmation: {
-      name: 'Order Confirmation',
-      subject: 'Order Confirmed - {{order_id}} 🎉',
+      name: 'Order Confirmation - Professional',
+      subject: '🎉 Order Confirmed #{{order_id}} - Thank You {{customer_name}}!',
       templateType: 'order_confirmation',
-      plainTextContent: `Hello {{customer_name}},
+      htmlContent: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }
+        .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+        .logo { max-width: 180px; height: auto; margin-bottom: 15px; }
+        .header h1 { font-size: 28px; font-weight: 600; margin: 0; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
+        .content p { margin-bottom: 16px; color: #555; }
+        .highlight-box { background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .order-details { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .order-details h3 { color: #2c3e50; margin-bottom: 15px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f3f4; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-weight: 600; color: #555; }
+        .detail-value { color: #333; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; text-align: center; }
+        .footer { background: #2c3e50; color: #bdc3c7; padding: 30px; text-align: center; font-size: 14px; }
+        .footer a { color: #3498db; text-decoration: none; }
+        .divider { height: 1px; background: #e9ecef; margin: 30px 0; }
+        @media (max-width: 600px) { 
+            .email-container { margin: 0; border-radius: 0; }
+            .content { padding: 20px; }
+            .header { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://nuvante.com/logo-white.png" alt="Nuvante Logo" class="logo">
+            <h1>Nuvante</h1>
+        </div>
+        <div class="content">
+            <h2>🎉 Your Order is Confirmed!</h2>
+            <p>Hi {{customer_name}},</p>
+            <p>Thank you for your order! We're excited to get your fashion items ready for you.</p>
+            
+            <div class="highlight-box">
+                <p><strong>🚀 What's Next?</strong></p>
+                <p>• We'll start processing your order immediately</p>
+                <p>• You'll receive tracking information once shipped</p>
+                <p>• Estimated delivery: 3-5 business days</p>
+            </div>
 
-🎉 Thank you for your order! We're excited to get your items to you.
+            <div class="order-details">
+                <h3>📋 Order Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Order Number:</span>
+                    <span class="detail-value">#{{order_id}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Order Date:</span>
+                    <span class="detail-value">{{order_date}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Total Amount:</span>
+                    <span class="detail-value">₹{{order_total}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method:</span>
+                    <span class="detail-value">{{payment_method}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Shipping Address:</span>
+                    <span class="detail-value">{{shipping_address}}</span>
+                </div>
+            </div>
 
-📋 ORDER DETAILS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Order ID: {{order_id}}
-Order Date: {{order_date}} at {{order_time}}
-Total Amount: {{total_amount}}
-Payment Method: {{payment_method}}
-Estimated Delivery: {{estimated_delivery}}
+            <div style="text-align: center;">
+                <a href="{{website_url}}/orders/{{order_id}}" class="btn">Track Your Order</a>
+            </div>
 
-🛍️ WHAT YOU ORDERED ({{order_items_count}} items)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{{order_items}}
+            <div class="divider"></div>
+            <p>Questions about your order? Just reply to this email or contact us at {{support_email}}</p>
+            <p>Thank you for choosing Nuvante! 💜</p>
+        </div>
+        <div class="footer">
+            <p><strong>Nuvante</strong></p>
+            <p>Fashion That Speaks Your Style</p>
+            <p>
+                <a href="mailto:support@nuvante.in">support@nuvante.in</a> | 
+                <a href="https://nuvante.com">nuvante.com</a>
+            </p>
+            <p>&copy; {{current_year}} Nuvante. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`,
+      plainTextContent: `🎉 Your Order is Confirmed!
 
-🚚 SHIPPING TO
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-{{shipping_address}}
+Hi {{customer_name}},
 
-📦 Track your order: {{website_url}}/orders/{{order_id}}
-📞 Need help? Contact: {{support_email}}
+Thank you for your order! We're excited to get your fashion items ready for you.
 
-Thank you for choosing {{website_name}}!
-© {{current_year}} {{website_name}}. All rights reserved.`,
-      variables: [
-        { name: 'customer_name', description: 'Customer full name (auto-filled)', example: 'John Doe' },
-        { name: 'order_id', description: 'Order identifier (auto-filled)', example: 'ORD-123456' },
-        { name: 'order_date', description: 'Order date (auto-filled)', example: '15/06/2024' },
-        { name: 'order_time', description: 'Order time (auto-filled)', example: '2:30 PM' },
-        { name: 'total_amount', description: 'Order total (auto-filled)', example: '₹1,299' },
-        { name: 'payment_method', description: 'Payment method (auto-filled)', example: 'Credit Card' },
-        { name: 'estimated_delivery', description: 'Delivery date (auto-calculated)', example: '20/06/2024' },
-        { name: 'order_items', description: 'Product details (AUTO-FETCHED from database)', example: '• Nuvante Classic T-Shirt\n  Size: M | Qty: 2 | Price: ₹599\n  Subtotal: ₹1,198' },
-        { name: 'order_items_count', description: 'Number of items (auto-calculated)', example: '3' },
-        { name: 'shipping_address', description: 'Formatted address (auto-filled)', example: 'John Doe\n123 Main Street\nMumbai 400001\nPhone: +91 9876543210' }
-      ]
-    },
-    welcome: {
-      name: 'Welcome Email',
-      subject: 'Welcome to {{website_name}}! 🎉',
-      templateType: 'welcome',
-      plainTextContent: `Hello {{customer_name}}! 👋
+Order Details:
+- Order Number: #{{order_id}}
+- Order Date: {{order_date}}
+- Total Amount: ₹{{order_total}}
+- Payment Method: {{payment_method}}
+- Shipping Address: {{shipping_address}}
 
-🎉 Welcome to {{website_name}}!
-
-Thank you for joining our fashion community. We're excited to have you here!
-
-What you can do next:
-🛍️ Browse our latest collection
-👤 Complete your profile for personalized recommendations  
-📧 Subscribe to our newsletter for exclusive deals
-📱 Follow us on social media for updates
-
-🚀 Get started: {{getting_started_url}}
-🛒 Shop now: {{website_url}}
+Track your order: {{website_url}}/orders/{{order_id}}
 
 Questions? Contact us at {{support_email}}
 
-Welcome aboard!
-© {{current_year}} {{website_name}}`,
+Thank you for choosing Nuvante!
+
+© {{current_year}} Nuvante. All rights reserved.`,
       variables: [
-        { name: 'customer_name', description: 'Customer full name', example: 'John Doe' },
-        { name: 'welcome_message', description: 'Personal welcome message', example: 'Welcome to our fashion community!' },
-        { name: 'getting_started_url', description: 'Getting started page URL', example: '/welcome' }
+        { name: 'customer_name', description: 'Customer full name (auto-filled)', example: 'John Doe' },
+        { name: 'order_id', description: 'Order identifier (auto-filled)', example: 'ORD-123456' },
+        { name: 'order_date', description: 'Order date (auto-filled)', example: '18/01/2025' },
+        { name: 'order_total', description: 'Order total amount (auto-filled)', example: '2999' },
+        { name: 'payment_method', description: 'Payment method (auto-filled)', example: 'Credit Card' },
+        { name: 'shipping_address', description: 'Shipping address (auto-filled)', example: 'Mumbai, Maharashtra' },
+        { name: 'website_url', description: 'Website URL (auto-filled)', example: 'https://nuvante.com' },
+        { name: 'support_email', description: 'Support email (auto-filled)', example: 'support@nuvante.in' },
+        { name: 'current_year', description: 'Current year (auto-filled)', example: '2025' }
+      ]
+    },
+    welcome: {
+      name: 'Welcome Email - Professional',
+      subject: '🌟 Welcome to Nuvante, {{customer_name}}!',
+      templateType: 'welcome',
+      htmlContent: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Nuvante</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }
+        .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+        .logo { max-width: 180px; height: auto; margin-bottom: 15px; }
+        .header h1 { font-size: 28px; font-weight: 600; margin: 0; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
+        .content p { margin-bottom: 16px; color: #555; }
+        .highlight-box { background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .order-details { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .order-details h3 { color: #2c3e50; margin-bottom: 15px; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; text-align: center; }
+        .footer { background: #2c3e50; color: #bdc3c7; padding: 30px; text-align: center; font-size: 14px; }
+        .footer a { color: #3498db; text-decoration: none; }
+        .divider { height: 1px; background: #e9ecef; margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://nuvante.com/logo-white.png" alt="Nuvante Logo" class="logo">
+            <h1>Nuvante</h1>
+        </div>
+        <div class="content">
+            <h2>🌟 Welcome to the Nuvante Family!</h2>
+            <p>Hi {{customer_name}},</p>
+            <p>Welcome to Nuvante! We're thrilled to have you join our fashion community.</p>
+            
+            <div class="highlight-box">
+                <p><strong>🎁 Special Welcome Offer</strong></p>
+                <p>Get <strong>15% OFF</strong> your first order with code: <strong>WELCOME15</strong></p>
+                <p>Valid for the next 7 days!</p>
+            </div>
+
+            <div class="order-details">
+                <h3>🚀 Get Started</h3>
+                <div style="padding: 10px 0;">
+                    <p>🛍️ <strong>Browse Collections:</strong> Discover our latest fashion trends</p>
+                    <p>👤 <strong>Complete Profile:</strong> Get personalized recommendations</p>
+                    <p>💌 <strong>Follow Us:</strong> Stay updated with exclusive deals</p>
+                    <p>📱 <strong>Download App:</strong> Shop on the go</p>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{website_url}}" class="btn">Start Shopping</a>
+            </div>
+
+            <div class="divider"></div>
+            <p>Questions? We're here to help! Contact us at {{support_email}}</p>
+            <p>Happy shopping! 💜</p>
+        </div>
+        <div class="footer">
+            <p><strong>Nuvante</strong></p>
+            <p>Fashion That Speaks Your Style</p>
+            <p>
+                <a href="mailto:support@nuvante.in">support@nuvante.in</a> | 
+                <a href="https://nuvante.com">nuvante.com</a>
+            </p>
+            <p>&copy; {{current_year}} Nuvante. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`,
+      plainTextContent: `🌟 Welcome to the Nuvante Family!
+
+Hi {{customer_name}},
+
+Welcome to Nuvante! We're thrilled to have you join our fashion community.
+
+🎁 Special Welcome Offer
+Get 15% OFF your first order with code: WELCOME15
+Valid for the next 7 days!
+
+🚀 Get Started:
+🛍️ Browse Collections: Discover our latest fashion trends
+👤 Complete Profile: Get personalized recommendations  
+💌 Follow Us: Stay updated with exclusive deals
+📱 Download App: Shop on the go
+
+Start shopping: {{website_url}}
+
+Questions? Contact us at {{support_email}}
+
+Happy shopping! 💜
+
+© {{current_year}} Nuvante. All rights reserved.`,
+      variables: [
+        { name: 'customer_name', description: 'Customer full name (auto-filled)', example: 'John Doe' },
+        { name: 'website_url', description: 'Website URL (auto-filled)', example: 'https://nuvante.com' },
+        { name: 'support_email', description: 'Support email (auto-filled)', example: 'support@nuvante.in' },
+        { name: 'current_year', description: 'Current year (auto-filled)', example: '2025' }
       ]
     },
     order_shipped: {
-      name: 'Order Shipped',
-      subject: 'Your Order is On the Way! 📦 - {{order_id}}',
+      name: 'Order Shipped - Professional',
+      subject: '📦 Your Order #{{order_id}} is On Its Way!',
       templateType: 'order_shipped',
-      plainTextContent: `Hello {{customer_name}}!
+      htmlContent: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Shipped</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }
+        .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+        .logo { max-width: 180px; height: auto; margin-bottom: 15px; }
+        .header h1 { font-size: 28px; font-weight: 600; margin: 0; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
+        .content p { margin-bottom: 16px; color: #555; }
+        .highlight-box { background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .order-details { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+        .order-details h3 { color: #2c3e50; margin-bottom: 15px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f3f4; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-weight: 600; color: #555; }
+        .detail-value { color: #333; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; text-align: center; }
+        .footer { background: #2c3e50; color: #bdc3c7; padding: 30px; text-align: center; font-size: 14px; }
+        .footer a { color: #3498db; text-decoration: none; }
+        .divider { height: 1px; background: #e9ecef; margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://nuvante.com/logo-white.png" alt="Nuvante Logo" class="logo">
+            <h1>Nuvante</h1>
+        </div>
+        <div class="content">
+            <h2>📦 Your Order is Shipped!</h2>
+            <p>Great news {{customer_name}}!</p>
+            <p>Your order has been carefully packed and is now on its way to you.</p>
+            
+            <div class="highlight-box">
+                <p><strong>📍 Tracking Information</strong></p>
+                <p>Tracking Number: <strong>{{tracking_number}}</strong></p>
+                <p>Carrier: {{shipping_carrier}}</p>
+                <p>Estimated Delivery: 2-3 business days</p>
+            </div>
 
-📦 Great news! Your order has been shipped and is on its way to you.
+            <div class="order-details">
+                <h3>📋 Shipment Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Order Number:</span>
+                    <span class="detail-value">#{{order_id}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Ship Date:</span>
+                    <span class="detail-value">{{ship_date}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Tracking Number:</span>
+                    <span class="detail-value">{{tracking_number}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Shipping Carrier:</span>
+                    <span class="detail-value">{{shipping_carrier}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Delivery Address:</span>
+                    <span class="detail-value">{{shipping_address}}</span>
+                </div>
+            </div>
 
-📍 TRACKING INFORMATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Tracking ID: {{tracking_id}}
-Order ID: {{order_id}}
-Estimated Delivery: {{estimated_delivery}}
+            <div style="text-align: center;">
+                <a href="{{tracking_url}}" class="btn">Track Package</a>
+            </div>
 
-🔍 Track your package: {{tracking_url}}
+            <div class="divider"></div>
+            <p><strong>💡 Delivery Tips:</strong></p>
+            <p>• Someone should be available to receive the package</p>
+            <p>• Keep your tracking number handy</p>
+            <p>• Contact us if you have any delivery concerns</p>
+        </div>
+        <div class="footer">
+            <p><strong>Nuvante</strong></p>
+            <p>Fashion That Speaks Your Style</p>
+            <p>
+                <a href="mailto:support@nuvante.in">support@nuvante.in</a> | 
+                <a href="https://nuvante.com">nuvante.com</a>
+            </p>
+            <p>&copy; {{current_year}} Nuvante. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`,
+      plainTextContent: `📦 Your Order is Shipped!
 
-Thank you for shopping with {{website_name}}!
-© {{current_year}} {{website_name}}`,
+Great news {{customer_name}}!
+
+Your order has been carefully packed and is now on its way to you.
+
+Tracking Information:
+- Tracking Number: {{tracking_number}}
+- Carrier: {{shipping_carrier}}
+- Estimated Delivery: 2-3 business days
+
+Shipment Details:
+- Order Number: #{{order_id}}
+- Ship Date: {{ship_date}}
+- Delivery Address: {{shipping_address}}
+
+Track your package: {{tracking_url}}
+
+Questions? Contact us at {{support_email}}
+
+© {{current_year}} Nuvante. All rights reserved.`,
       variables: [
-        { name: 'customer_name', description: 'Customer full name', example: 'John Doe' },
-        { name: 'order_id', description: 'Order identifier', example: 'ORD-123456' },
-        { name: 'tracking_id', description: 'Shipment tracking ID', example: 'TRK-789012' },
-        { name: 'estimated_delivery', description: 'Expected delivery date', example: '25/06/2024' },
-        { name: 'tracking_url', description: 'Tracking URL', example: 'https://track.shipper.com/TRK-789012' }
+        { name: 'customer_name', description: 'Customer full name (auto-filled)', example: 'John Doe' },
+        { name: 'order_id', description: 'Order identifier (auto-filled)', example: 'ORD-123456' },
+        { name: 'ship_date', description: 'Ship date (auto-filled)', example: '19/01/2025' },
+        { name: 'tracking_number', description: 'Tracking number (auto-filled)', example: 'TRK789012' },
+        { name: 'shipping_carrier', description: 'Shipping carrier (auto-filled)', example: 'Blue Dart' },
+        { name: 'shipping_address', description: 'Shipping address (auto-filled)', example: 'Mumbai, Maharashtra' },
+        { name: 'tracking_url', description: 'Tracking URL (auto-filled)', example: 'https://tracking.example.com/TRK789012' },
+        { name: 'support_email', description: 'Support email (auto-filled)', example: 'support@nuvante.in' },
+        { name: 'current_year', description: 'Current year (auto-filled)', example: '2025' }
+      ]
+    },
+    password_reset: {
+      name: 'Password Reset - Professional',
+      subject: '🔐 Reset Your Nuvante Password',
+      templateType: 'password_reset',
+      htmlContent: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }
+        .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+        .logo { max-width: 180px; height: auto; margin-bottom: 15px; }
+        .header h1 { font-size: 28px; font-weight: 600; margin: 0; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
+        .content p { margin-bottom: 16px; color: #555; }
+        .highlight-box { background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; text-align: center; }
+        .footer { background: #2c3e50; color: #bdc3c7; padding: 30px; text-align: center; font-size: 14px; }
+        .footer a { color: #3498db; text-decoration: none; }
+        .divider { height: 1px; background: #e9ecef; margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://nuvante.com/logo-white.png" alt="Nuvante Logo" class="logo">
+            <h1>Nuvante</h1>
+        </div>
+        <div class="content">
+            <h2>🔐 Password Reset Request</h2>
+            <p>Hi {{customer_name}},</p>
+            <p>We received a request to reset your Nuvante account password.</p>
+            
+            <div class="highlight-box">
+                <p><strong>🔒 Security Information</strong></p>
+                <p>If you didn't request this password reset, please ignore this email.</p>
+                <p>This link will expire in 1 hour for your security.</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{reset_url}}" class="btn">Reset Password</a>
+            </div>
+
+            <div class="divider"></div>
+            <p><strong>Can't click the button?</strong> Copy and paste this link into your browser:</p>
+            <p style="word-break: break-all; color: #666;">{{reset_url}}</p>
+            
+            <p>If you have any questions, contact us at {{support_email}}</p>
+        </div>
+        <div class="footer">
+            <p><strong>Nuvante</strong></p>
+            <p>Fashion That Speaks Your Style</p>
+            <p>
+                <a href="mailto:support@nuvante.in">support@nuvante.in</a> | 
+                <a href="https://nuvante.com">nuvante.com</a>
+            </p>
+            <p>&copy; {{current_year}} Nuvante. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`,
+      plainTextContent: `🔐 Password Reset Request
+
+Hi {{customer_name}},
+
+We received a request to reset your Nuvante account password.
+
+If you didn't request this password reset, please ignore this email.
+This link will expire in 1 hour for your security.
+
+Reset your password: {{reset_url}}
+
+If you have any questions, contact us at {{support_email}}
+
+© {{current_year}} Nuvante. All rights reserved.`,
+      variables: [
+        { name: 'customer_name', description: 'Customer full name (auto-filled)', example: 'John Doe' },
+        { name: 'reset_url', description: 'Password reset URL (auto-generated)', example: 'https://nuvante.com/reset-password?token=abc123' },
+        { name: 'support_email', description: 'Support email (auto-filled)', example: 'support@nuvante.in' },
+        { name: 'current_year', description: 'Current year (auto-filled)', example: '2025' }
+      ]
+    },
+    newsletter: {
+      name: 'Newsletter - Professional',
+      subject: '📧 {{newsletter_title}} - Nuvante',
+      templateType: 'newsletter',
+      htmlContent: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }
+        .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+        .logo { max-width: 180px; height: auto; margin-bottom: 15px; }
+        .header h1 { font-size: 28px; font-weight: 600; margin: 0; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
+        .content p { margin-bottom: 16px; color: #555; }
+        .highlight-box { background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; text-align: center; }
+        .footer { background: #2c3e50; color: #bdc3c7; padding: 30px; text-align: center; font-size: 14px; }
+        .footer a { color: #3498db; text-decoration: none; }
+        .divider { height: 1px; background: #e9ecef; margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://nuvante.com/logo-white.png" alt="Nuvante Logo" class="logo">
+            <h1>Nuvante</h1>
+        </div>
+        <div class="content">
+            <h2>{{newsletter_title}}</h2>
+            <p>Hi {{customer_name}},</p>
+            
+            <div class="highlight-box">
+                <p><strong>{{newsletter_highlight}}</strong></p>
+            </div>
+            
+            <div>{{newsletter_content}}</div>
+
+            <div style="text-align: center;">
+                <a href="{{cta_url}}" class="btn">{{cta_text}}</a>
+            </div>
+
+            <div class="divider"></div>
+            <p>Thanks for being part of the Nuvante family!</p>
+        </div>
+        <div class="footer">
+            <p><strong>Nuvante</strong></p>
+            <p>Fashion That Speaks Your Style</p>
+            <p>
+                <a href="mailto:support@nuvante.in">support@nuvante.in</a> | 
+                <a href="https://nuvante.com">nuvante.com</a>
+            </p>
+            <p>&copy; {{current_year}} Nuvante. All rights reserved.</p>
+            <p><a href="{{unsubscribe_url}}">Unsubscribe</a></p>
+        </div>
+    </div>
+</body>
+</html>`,
+      plainTextContent: `{{newsletter_title}}
+
+Hi {{customer_name}},
+
+{{newsletter_highlight}}
+
+{{newsletter_content}}
+
+{{cta_text}}: {{cta_url}}
+
+Thanks for being part of the Nuvante family!
+
+Unsubscribe: {{unsubscribe_url}}
+
+© {{current_year}} Nuvante. All rights reserved.`,
+      variables: [
+        { name: 'customer_name', description: 'Customer full name (auto-filled)', example: 'John Doe' },
+        { name: 'newsletter_title', description: 'Newsletter title (customize)', example: 'New Collection Launch' },
+        { name: 'newsletter_highlight', description: 'Main highlight (customize)', example: '50% OFF on all summer wear!' },
+        { name: 'newsletter_content', description: 'Newsletter content (customize)', example: 'Discover our latest collection...' },
+        { name: 'cta_text', description: 'Call-to-action text (customize)', example: 'Shop Now' },
+        { name: 'cta_url', description: 'Call-to-action URL (customize)', example: 'https://nuvante.com/sale' },
+        { name: 'unsubscribe_url', description: 'Unsubscribe URL (auto-generated)', example: 'https://nuvante.com/unsubscribe' },
+        { name: 'current_year', description: 'Current year (auto-filled)', example: '2025' }
+      ]
+    },
+    custom: {
+      name: 'Custom Template - Professional',
+      subject: '{{email_subject}} - Nuvante',
+      templateType: 'custom',
+      htmlContent: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{email_subject}}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; line-height: 1.6; color: #333; background-color: #f8f9fa; }
+        .email-container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
+        .logo { max-width: 180px; height: auto; margin-bottom: 15px; }
+        .header h1 { font-size: 28px; font-weight: 600; margin: 0; }
+        .content { padding: 40px 30px; }
+        .content h2 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
+        .content p { margin-bottom: 16px; color: #555; }
+        .highlight-box { background: #f8f9ff; border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 4px; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; text-align: center; }
+        .footer { background: #2c3e50; color: #bdc3c7; padding: 30px; text-align: center; font-size: 14px; }
+        .footer a { color: #3498db; text-decoration: none; }
+        .divider { height: 1px; background: #e9ecef; margin: 30px 0; }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://nuvante.com/logo-white.png" alt="Nuvante Logo" class="logo">
+            <h1>Nuvante</h1>
+        </div>
+        <div class="content">
+            <h2>{{email_title}}</h2>
+            <p>Hi {{customer_name}},</p>
+            
+            <div class="highlight-box">
+                <p><strong>{{highlight_message}}</strong></p>
+            </div>
+            
+            <div>{{email_content}}</div>
+
+            <div style="text-align: center;">
+                <a href="{{cta_url}}" class="btn">{{cta_text}}</a>
+            </div>
+
+            <div class="divider"></div>
+            <p>{{closing_message}}</p>
+        </div>
+        <div class="footer">
+            <p><strong>Nuvante</strong></p>
+            <p>Fashion That Speaks Your Style</p>
+            <p>
+                <a href="mailto:support@nuvante.in">support@nuvante.in</a> | 
+                <a href="https://nuvante.com">nuvante.com</a>
+            </p>
+            <p>&copy; {{current_year}} Nuvante. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`,
+      plainTextContent: `{{email_title}}
+
+Hi {{customer_name}},
+
+{{highlight_message}}
+
+{{email_content}}
+
+{{cta_text}}: {{cta_url}}
+
+{{closing_message}}
+
+© {{current_year}} Nuvante. All rights reserved.`,
+      variables: [
+        { name: 'customer_name', description: 'Customer full name (auto-filled)', example: 'John Doe' },
+        { name: 'email_subject', description: 'Email subject line (customize)', example: 'Important Update' },
+        { name: 'email_title', description: 'Main email title (customize)', example: 'Important Update' },
+        { name: 'highlight_message', description: 'Highlighted message (customize)', example: 'This is important information' },
+        { name: 'email_content', description: 'Main email content (customize)', example: 'Your custom email content goes here...' },
+        { name: 'cta_text', description: 'Call-to-action text (customize)', example: 'Learn More' },
+        { name: 'cta_url', description: 'Call-to-action URL (customize)', example: 'https://nuvante.com' },
+        { name: 'closing_message', description: 'Closing message (customize)', example: 'Thank you for being a valued customer!' },
+        { name: 'current_year', description: 'Current year (auto-filled)', example: '2025' }
       ]
     }
   };
@@ -495,82 +1029,111 @@ Thank you for shopping with {{website_name}}!
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto p-6">
             {/* Template Mode Selection */}
-            {!template && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  How do you want to create your email?
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Template Type
+              </label>
+              <div className="flex space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="preset"
+                    checked={templateMode === 'preset'}
+                    onChange={(e) => setTemplateMode(e.target.value as any)}
+                    className="mr-2"
+                  />
+                  Professional Templates (Recommended)
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <label className="flex flex-col items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      value="preset"
-                      checked={templateMode === 'preset'}
-                      onChange={(e) => setTemplateMode(e.target.value as any)}
-                      className="mb-2"
-                    />
-                    <span className="text-2xl mb-2">🎯</span>
-                    <span className="text-sm font-medium text-center">
-                      <strong>Smart Templates</strong><br/>
-                      Pre-built with automatic product details
-                    </span>
-                  </label>
-                  <label className="flex flex-col items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      value="simple"
-                      checked={templateMode === 'simple'}
-                      onChange={(e) => setTemplateMode(e.target.value as any)}
-                      className="mb-2"
-                    />
-                    <span className="text-2xl mb-2">📝</span>
-                    <span className="text-sm font-medium text-center">
-                      <strong>Simple</strong><br/>
-                      Write content, auto-style
-                    </span>
-                  </label>
-                  <label className="flex flex-col items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="radio"
-                      value="advanced"
-                      checked={templateMode === 'advanced'}
-                      onChange={(e) => setTemplateMode(e.target.value as any)}
-                      className="mb-2"
-                    />
-                    <span className="text-2xl mb-2">🎨</span>
-                    <span className="text-sm font-medium text-center">
-                      <strong>Advanced</strong><br/>
-                      Full HTML control
-                    </span>
-                  </label>
-                </div>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="simple"
+                    checked={templateMode === 'simple'}
+                    onChange={(e) => setTemplateMode(e.target.value as any)}
+                    className="mr-2"
+                  />
+                  Simple HTML
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="advanced"
+                    checked={templateMode === 'advanced'}
+                    onChange={(e) => setTemplateMode(e.target.value as any)}
+                    className="mr-2"
+                  />
+                  Custom HTML
+                </label>
               </div>
-            )}
+            </div>
 
-            {/* Preset Template Selection */}
-            {templateMode === 'preset' && !template && (
+            {/* Professional Template Selector */}
+            {templateMode === 'preset' && (
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Choose a Smart Template
+                  Choose Professional Template
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {Object.entries(presetTemplates).map(([key, preset]) => (
-                    <label key={key} className="flex flex-col p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="radio"
-                        value={key}
-                        checked={selectedPreset === key}
-                        onChange={(e) => setSelectedPreset(e.target.value)}
-                        className="mb-2"
-                      />
-                      <span className="font-medium">{preset.name}</span>
-                      <span className="text-xs text-gray-500 mt-1">
-                        {key === 'order_confirmation' && '✨ Auto-fetches product details from your database'}
-                        {key === 'welcome' && '🎉 Perfect for new customer onboarding'}
-                        {key === 'order_shipped' && '📦 Keeps customers updated on deliveries'}
-                      </span>
-                    </label>
+                    <div
+                      key={key}
+                      onClick={() => setSelectedPreset(key)}
+                      className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                        selectedPreset === key
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">{preset.name}</h3>
+                        <input
+                          type="radio"
+                          checked={selectedPreset === key}
+                          onChange={() => setSelectedPreset(key)}
+                          className="text-blue-600"
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{preset.subject}</p>
+                      <p className="text-xs text-gray-500">
+                        {preset.variables.length} variables included
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {preset.variables.slice(0, 3).map((variable, index) => (
+                          <span
+                            key={index}
+                            className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded"
+                          >
+                            {variable.name}
+                          </span>
+                        ))}
+                        {preset.variables.length > 3 && (
+                          <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                            +{preset.variables.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   ))}
+                </div>
+                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <CheckCircle className="h-5 w-5 text-green-400" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-green-800">
+                        Professional templates include:
+                      </h3>
+                      <div className="mt-2 text-sm text-green-700">
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li>Nuvante logo and branding</li>
+                          <li>Mobile-responsive design</li>
+                          <li>All required variables pre-defined</li>
+                          <li>Professional styling and layout</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1361,13 +1924,71 @@ export default function EmailAutomationPage() {
                 <h1 className="text-xl font-semibold text-gray-900">Email Automation</h1>
               </div>
             </div>
-            <button
-              onClick={handleCreateTemplate}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Template
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/admin/seed-templates', { method: 'POST' });
+                    const result = await response.json();
+                    if (result.success) {
+                      alert(`✅ ${result.message}\n\nLoaded ${result.count} professional templates!`);
+                      fetchData(); // Refresh the templates list
+                    } else {
+                      alert(`❌ Error: ${result.error}`);
+                    }
+                  } catch (error) {
+                    alert('❌ Failed to load templates');
+                  }
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Load Professional Templates
+              </button>
+              <button
+                onClick={async () => {
+                  const email = prompt('Enter your email to test:');
+                  if (!email) return;
+                  
+                  try {
+                    const response = await fetch('/api/webhooks/order-success', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        success: true,
+                        orderId: 'TEST-' + Date.now(),
+                        customerEmail: email,
+                        customerName: 'Test User',
+                        orderDate: new Date().toLocaleDateString('en-IN'),
+                        orderTotal: '2999',
+                        paymentMethod: 'Test Payment',
+                        shippingAddress: 'Test Address, Mumbai'
+                      })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                      alert(`✅ Test email sent successfully to ${email}!`);
+                      fetchData(); // Refresh logs
+                    } else {
+                      alert(`❌ Failed to send test email: ${result.error || result.details}`);
+                    }
+                  } catch (error) {
+                    alert('❌ Failed to send test email');
+                  }
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                Test Email System
+              </button>
+              <button
+                onClick={handleCreateTemplate}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                New Template
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1481,7 +2102,10 @@ export default function EmailAutomationPage() {
                 <Mail className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">No templates found</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  Get started by creating a new email template.
+                  Click "Load Professional Templates" above to get started with beautiful, ready-to-use email templates.
+                </p>
+                <p className="mt-2 text-xs text-gray-400">
+                  Or create a new custom template from scratch.
                 </p>
               </div>
             )}
