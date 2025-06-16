@@ -175,6 +175,583 @@ const TemplateCard = ({
   </motion.div>
 );
 
+// Template Creation Modal Component
+const TemplateModal = ({ 
+  isOpen, 
+  onClose, 
+  template, 
+  onSave,
+  userEmail 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  template: EmailTemplate | null;
+  onSave: () => void;
+  userEmail: string;
+}) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    subject: '',
+    htmlContent: '',
+    plainTextContent: '',
+    templateType: 'custom',
+    isActive: true,
+    variables: [] as Array<{ name: string; description: string; example: string }>
+  });
+  const [templateMode, setTemplateMode] = useState<'simple' | 'advanced'>('simple');
+  const [saving, setSaving] = useState(false);
+  const [newVariable, setNewVariable] = useState({ name: '', description: '', example: '' });
+
+  useEffect(() => {
+    if (template) {
+      setFormData({
+        name: template.name,
+        subject: template.subject,
+        htmlContent: template.htmlContent,
+        plainTextContent: template.plainTextContent,
+        templateType: template.templateType,
+        isActive: template.isActive,
+        variables: template.variables || []
+      });
+      // Determine mode based on HTML content complexity
+      setTemplateMode(template.htmlContent.includes('<html>') ? 'advanced' : 'simple');
+    } else {
+      setFormData({
+        name: '',
+        subject: '',
+        htmlContent: '',
+        plainTextContent: '',
+        templateType: 'custom',
+        isActive: true,
+        variables: []
+      });
+      setTemplateMode('simple');
+    }
+  }, [template, isOpen]);
+
+  const generateSimpleHtml = (content: string) => {
+    return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${formData.subject}</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #f9f9f9;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header { 
+            border-bottom: 2px solid #4F46E5; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px; 
+        }
+        .content { 
+            white-space: pre-line; 
+            margin-bottom: 30px; 
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 30px; 
+            padding-top: 20px; 
+            border-top: 1px solid #eee; 
+            font-size: 14px; 
+            color: #666; 
+        }
+        .button { 
+            display: inline-block; 
+            background: #4F46E5; 
+            color: white; 
+            padding: 12px 24px; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            margin: 10px 0; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0; color: #4F46E5;">${formData.subject}</h1>
+        </div>
+        
+        <div class="content">
+            ${content.replace(/\n/g, '<br>')}
+        </div>
+        
+        <div class="footer">
+            <p>Need help? Contact us at {{support_email}}</p>
+            <p>© {{current_year}} {{website_name}}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>`;
+  };
+
+  const addVariable = () => {
+    if (newVariable.name && newVariable.description) {
+      setFormData(prev => ({
+        ...prev,
+        variables: [...prev.variables, { ...newVariable }]
+      }));
+      setNewVariable({ name: '', description: '', example: '' });
+    }
+  };
+
+  const removeVariable = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      variables: prev.variables.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+
+    try {
+      const submitData = {
+        ...formData,
+        htmlContent: templateMode === 'simple' 
+          ? generateSimpleHtml(formData.plainTextContent)
+          : formData.htmlContent
+      };
+
+      const url = template 
+        ? `/api/admin/email-templates/${template._id}`
+        : '/api/admin/email-templates';
+      
+      const method = template ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': userEmail,
+        },
+        body: JSON.stringify(submitData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        onSave();
+        onClose();
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error saving template:', error);
+      alert('Failed to save template');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-semibold">
+            {template ? 'Edit Template' : 'Create New Template'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+          <div className="flex-1 overflow-y-auto p-6">
+            {/* Template Mode Selection */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Template Type
+              </label>
+              <div className="flex space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="simple"
+                    checked={templateMode === 'simple'}
+                    onChange={(e) => setTemplateMode(e.target.value as 'simple' | 'advanced')}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">
+                    📝 <strong>Simple</strong> - Clean, professional emails with automatic styling
+                  </span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    value="advanced"
+                    checked={templateMode === 'advanced'}
+                    onChange={(e) => setTemplateMode(e.target.value as 'simple' | 'advanced')}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">
+                    🎨 <strong>Advanced</strong> - Full HTML control with custom styling
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Template Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., Order Confirmation"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Template Category
+                </label>
+                <select
+                  value={formData.templateType}
+                  onChange={(e) => setFormData(prev => ({ ...prev, templateType: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="custom">Custom</option>
+                  <option value="order_confirmation">Order Confirmation</option>
+                  <option value="order_shipped">Order Shipped</option>
+                  <option value="order_delivered">Order Delivered</option>
+                  <option value="welcome">Welcome Email</option>
+                  <option value="password_reset">Password Reset</option>
+                  <option value="newsletter">Newsletter</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email Subject *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.subject}
+                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., Order Confirmation - {{order_id}}"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                                 Use {'{'}{'{'} variable_name {'}'}{'}'}  for dynamic content
+              </p>
+            </div>
+
+            {/* Content Based on Mode */}
+            {templateMode === 'simple' ? (
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Content *
+                </label>
+                <textarea
+                  required
+                  value={formData.plainTextContent}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    plainTextContent: e.target.value 
+                  }))}
+                  rows={12}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                  placeholder="Hello {{customer_name}},
+
+Thank you for your order! Here are the details:
+
+Order ID: {{order_id}}
+Total: {{total_amount}}
+
+We'll process your order shortly.
+
+Best regards,
+The Nuvante Team"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Write your email content here. HTML will be generated automatically with professional styling.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    HTML Content *
+                  </label>
+                  <textarea
+                    required
+                    value={formData.htmlContent}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      htmlContent: e.target.value 
+                    }))}
+                    rows={12}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                    placeholder="<!DOCTYPE html>
+<html>
+<head>
+  <title>{{subject}}</title>
+</head>
+<body>
+  <h1>Hello {{customer_name}}!</h1>
+  <!-- Your HTML content here -->
+</body>
+</html>"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Plain Text Content *
+                  </label>
+                  <textarea
+                    required
+                    value={formData.plainTextContent}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      plainTextContent: e.target.value 
+                    }))}
+                    rows={12}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                    placeholder="Hello {{customer_name}},
+
+This is the plain text version of your email...
+
+Best regards,
+The Nuvante Team"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Variables Section */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Template Variables
+              </label>
+              
+              {/* Add Variable */}
+              <div className="bg-gray-50 p-4 rounded-md mb-4">
+                <h4 className="text-sm font-medium mb-2">Add New Variable</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Variable name (e.g., customer_name)"
+                    value={newVariable.name}
+                    onChange={(e) => setNewVariable(prev => ({ ...prev, name: e.target.value }))}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Description"
+                    value={newVariable.description}
+                    onChange={(e) => setNewVariable(prev => ({ ...prev, description: e.target.value }))}
+                    className="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      placeholder="Example value"
+                      value={newVariable.example}
+                      onChange={(e) => setNewVariable(prev => ({ ...prev, example: e.target.value }))}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={addVariable}
+                      className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Variable List */}
+              {formData.variables.length > 0 && (
+                <div className="space-y-2">
+                  {formData.variables.map((variable, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-md">
+                      <div className="flex-1">
+                        <span className="font-mono text-sm text-blue-600">{`{{${variable.name}}}`}</span>
+                        <span className="ml-2 text-sm text-gray-600">- {variable.description}</span>
+                        {variable.example && (
+                          <span className="ml-2 text-xs text-gray-500">
+                            (e.g., {variable.example})
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeVariable(index)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* System Variables Info */}
+                             <div className="mt-4 p-3 bg-blue-50 rounded-md">
+                 <h5 className="text-sm font-medium text-blue-900 mb-2">Available System Variables:</h5>
+                 <div className="text-xs text-blue-700 space-x-4">
+                   <span>{'{'}{'{'} current_year {'}'}{'}'}  </span>
+                   <span>{'{'}{'{'} current_date {'}'}{'}'}  </span>
+                   <span>{'{'}{'{'} website_name {'}'}{'}'}  </span>
+                   <span>{'{'}{'{'} website_url {'}'}{'}'}  </span>
+                   <span>{'{'}{'{'} support_email {'}'}{'}'}  </span>
+                 </div>
+               </div>
+            </div>
+
+            {/* Active Status */}
+            <div className="mb-6">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.isActive}
+                  onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                  className="mr-2"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Active Template (can be used for sending emails)
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between p-6 border-t bg-gray-50">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : (template ? 'Update Template' : 'Create Template')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Preview Modal Component
+const PreviewModal = ({ 
+  isOpen, 
+  onClose, 
+  template 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  template: EmailTemplate | null;
+}) => {
+  const [previewMode, setPreviewMode] = useState<'html' | 'text'>('html');
+
+  if (!isOpen || !template) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-xl font-semibold">Preview: {template.name}</h2>
+            <p className="text-sm text-gray-500">Subject: {template.subject}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setPreviewMode('html')}
+              className={`px-3 py-1 rounded text-sm ${
+                previewMode === 'html' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-white text-gray-700 border'
+              }`}
+            >
+              HTML Preview
+            </button>
+            <button
+              onClick={() => setPreviewMode('text')}
+              className={`px-3 py-1 rounded text-sm ${
+                previewMode === 'text' 
+                  ? 'bg-blue-500 text-white' 
+                  : 'bg-white text-gray-700 border'
+              }`}
+            >
+              Plain Text
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          {previewMode === 'html' ? (
+            <div className="border rounded-lg overflow-hidden">
+              <iframe
+                srcDoc={template.htmlContent}
+                className="w-full h-96 border-0"
+                title="HTML Preview"
+              />
+            </div>
+          ) : (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <pre className="whitespace-pre-wrap text-sm font-mono">
+                {template.plainTextContent}
+              </pre>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end p-6 border-t bg-gray-50">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function EmailAutomationPage() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
@@ -557,6 +1134,22 @@ export default function EmailAutomationPage() {
           </div>
         )}
       </div>
+
+      {/* Template Creation/Edit Modal */}
+      <TemplateModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        template={selectedTemplate}
+        onSave={fetchData}
+        userEmail={user?.emailAddresses[0]?.emailAddress || ''}
+      />
+
+      {/* Preview Modal */}
+      <PreviewModal
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        template={selectedTemplate}
+      />
     </div>
   );
 } 
