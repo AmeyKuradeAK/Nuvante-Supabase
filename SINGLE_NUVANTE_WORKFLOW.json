@@ -20,18 +20,9 @@
     {
       "parameters": {
         "conditions": {
-          "string": [
+          "boolean": [
             {
-              "value1": "={{ $json.success }}",
-              "value2": "true"
-            },
-            {
-              "value1": "={{ $json.orderId }}",
-              "operation": "isNotEmpty"
-            },
-            {
-              "value1": "={{ $json.customerEmail || $json.email || $json.shippingAddress?.email || $json.user?.email }}",
-              "operation": "isNotEmpty"
+              "value1": "={{ $json.success === true && $json.orderId && $json.customerEmail }}"
             }
           ]
         }
@@ -107,7 +98,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "{\n  \"success\": true,\n  \"message\": \"✅ Order email automation completed successfully!\",\n  \"orderId\": \"{{ $json.orderId }}\",\n  \"customerEmail\": \"{{ $json.customerEmail }}\",\n  \"customerName\": \"{{ $json.customerFullName }}\",\n  \"orderAmount\": \"{{ $json.formattedAmount }}\",\n  \"emailsSent\": { \"customer\": true, \"admin\": true },\n  \"timestamp\": \"{{ $now.toISOString() }}\",\n  \"webhookUrl\": \"POST /webhook/nuvante-order-success\"\n}"
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"✅ Order email automation completed successfully!\",\n  \"orderId\": \"{{ $json.orderId }}\",\n  \"customerEmail\": \"{{ $json.customerEmail }}\",\n  \"customerName\": \"{{ $json.customerFullName }}\",\n  \"orderAmount\": \"{{ $json.formattedAmount }}\",\n  \"emailsSent\": { \"customer\": true, \"admin\": true },\n  \"timestamp\": \"{{ new Date().toISOString() }}\",\n  \"webhookUrl\": \"POST /webhook/nuvante-order-success\"\n}"
       },
       "id": "a1d9f4e7-5c2b-4f8e-9d3a-6e7f8a9b1c40",
       "name": "Success Response",
@@ -118,7 +109,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "{\n  \"success\": false,\n  \"error\": \"❌ Order validation failed\",\n  \"message\": \"Invalid order data. Please ensure success=true, orderId exists, and customer email is provided.\",\n  \"requiredFields\": {\n    \"success\": \"Must be true\",\n    \"orderId\": \"Must not be empty\",\n    \"customerEmail\": \"Must provide: customerEmail, email, shippingAddress.email, or user.email\"\n  },\n  \"timestamp\": \"{{ $now.toISOString() }}\"\n}",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"❌ Order validation failed\",\n  \"message\": \"Invalid order data. Please ensure success=true, orderId exists, and customer email is provided.\",\n  \"requiredFields\": {\n    \"success\": \"Must be true\",\n    \"orderId\": \"Must not be empty\",\n    \"customerEmail\": \"Must not be empty\"\n  },\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
         "responseStatusCode": 400
       },
       "id": "b6e9c2f5-7a4d-4e8f-9b1c-2d5e8f7a4b60",

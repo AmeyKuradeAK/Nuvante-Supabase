@@ -1,0 +1,106 @@
+{
+  "name": "Nuvante Email Automation - Render",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "nuvante-order-success",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-node",
+      "name": "Order Success Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.success === true && $json.orderId && $json.customerEmail }}"
+            }
+          ]
+        }
+      },
+      "id": "validation-node",
+      "name": "Validate Order",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"✅ Order email automation completed successfully!\",\n  \"orderId\": \"{{ $json.orderId }}\",\n  \"customerEmail\": \"{{ $json.customerEmail }}\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\",\n  \"webhookUrl\": \"https://nuvante-email-n8n.onrender.com/webhook/nuvante-order-success\"\n}"
+      },
+      "id": "success-response-node",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 240]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"❌ Order validation failed\",\n  \"message\": \"Invalid order data. Please ensure success=true, orderId exists, and customer email is provided.\",\n  \"requiredFields\": {\n    \"success\": \"Must be true\",\n    \"orderId\": \"Must not be empty\",\n    \"customerEmail\": \"Must not be empty\"\n  },\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "responseStatusCode": 400
+      },
+      "id": "error-response-node",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [680, 400]
+    }
+  ],
+  "connections": {
+    "Order Success Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Order": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2024-12-19T16:30:00.000Z",
+  "updatedAt": "2024-12-19T16:30:00.000Z",
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2024-12-19T16:30:00.000Z",
+      "updatedAt": "2024-12-19T16:30:00.000Z",
+      "id": "nuvante-render", 
+      "name": "nuvante-render"
+    }
+  ],
+  "triggerCount": 1,
+  "versionId": "1"
+} 

@@ -472,6 +472,16 @@ export default function AdminDashboard() {
             badge="Debug"
           />
 
+          {/* Email Automation */}
+          <AdminCard
+            title="Email Automation"
+            description="Manage email templates, automate customer communications, and track email delivery"
+            href="/admin/email-automation"
+            icon={Mail}
+            color="green"
+            badge="New"
+          />
+
         </div>
 
         {/* Quick Actions */}
