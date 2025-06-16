@@ -682,32 +682,209 @@ The Nuvante Team"
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                <div>
+              <div className="mb-6">
+                {/* Advanced HTML Editor */}
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     HTML Content *
                   </label>
-                  <textarea
-                    required
-                    value={formData.htmlContent}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      htmlContent: e.target.value 
-                    }))}
-                    rows={12}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                    placeholder="<!DOCTYPE html>
+                  <div className="border border-gray-300 rounded-md">
+                    <div className="bg-gray-50 px-3 py-2 border-b border-gray-300 flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700">HTML Editor</span>
+                      <div className="flex space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const advancedTemplate = `<!DOCTYPE html>
 <html>
 <head>
-  <title>{{subject}}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{subject}}</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            line-height: 1.6; 
+            color: #333; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background-color: #f9f9f9;
+        }
+        .email-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header { 
+            border-bottom: 2px solid #4F46E5; 
+            padding-bottom: 20px; 
+            margin-bottom: 30px; 
+            text-align: center;
+        }
+        .header h1 { 
+            margin: 0; 
+            color: #4F46E5; 
+            font-size: 28px; 
+        }
+        .content { 
+            margin-bottom: 30px; 
+        }
+        .order-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .order-items {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            white-space: pre-line;
+        }
+        .button { 
+            display: inline-block; 
+            background: #4F46E5; 
+            color: white; 
+            padding: 12px 24px; 
+            text-decoration: none; 
+            border-radius: 6px; 
+            margin: 10px 0; 
+            text-align: center;
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 30px; 
+            padding-top: 20px; 
+            border-top: 1px solid #eee; 
+            font-size: 14px; 
+            color: #666; 
+        }
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .email-container { padding: 20px; }
+        }
+    </style>
 </head>
 <body>
-  <h1>Hello {{customer_name}}!</h1>
-  <!-- Your HTML content here -->
+    <div class="email-container">
+        <div class="header">
+            <h1>{{subject}}</h1>
+        </div>
+        
+        <div class="content">
+            <h2>Hello {{customer_name}}! 👋</h2>
+            
+            <p>Thank you for your order with {{website_name}}! We're excited to get your items to you.</p>
+            
+            <div class="order-details">
+                <h3>📋 Order Details</h3>
+                <p><strong>Order ID:</strong> {{order_id}}</p>
+                <p><strong>Order Date:</strong> {{order_date}} at {{order_time}}</p>
+                <p><strong>Total Amount:</strong> {{total_amount}}</p>
+                <p><strong>Payment Method:</strong> {{payment_method}}</p>
+                <p><strong>Estimated Delivery:</strong> {{estimated_delivery}}</p>
+            </div>
+            
+            <div class="order-items">
+                <h3>🛍️ What You Ordered ({{order_items_count}} items)</h3>
+                {{order_items}}
+            </div>
+            
+            <h3>🚚 Shipping Address</h3>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; white-space: pre-line;">{{shipping_address}}</div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{website_url}}/orders/{{order_id}}" class="button">📦 Track Your Order</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Need help? Contact us at {{support_email}}</p>
+            <p>© {{current_year}} {{website_name}}. All rights reserved.</p>
+        </div>
+    </div>
 </body>
-</html>"
-                  />
+</html>`;
+                            setFormData(prev => ({ ...prev, htmlContent: advancedTemplate }));
+                          }}
+                          className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                          Load Template
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, htmlContent: '' }))}
+                          className="text-xs px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                    <textarea
+                      required
+                      value={formData.htmlContent}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        htmlContent: e.target.value 
+                      }))}
+                      rows={20}
+                      className="w-full px-3 py-2 border-0 focus:ring-0 font-mono text-xs"
+                      placeholder="Click 'Load Template' for a professional HTML template with order details, or write your own..."
+                    />
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = formData.htmlContent;
+                        const insertion = '<div class="order-details">\n  <h3>📋 Order Details</h3>\n  <p><strong>Order ID:</strong> {{order_id}}</p>\n  <p><strong>Total:</strong> {{total_amount}}</p>\n</div>';
+                        setFormData(prev => ({ ...prev, htmlContent: current + '\n' + insertion }));
+                      }}
+                      className="text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                      + Order Block
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = formData.htmlContent;
+                        const insertion = '<div class="order-items">\n  <h3>🛍️ Items Ordered</h3>\n  {{order_items}}\n</div>';
+                        setFormData(prev => ({ ...prev, htmlContent: current + '\n' + insertion }));
+                      }}
+                      className="text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                      + Items Block
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = formData.htmlContent;
+                        const insertion = '<a href="{{website_url}}/orders/{{order_id}}" class="button">📦 Track Order</a>';
+                        setFormData(prev => ({ ...prev, htmlContent: current + '\n' + insertion }));
+                      }}
+                      className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      + Track Button
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const current = formData.htmlContent;
+                        const insertion = '<div class="footer">\n  <p>© {{current_year}} {{website_name}}</p>\n</div>';
+                        setFormData(prev => ({ ...prev, htmlContent: current + '\n' + insertion }));
+                      }}
+                      className="text-xs px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600"
+                    >
+                      + Footer
+                    </button>
+                  </div>
                 </div>
+
+                {/* Plain Text Content */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Plain Text Content *
@@ -723,11 +900,42 @@ The Nuvante Team"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                     placeholder="Hello {{customer_name}},
 
-This is the plain text version of your email...
+Thank you for your order with {{website_name}}!
+
+📋 Order Details:
+Order ID: {{order_id}}
+Total: {{total_amount}}
+Items: {{order_items}}
+
+🚚 Shipping to: {{shipping_address}}
+
+Track your order: {{website_url}}/orders/{{order_id}}
 
 Best regards,
-The Nuvante Team"
+The {{website_name}} Team"
                   />
+                </div>
+
+                {/* Available Variables Helper */}
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">💡 Quick Variable Reference</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-xs">
+                    <code className="bg-white px-2 py-1 rounded border">{'{{customer_name}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{order_id}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{total_amount}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{order_items}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{shipping_address}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{order_date}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{website_name}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{support_email}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{website_url}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{current_year}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{payment_method}}'}</code>
+                    <code className="bg-white px-2 py-1 rounded border">{'{{estimated_delivery}}'}</code>
+                  </div>
+                  <p className="text-xs text-blue-700 mt-2">
+                    Click "Load Template" for a complete order confirmation template with all these variables!
+                  </p>
                 </div>
               </div>
             )}

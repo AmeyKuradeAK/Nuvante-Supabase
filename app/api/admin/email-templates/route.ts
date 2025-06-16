@@ -4,8 +4,22 @@ import connect from '../../../../db';
 import EmailTemplate from '../../../../models/EmailTemplate';
 import AdminEmail from '../../../../models/AdminEmails';
 
+// Hardcoded fallback admin emails (these will always be admins)
+const FALLBACK_ADMINS = [
+  'admin@nuvante.com',
+  'ameykurade60@gmail.com',
+  'support@nuvante.in',
+  'alan.noble777@gmail.com',
+  // Add your email here if it's different
+];
+
 // Check if user is admin
 async function checkAdminStatus(userEmail: string): Promise<boolean> {
+  // Check fallback admins first
+  if (FALLBACK_ADMINS.includes(userEmail.toLowerCase())) {
+    return true;
+  }
+
   try {
     await connect();
     const adminRecord = await AdminEmail.findOne({ 
