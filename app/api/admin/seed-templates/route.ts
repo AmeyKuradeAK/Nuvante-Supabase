@@ -280,6 +280,33 @@ const stunningTemplates = [
         <a href="{{website_url}}/orders/{{order_id}}" class="btn">🔍 Track Your Order</a>
       </div>
 
+      <!-- Terms of Use Section with Custom Banner Image -->
+      <div style="margin: 30px 0; padding: 0; text-align: center;">
+        <a href="{{website_url}}/terms-and-conditions" style="display: block; text-decoration: none; margin-bottom: 15px;">
+          <img src="{{website_url}}/terms-banner.svg" alt="Terms & Conditions Apply - Click to view full terms" style="width: 100%; max-width: 400px; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);">
+        </a>
+        <div style="background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%); border-radius: 12px; border-left: 4px solid #667eea; padding: 20px; margin-top: 10px;">
+          <p style="margin: 0 0 15px 0; color: #555; font-size: 14px; line-height: 1.6;">
+            <strong>Important:</strong> By placing this order, you agree to our Terms & Conditions. Please review our policies for returns, exchanges, and customization guidelines.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 15px;">
+            <a href="{{website_url}}/terms-and-conditions" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 16px; text-decoration: none; border-radius: 20px; font-size: 12px; font-weight: 600;">
+              📄 Terms & Conditions
+            </a>
+            <a href="{{website_url}}/privacy-policy" style="display: inline-block; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 8px 16px; text-decoration: none; border-radius: 20px; font-size: 12px; font-weight: 600;">
+              🔒 Privacy Policy
+            </a>
+            <a href="{{website_url}}/refund-and-cancellation" style="display: inline-block; background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%); color: white; padding: 8px 16px; text-decoration: none; border-radius: 20px; font-size: 12px; font-weight: 600;">
+              🔄 Return Policy
+            </a>
+          </div>
+          <p style="margin: 15px 0 0 0; color: #777; font-size: 12px; border-top: 1px solid #e9ecef; padding-top: 15px;">
+            <strong>📋 Return Policy:</strong> Returns accepted within 3 days with unboxing video<br>
+            <strong>📞 Support:</strong> <a href="mailto:{{support_email}}" style="color: #667eea; text-decoration: none;">{{support_email}}</a> | Phone: +91 8882587922
+          </p>
+        </div>
+      </div>
+
       <p style="text-align: center; font-size: 18px; color: #667eea; font-weight: 600;">
         Thank you for choosing Nuvante! 💜✨
       </p>
@@ -298,6 +325,13 @@ Order Details:
 - Shipping Address: {{shipping_address}}
 
 Track: {{website_url}}/orders/{{order_id}}
+
+📋 IMPORTANT - TERMS OF USE:
+By placing this order, you agree to our Terms & Conditions.
+View full terms: {{website_url}}/terms-and-conditions
+
+Return Policy: Returns accepted within 3 days with unboxing video
+Support: {{support_email}}
 
 © {{current_year}} Nuvante. All rights reserved.`,
     variables: [
